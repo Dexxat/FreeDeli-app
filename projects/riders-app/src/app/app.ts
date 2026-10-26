@@ -1,13 +1,21 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ICONOS, ItemNav, NavInferior } from '@freedeli/shared';
 import { RiderStore } from './core/rider.store';
-import { BottomNav } from './layout/bottom-nav';
 import { OfertaEntrante } from './layout/oferta-entrante';
 import { RiderHeader } from './layout/rider-header';
 
+const SECCIONES: readonly ItemNav[] = [
+  { ruta: '/inicio', etiqueta: 'INICIO', icono: ICONOS.inicio },
+  { ruta: '/vivo', etiqueta: 'VIVO', icono: ICONOS.vivo },
+  { ruta: '/historial', etiqueta: 'HISTORIAL', icono: ICONOS.lista },
+  { ruta: '/ganancias', etiqueta: 'GANANCIAS', icono: ICONOS.pesos },
+  { ruta: '/perfil', etiqueta: 'PERFIL', icono: ICONOS.perfil },
+];
+
 @Component({
   selector: 'fd-root',
-  imports: [RouterOutlet, RiderHeader, BottomNav, OfertaEntrante],
+  imports: [RouterOutlet, RiderHeader, NavInferior, OfertaEntrante],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="app">
@@ -16,7 +24,7 @@ import { RiderHeader } from './layout/rider-header';
         <router-outlet />
       </main>
       @if (!store.sesionCerrada()) {
-        <fd-bottom-nav />
+        <fd-nav-inferior [items]="secciones" />
         <fd-oferta-entrante />
       }
     </div>
@@ -41,4 +49,5 @@ import { RiderHeader } from './layout/rider-header';
 })
 export class App {
   protected readonly store = inject(RiderStore);
+  protected readonly secciones = SECCIONES;
 }

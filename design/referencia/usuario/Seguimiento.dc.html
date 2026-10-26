@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>FreeDeli · Mi pedido</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#8FB4FF}a:hover{color:#FFFFFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #0B1736; color: #FFFFFF; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; overflow: hidden">
+
+<header style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; background: #0A1633; border-bottom: 4px solid #16306F">
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="width: 46px; height: 36px; display: flex; align-items: center; justify-content: center; background: #EEF2FA">
+<svg aria-hidden="true" viewBox="2 0 38 28" width="38" height="28" shape-rendering="crispEdges"><path fill="#0A1633" d="M15 0h4v1h-4zM12 1h3v1h-3zM19 1h1v1h-1zM10 2h2v1h-2zM20 2h1v1h-1zM8 3h2v1h-2zM20 3h1v1h-1zM30 3h3v1h-3zM6 4h2v1h-2zM20 4h1v1h-1zM29 4h1v1h-1zM33 4h1v1h-1zM4 5h2v1h-2zM20 5h1v1h-1zM30 5h1v1h-1zM32 5h1v1h-1zM3 6h1v1h-1zM20 6h1v1h-1zM25 6h6v1h-6zM32 6h1v1h-1zM4 7h2v1h-2zM20 7h1v1h-1zM24 7h1v1h-1zM30 7h1v1h-1zM32 7h7v1h-7zM4 8h1v1h-1zM20 8h1v1h-1zM25 8h3v1h-3zM39 8h1v1h-1zM5 9h3v1h-3zM20 9h1v1h-1zM27 9h1v1h-1zM39 9h1v1h-1zM6 10h1v1h-1zM20 10h1v1h-1zM27 10h1v1h-1zM39 10h1v1h-1zM7 11h3v1h-3zM20 11h2v1h-2zM26 11h1v1h-1zM33 11h6v1h-6zM3 12h5v1h-5zM22 12h1v1h-1zM26 12h1v1h-1zM33 12h2v1h-2zM2 13h1v1h-1zM22 13h1v1h-1zM26 13h1v1h-1zM35 13h1v1h-1zM3 14h3v1h-3zM22 14h1v1h-1zM26 14h1v1h-1zM35 14h3v1h-3zM3 15h1v1h-1zM22 15h1v1h-1zM26 15h1v1h-1zM38 15h1v1h-1zM3 16h1v1h-1zM22 16h1v1h-1zM26 16h1v1h-1zM38 16h1v1h-1zM3 17h1v1h-1zM22 17h5v1h-5zM36 17h2v1h-2zM4 18h1v1h-1zM37 18h1v1h-1zM5 19h1v1h-1zM15 19h6v1h-6zM38 19h1v1h-1zM4 20h1v1h-1zM24 20h4v1h-4zM39 20h1v1h-1zM4 21h1v1h-1zM24 21h1v1h-1zM27 21h1v1h-1zM39 21h1v1h-1zM4 22h1v1h-1zM16 22h8v1h-8zM27 22h1v1h-1zM39 22h1v1h-1zM4 23h1v1h-1zM16 23h1v1h-1zM27 23h1v1h-1zM39 23h1v1h-1zM4 24h1v1h-1zM16 24h1v1h-1zM27 24h1v1h-1zM39 24h1v1h-1zM5 25h1v1h-1zM15 25h1v1h-1zM28 25h1v1h-1zM38 25h1v1h-1zM6 26h1v1h-1zM14 26h1v1h-1zM29 26h1v1h-1zM37 26h1v1h-1zM7 27h1v1h-1zM13 27h1v1h-1zM30 27h1v1h-1zM36 27h1v1h-1z"></path><path fill="#BFD3FF" d="M15 1h4v1h-4zM12 2h3v1h-3zM19 2h1v1h-1zM10 3h2v1h-2zM37 9h2v1h-2zM13 20h9v1h-9z"></path><path fill="#FFFFFF" d="M15 2h4v1h-4zM12 3h8v1h-8zM8 4h12v1h-12zM6 5h14v1h-14zM10 6h10v1h-10zM6 7h14v1h-14zM12 8h8v1h-8zM8 9h12v1h-12zM15 10h5v1h-5zM10 11h10v1h-10z"></path><path fill="#9AA3B5" d="M30 4h3v1h-3zM31 5h1v1h-1zM31 6h1v1h-1zM27 7h3v1h-3zM31 7h1v1h-1zM3 13h5v1h-5zM33 13h2v1h-2zM33 14h2v1h-2zM33 17h2v1h-2zM33 18h2v1h-2zM22 19h2v1h-2zM33 19h2v1h-2zM12 20h1v1h-1zM22 20h2v1h-2zM33 20h2v1h-2zM10 21h1v1h-1zM12 21h12v1h-12zM33 21h2v1h-2zM9 22h1v1h-1zM11 22h1v1h-1zM32 22h1v1h-1zM34 22h1v1h-1zM10 23h1v1h-1zM33 23h1v1h-1z"></path><path fill="#B9CBEB" d="M4 6h6v1h-6zM5 8h7v1h-7zM7 10h8v1h-8z"></path><path fill="#14161C" d="M25 7h2v1h-2zM8 12h1v1h-1zM21 12h1v1h-1zM8 13h14v1h-14zM32 17h1v1h-1zM35 17h1v1h-1zM32 18h1v1h-1zM35 18h2v1h-2zM6 19h3v1h-3zM12 19h3v1h-3zM35 19h3v1h-3zM5 20h3v1h-3zM28 20h3v1h-3zM36 20h3v1h-3zM5 21h2v1h-2zM28 21h2v1h-2zM37 21h2v1h-2zM5 22h2v1h-2zM10 22h1v1h-1zM14 22h2v1h-2zM28 22h2v1h-2zM33 22h1v1h-1zM37 22h2v1h-2zM5 23h2v1h-2zM14 23h2v1h-2zM28 23h2v1h-2zM37 23h2v1h-2zM5 24h3v1h-3zM13 24h3v1h-3zM28 24h3v1h-3zM36 24h3v1h-3zM6 25h3v1h-3zM12 25h3v1h-3zM29 25h3v1h-3zM35 25h3v1h-3zM7 26h7v1h-7zM30 26h7v1h-7zM8 27h5v1h-5zM31 27h5v1h-5z"></path><path fill="#16306F" d="M28 8h1v1h-1zM37 8h1v1h-1zM28 9h9v1h-9zM28 10h10v1h-10zM27 11h6v1h-6zM27 12h1v1h-1zM29 12h4v1h-4zM27 13h1v1h-1zM29 13h4v1h-4zM6 14h2v1h-2zM21 14h1v1h-1zM27 14h1v1h-1zM29 14h4v1h-4zM5 15h17v1h-17zM27 15h1v1h-1zM29 15h2v1h-2zM37 15h1v1h-1zM5 16h2v1h-2zM27 16h1v1h-1zM29 16h9v1h-9zM5 17h17v1h-17zM27 17h1v1h-1zM29 17h3v1h-3zM5 18h16v1h-16zM27 18h1v1h-1zM29 18h3v1h-3zM21 19h1v1h-1zM24 19h8v1h-8z"></path><path fill="#2E5BBF" d="M29 8h8v1h-8zM28 12h1v1h-1zM28 13h1v1h-1zM8 14h13v1h-13zM28 14h1v1h-1zM28 15h1v1h-1zM31 15h6v1h-6zM7 16h15v1h-15zM28 16h1v1h-1zM28 17h1v1h-1zM21 18h6v1h-6zM28 18h1v1h-1z"></path><path fill="#FFD23F" d="M38 8h1v1h-1zM38 10h1v1h-1z"></path><path fill="#3B4252" d="M9 12h12v1h-12zM9 19h3v1h-3zM32 19h1v1h-1zM8 20h4v1h-4zM31 20h2v1h-2zM35 20h1v1h-1zM7 21h3v1h-3zM11 21h1v1h-1zM30 21h3v1h-3zM35 21h2v1h-2zM7 22h2v1h-2zM12 22h2v1h-2zM30 22h2v1h-2zM35 22h2v1h-2zM7 23h3v1h-3zM11 23h3v1h-3zM30 23h3v1h-3zM34 23h3v1h-3zM8 24h5v1h-5zM31 24h5v1h-5zM9 25h3v1h-3zM32 25h3v1h-3z"></path><path fill="#FFB020" d="M4 15h1v1h-1zM4 16h1v1h-1zM4 17h1v1h-1z"></path></svg>
+</div>
+<span style="font-family: 'Press Start 2P', monospace; font-size: 13px; line-height: 1">Free<span style="color: #8FB4FF">Deli</span></span>
+</div>
+<span style="padding: 8px 10px; background: #16306F; color: #FFD23F; font-family: 'Press Start 2P', monospace; font-size: 9px; line-height: 1">24 HS</span>
+</header>
+<main style="flex: 1 1 auto; overflow-y: auto; padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 12px">
+
+<section style="padding: 12px; background: #16306F; border-left: 4px solid #FFD23F; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 10px">
+<h1 style="margin: 0; font-family: 'Press Start 2P', monospace; font-size: 10px; line-height: 1.4">#A-1042</h1>
+<span style="font-size: 13px; color: #BFD3FF">Llega en <span style="font-family: 'Press Start 2P', monospace; font-size: 11px; color: #FFD23F">~8 min</span></span>
+</div>
+<ol aria-label="Progreso del pedido" style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+<li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 10px; background: #8FB4FF"></span><span style="font-size: 11px; color: #BFD3FF">Aceptado</span></li>
+<li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 10px; background: #8FB4FF"></span><span style="font-size: 11px; color: #BFD3FF">Retirado</span></li>
+<li aria-current="step" style="display: flex; flex-direction: column; gap: 6px"><span style="height: 10px; background: #FFD23F"></span><span style="font-size: 11px; font-weight: 700; color: #FFD23F">En camino</span></li>
+<li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 10px; background: #0A1633"></span><span style="font-size: 11px; color: #8FB4FF">Entregado</span></li>
+</ol>
+</section>
+
+<section style="padding: 10px 12px; background: #EEF2FA; color: #0A1633; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'Press Start 2P', monospace; font-size: 8px; line-height: 1.4; color: #16306F">PIN DE ENTREGA</span>
+<span style="font-size: 11px; font-weight: 600; color: #16306F">Dáselo al rider al recibir</span>
+</span>
+<span role="img" aria-label="PIN 4 7 2 9" style="display: flex; gap: 4px">
+<span style="width: 30px; padding: 8px 0; text-align: center; background: #16306F; color: #FFD23F; font-family: 'Press Start 2P', monospace; font-size: 14px; line-height: 1">4</span>
+<span style="width: 30px; padding: 8px 0; text-align: center; background: #16306F; color: #FFD23F; font-family: 'Press Start 2P', monospace; font-size: 14px; line-height: 1">7</span>
+<span style="width: 30px; padding: 8px 0; text-align: center; background: #16306F; color: #FFD23F; font-family: 'Press Start 2P', monospace; font-size: 14px; line-height: 1">2</span>
+<span style="width: 30px; padding: 8px 0; text-align: center; background: #16306F; color: #FFD23F; font-family: 'Press Start 2P', monospace; font-size: 14px; line-height: 1">9</span>
+</span>
+</section>
+
+<section aria-label="Juego FreeDeli Rush" style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 10px">
+<h2 style="margin: 0; font-family: 'Press Start 2P', monospace; font-size: 9px; color: #FFD23F">FREEDELI RUSH</h2>
+<span style="font-family: 'Press Start 2P', monospace; font-size: 8px; color: #BFD3FF">PTS {{scoreStr}} · MEJOR {{bestStr}}</span>
+</div>
+<div style="position: relative; height: 176px; overflow: hidden; background: #0F1F4A; box-shadow: inset 0 0 0 3px #16306F">
+<span style="position: absolute; left: 40px; top: 18px; width: 4px; height: 4px; background: #8FB4FF"></span>
+<span style="position: absolute; left: 150px; top: 34px; width: 4px; height: 4px; background: #8FB4FF"></span>
+<span style="position: absolute; left: 260px; top: 14px; width: 4px; height: 4px; background: #FFD23F"></span>
+<span style="position: absolute; left: 310px; top: 46px; width: 4px; height: 4px; background: #8FB4FF"></span>
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 30px; background: #16306F; border-top: 4px solid #2E5BBF"></div>
+<sc-for list="{{obs}}" as="o" hint-placeholder-count="2">
+<sc-if value="{{o.isPit}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; bottom: 0; height: 34px; left: {{o.left}}; width: {{o.width}}; background: #050B1C"></div>
+</sc-if>
+<sc-if value="{{o.isTacho}}" hint-placeholder-val="{{ true }}">
+<svg aria-hidden="true" viewBox="0 0 9 12" width="18" height="24" shape-rendering="crispEdges" style="position: absolute; bottom: 30px; left: {{o.left}}"><rect x="0" y="0" width="9" height="2" fill="#BFD3FF"></rect><rect x="3" y="0" width="3" height="1" fill="#9AA3B5"></rect><rect x="1" y="2" width="7" height="10" fill="#9AA3B5"></rect><rect x="2" y="3" width="1" height="8" fill="#5C677D"></rect><rect x="4" y="3" width="1" height="8" fill="#5C677D"></rect><rect x="6" y="3" width="1" height="8" fill="#5C677D"></rect></svg>
+</sc-if>
+<sc-if value="{{o.isBush}}" hint-placeholder-val="{{ false }}">
+<svg aria-hidden="true" viewBox="0 0 13 9" width="26" height="18" shape-rendering="crispEdges" style="position: absolute; bottom: 30px; left: {{o.left}}"><rect x="3" y="0" width="4" height="2" fill="#4CC07D"></rect><rect x="7" y="1" width="4" height="2" fill="#4CC07D"></rect><rect x="1" y="2" width="11" height="3" fill="#36A465"></rect><rect x="0" y="4" width="13" height="5" fill="#23704A"></rect><rect x="3" y="3" width="2" height="1" fill="#7EE0A1"></rect></svg>
+</sc-if>
+<sc-if value="{{o.isBag}}" hint-placeholder-val="{{ false }}">
+<svg aria-hidden="true" viewBox="0 0 10 8" width="20" height="16" shape-rendering="crispEdges" style="position: absolute; bottom: 30px; left: {{o.left}}"><rect x="4" y="0" width="2" height="2" fill="#FFB020"></rect><rect x="2" y="2" width="6" height="2" fill="#3B4252"></rect><rect x="0" y="4" width="10" height="4" fill="#3B4252"></rect><rect x="2" y="5" width="2" height="1" fill="#9AA3B5"></rect></svg>
+</sc-if>
+</sc-for>
+<svg aria-hidden="true" viewBox="2 0 38 28" width="46" height="34" shape-rendering="crispEdges" style="position: absolute; left: 22px; bottom: {{motoBottom}}"><path fill="#0A1633" d="M15 0h4v1h-4zM12 1h3v1h-3zM19 1h1v1h-1zM10 2h2v1h-2zM20 2h1v1h-1zM8 3h2v1h-2zM20 3h1v1h-1zM30 3h3v1h-3zM6 4h2v1h-2zM20 4h1v1h-1zM29 4h1v1h-1zM33 4h1v1h-1zM4 5h2v1h-2zM20 5h1v1h-1zM30 5h1v1h-1zM32 5h1v1h-1zM3 6h1v1h-1zM20 6h1v1h-1zM25 6h6v1h-6zM32 6h1v1h-1zM4 7h2v1h-2zM20 7h1v1h-1zM24 7h1v1h-1zM30 7h1v1h-1zM32 7h7v1h-7zM4 8h1v1h-1zM20 8h1v1h-1zM25 8h3v1h-3zM39 8h1v1h-1zM5 9h3v1h-3zM20 9h1v1h-1zM27 9h1v1h-1zM39 9h1v1h-1zM6 10h1v1h-1zM20 10h1v1h-1zM27 10h1v1h-1zM39 10h1v1h-1zM7 11h3v1h-3zM20 11h2v1h-2zM26 11h1v1h-1zM33 11h6v1h-6zM3 12h5v1h-5zM22 12h1v1h-1zM26 12h1v1h-1zM33 12h2v1h-2zM2 13h1v1h-1zM22 13h1v1h-1zM26 13h1v1h-1zM35 13h1v1h-1zM3 14h3v1h-3zM22 14h1v1h-1zM26 14h1v1h-1zM35 14h3v1h-3zM3 15h1v1h-1zM22 15h1v1h-1zM26 15h1v1h-1zM38 15h1v1h-1zM3 16h1v1h-1zM22 16h1v1h-1zM26 16h1v1h-1zM38 16h1v1h-1zM3 17h1v1h-1zM22 17h5v1h-5zM36 17h2v1h-2zM4 18h1v1h-1zM37 18h1v1h-1zM5 19h1v1h-1zM15 19h6v1h-6zM38 19h1v1h-1zM4 20h1v1h-1zM24 20h4v1h-4zM39 20h1v1h-1zM4 21h1v1h-1zM24 21h1v1h-1zM27 21h1v1h-1zM39 21h1v1h-1zM4 22h1v1h-1zM16 22h8v1h-8zM27 22h1v1h-1zM39 22h1v1h-1zM4 23h1v1h-1zM16 23h1v1h-1zM27 23h1v1h-1zM39 23h1v1h-1zM4 24h1v1h-1zM16 24h1v1h-1zM27 24h1v1h-1zM39 24h1v1h-1zM5 25h1v1h-1zM15 25h1v1h-1zM28 25h1v1h-1zM38 25h1v1h-1zM6 26h1v1h-1zM14 26h1v1h-1zM29 26h1v1h-1zM37 26h1v1h-1zM7 27h1v1h-1zM13 27h1v1h-1zM30 27h1v1h-1zM36 27h1v1h-1z"></path><path fill="#BFD3FF" d="M15 1h4v1h-4zM12 2h3v1h-3zM19 2h1v1h-1zM10 3h2v1h-2zM37 9h2v1h-2zM13 20h9v1h-9z"></path><path fill="#FFFFFF" d="M15 2h4v1h-4zM12 3h8v1h-8zM8 4h12v1h-12zM6 5h14v1h-14zM10 6h10v1h-10zM6 7h14v1h-14zM12 8h8v1h-8zM8 9h12v1h-12zM15 10h5v1h-5zM10 11h10v1h-10z"></path><path fill="#9AA3B5" d="M30 4h3v1h-3zM31 5h1v1h-1zM31 6h1v1h-1zM27 7h3v1h-3zM31 7h1v1h-1zM3 13h5v1h-5zM33 13h2v1h-2zM33 14h2v1h-2zM33 17h2v1h-2zM33 18h2v1h-2zM22 19h2v1h-2zM33 19h2v1h-2zM12 20h1v1h-1zM22 20h2v1h-2zM33 20h2v1h-2zM10 21h1v1h-1zM12 21h12v1h-12zM33 21h2v1h-2zM9 22h1v1h-1zM11 22h1v1h-1zM32 22h1v1h-1zM34 22h1v1h-1zM10 23h1v1h-1zM33 23h1v1h-1z"></path><path fill="#B9CBEB" d="M4 6h6v1h-6zM5 8h7v1h-7zM7 10h8v1h-8z"></path><path fill="#14161C" d="M25 7h2v1h-2zM8 12h1v1h-1zM21 12h1v1h-1zM8 13h14v1h-14zM32 17h1v1h-1zM35 17h1v1h-1zM32 18h1v1h-1zM35 18h2v1h-2zM6 19h3v1h-3zM12 19h3v1h-3zM35 19h3v1h-3zM5 20h3v1h-3zM28 20h3v1h-3zM36 20h3v1h-3zM5 21h2v1h-2zM28 21h2v1h-2zM37 21h2v1h-2zM5 22h2v1h-2zM10 22h1v1h-1zM14 22h2v1h-2zM28 22h2v1h-2zM33 22h1v1h-1zM37 22h2v1h-2zM5 23h2v1h-2zM14 23h2v1h-2zM28 23h2v1h-2zM37 23h2v1h-2zM5 24h3v1h-3zM13 24h3v1h-3zM28 24h3v1h-3zM36 24h3v1h-3zM6 25h3v1h-3zM12 25h3v1h-3zM29 25h3v1h-3zM35 25h3v1h-3zM7 26h7v1h-7zM30 26h7v1h-7zM8 27h5v1h-5zM31 27h5v1h-5z"></path><path fill="#16306F" d="M28 8h1v1h-1zM37 8h1v1h-1zM28 9h9v1h-9zM28 10h10v1h-10zM27 11h6v1h-6zM27 12h1v1h-1zM29 12h4v1h-4zM27 13h1v1h-1zM29 13h4v1h-4zM6 14h2v1h-2zM21 14h1v1h-1zM27 14h1v1h-1zM29 14h4v1h-4zM5 15h17v1h-17zM27 15h1v1h-1zM29 15h2v1h-2zM37 15h1v1h-1zM5 16h2v1h-2zM27 16h1v1h-1zM29 16h9v1h-9zM5 17h17v1h-17zM27 17h1v1h-1zM29 17h3v1h-3zM5 18h16v1h-16zM27 18h1v1h-1zM29 18h3v1h-3zM21 19h1v1h-1zM24 19h8v1h-8z"></path><path fill="#2E5BBF" d="M29 8h8v1h-8zM28 12h1v1h-1zM28 13h1v1h-1zM8 14h13v1h-13zM28 14h1v1h-1zM28 15h1v1h-1zM31 15h6v1h-6zM7 16h15v1h-15zM28 16h1v1h-1zM28 17h1v1h-1zM21 18h6v1h-6zM28 18h1v1h-1z"></path><path fill="#FFD23F" d="M38 8h1v1h-1zM38 10h1v1h-1z"></path><path fill="#3B4252" d="M9 12h12v1h-12zM9 19h3v1h-3zM32 19h1v1h-1zM8 20h4v1h-4zM31 20h2v1h-2zM35 20h1v1h-1zM7 21h3v1h-3zM11 21h1v1h-1zM30 21h3v1h-3zM35 21h2v1h-2zM7 22h2v1h-2zM12 22h2v1h-2zM30 22h2v1h-2zM35 22h2v1h-2zM7 23h3v1h-3zM11 23h3v1h-3zM30 23h3v1h-3zM34 23h3v1h-3zM8 24h5v1h-5zM31 24h5v1h-5zM9 25h3v1h-3zM32 25h3v1h-3z"></path><path fill="#FFB020" d="M4 15h1v1h-1zM4 16h1v1h-1zM4 17h1v1h-1z"></path></svg>
+<sc-if value="{{showMsg}}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; left: 0; right: 0; top: 54px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center">
+<span style="font-family: 'Press Start 2P', monospace; font-size: 11px; color: #FFD23F">{{msgTitle}}</span>
+<span style="font-size: 12px; color: #BFD3FF">{{msgSub}}</span>
+</div>
+</sc-if>
+</div>
+<button type="button" onClick="{{jump}}" style="margin: 4px; min-height: 56px; border: none; cursor: pointer; background: #FFD23F; color: #0A1633; font-family: 'Press Start 2P', monospace; font-size: 13px; box-shadow: 4px 0 0 0 #FFB020, -4px 0 0 0 #FFB020, 0 4px 0 0 #FFB020, 0 -4px 0 0 #FFB020, 0 8px 0 0 #0A1633">SALTAR</button>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; background: #0F1F4A; font-size: 12px; color: #BFD3FF">
+<span>Fecha lun 26/10 → lun 2/11 · Puesto <span style="font-weight: 700; color: #FFFFFF">#7</span></span>
+<span>Cupones <span style="font-weight: 700; color: #FFD23F">$3.000</span></span>
+</div>
+<span style="font-size: 11px; color: #8FB4FF">Pozos: tocá SALTAR dos veces. Funciona sin conexión.</span>
+</section>
+</main>
+<nav aria-label="Secciones" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #0A1633; border-top: 4px solid #16306F">
+<a href="Inicio.dc.html" style="min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; color: #BFD3FF; text-decoration: none; font-family: 'Press Start 2P', monospace; font-size: 8px"><svg aria-hidden="true" viewBox="0 0 20 20" width="20" height="20" fill="currentColor" shape-rendering="crispEdges"><rect x="9" y="1" width="2" height="2"></rect><rect x="7" y="3" width="6" height="2"></rect><rect x="5" y="5" width="10" height="2"></rect><rect x="3" y="7" width="14" height="2"></rect><rect x="5" y="9" width="10" height="9"></rect></svg>INICIO</a>
+<a href="Kioscos.dc.html" style="min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; color: #BFD3FF; text-decoration: none; font-family: 'Press Start 2P', monospace; font-size: 8px"><svg aria-hidden="true" viewBox="0 0 20 20" width="20" height="20" fill="currentColor" shape-rendering="crispEdges"><rect x="3" y="6" width="14" height="12"></rect><rect x="6" y="2" width="2" height="5"></rect><rect x="12" y="2" width="2" height="5"></rect><rect x="6" y="2" width="8" height="2"></rect></svg>PEDIR</a>
+<a href="Seguimiento.dc.html" aria-current="page" style="min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; color: #FFD23F; text-decoration: none; font-family: 'Press Start 2P', monospace; font-size: 8px"><svg aria-hidden="true" viewBox="0 0 20 20" width="20" height="20" fill="currentColor" shape-rendering="crispEdges"><rect x="8" y="8" width="4" height="4"></rect><rect x="4" y="6" width="2" height="8"></rect><rect x="14" y="6" width="2" height="8"></rect><rect x="0" y="4" width="2" height="12"></rect><rect x="18" y="4" width="2" height="12"></rect></svg>MI PEDIDO</a>
+<a href="Ajustes.dc.html" style="min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; color: #BFD3FF; text-decoration: none; font-family: 'Press Start 2P', monospace; font-size: 8px"><svg aria-hidden="true" viewBox="0 0 20 20" width="20" height="20" fill="currentColor" shape-rendering="crispEdges"><rect x="8" y="1" width="4" height="3"></rect><rect x="8" y="16" width="4" height="3"></rect><rect x="1" y="8" width="3" height="4"></rect><rect x="16" y="8" width="3" height="4"></rect><rect x="4" y="4" width="12" height="12"></rect><rect x="8" y="8" width="4" height="4" fill="#0A1633"></rect></svg>AJUSTES</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { mode: 'idle', h: 0, v: 0, jumps: 0, speed: 4, ticks: 0, score: 0, best: 0, obs: [], nextIn: 60, seq: 0 };
+}
+componentDidMount() {
+this.timer = setInterval(() => this.tick(), 30);
+}
+componentWillUnmount() {
+clearInterval(this.timer);
+}
+start() {
+this.setState({ mode: 'run', h: 0, v: 12, jumps: 1, speed: 4, ticks: 0, score: 0, obs: [], nextIn: 50 });
+}
+tick() {
+const s = this.state;
+if (s.mode !== 'run') return;
+const W = 326;
+const MX = 22;
+const speed = Math.min(11, 4 + s.ticks * 0.0025);
+let obs = s.obs.map((o) => Object.assign({}, o, { x: o.x - speed })).filter((o) => o.x + o.w > -10);
+let nextIn = s.nextIn - 1;
+let seq = s.seq;
+if (nextIn <= 0) {
+const r = Math.random();
+let o;
+if (r < 0.28) o = { type: 'tacho', w: 18, oh: 24 };
+else if (r < 0.52) o = { type: 'bush', w: 26, oh: 18 };
+else if (r < 0.76) o = { type: 'bag', w: 20, oh: 16 };
+else o = { type: 'pit', w: Math.round(26 * speed + 12), oh: 0 };
+seq += 1;
+obs.push(Object.assign(o, { x: W + 10, id: seq }));
+nextIn = Math.round((o.w + 170 + Math.random() * 160) / speed);
+}
+let v = s.v - 1.2;
+let h = s.h + v;
+let jumps = s.jumps;
+const center = MX + 23;
+const overPit = obs.some((o) => o.type === 'pit' && center > o.x + 4 && center < o.x + o.w - 4);
+if (h > 104) { h = 104; v = 0; }
+if (h <= 0 && !overPit && s.h >= 0) { h = 0; v = 0; jumps = 0; }
+let dead = h < -26;
+if (!dead) {
+for (const o of obs) {
+if (o.type === 'pit') continue;
+if (MX + 38 > o.x + 2 && MX + 8 < o.x + o.w - 2 && h < o.oh - 2) { dead = true; break; }
+}
+}
+const ticks = s.ticks + 1;
+const score = Math.floor(ticks / 3);
+if (dead) {
+this.setState({ mode: 'over', obs, h: Math.max(h, -26), best: Math.max(s.best, score), score });
+return;
+}
+this.setState({ obs, h, v, jumps, speed, ticks, score, nextIn, seq });
+}
+renderVals() {
+const s = this.state;
+const pad = (n) => String(n).padStart(5, '0');
+const jump = () => {
+const st = this.state;
+if (st.mode !== 'run') { this.start(); return; }
+if (st.jumps === 0 && st.h <= 0.01) this.setState({ v: 12, jumps: 1 });
+else if (st.jumps === 1) this.setState({ v: 10, jumps: 2 });
+};
+return {
+jump,
+scoreStr: pad(s.score),
+bestStr: pad(s.best),
+motoBottom: Math.round(30 + s.h) + 'px',
+obs: s.obs.map((o) => ({
+left: Math.round(o.x) + 'px',
+width: o.w + 'px',
+isPit: o.type === 'pit',
+isTacho: o.type === 'tacho',
+isBush: o.type === 'bush',
+isBag: o.type === 'bag'
+})),
+showMsg: s.mode !== 'run',
+msgTitle: s.mode === 'over' ? '¡CHOCASTE!' : 'FREEDELI RUSH',
+msgSub: s.mode === 'over' ? 'Tocá SALTAR para reintentar' : 'Tocá SALTAR para empezar'
+};
+}
+}
+</script>
+</body>
+</html>

@@ -35,6 +35,12 @@
     },
     {
       "path": "./projects/riders-app/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/usuarios-app/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/usuarios-app/tsconfig.spec.json"
     }
   ]
 }
