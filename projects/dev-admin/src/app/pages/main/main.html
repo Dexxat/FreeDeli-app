@@ -1,5 +1,8 @@
 <div class="encabezado">
-  <h1 class="titulo">MAIN · JORNADA</h1>
+  <div class="titulo-fila">
+    <h1 class="titulo">MAIN · JORNADA</h1>
+    <a class="enlace" routerLink="/kioscos">Kioscos y saldos</a>
+  </div>
   <fd-selector-zonas [elegidas]="elegidas()" (cambio)="cambiarZonas($event)" />
 </div>
 
@@ -29,13 +32,13 @@
         <li [class]="'estado-' + f.estado">
           <div class="lado">
             <span class="id">{{ codigo(f.numero) }}</span>
-            <span class="detalle">{{ f.kioscoNombre }} · {{ zona(f.zona) }}</span>
+            <span class="detalle"><a class="enlace-sutil" [routerLink]="['/kioscos', f.kioscoId]">{{ f.kioscoNombre }}</a> · {{ zona(f.zona) }}</span>
             <span class="monto">{{ f.totalKiosco | pesos }} <span class="sutil">para el kiosco</span></span>
           </div>
           <div class="centro"><span class="estado">{{ textoEstado[f.estado] }}</span></div>
           <div class="lado derecha">
             @if (f.riderId) {
-              <span class="id">{{ f.riderId.toUpperCase() }}</span>
+              <a class="id enlace-sutil" [routerLink]="['/riders', f.riderId]" [attr.aria-label]="'Ficha de ' + f.riderNombre">{{ f.riderId.toUpperCase() }}</a>
               <span class="detalle">{{ f.riderNombre }}</span>
               <span class="monto" [class.pendiente]="f.estado !== 'entregado'">
                 {{ f.gananciaRider | pesos }} <span class="sutil">{{ f.estado === 'entregado' ? 'ganó' : 'a cobrar' }}</span>

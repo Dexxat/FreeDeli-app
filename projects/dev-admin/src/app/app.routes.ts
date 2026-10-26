@@ -7,5 +7,6 @@ export const routes: Routes = [
   { path: 'entregas', title: 'FreeDeli Dev · Entregas', loadComponent: () => import('./pages/entregas/entregas') },
   { path: 'kioscos', title: 'FreeDeli Dev · Kioscos', loadComponent: () => import('./pages/kioscos/kioscos') },
   { path: 'kioscos/:kioscoId', title: 'FreeDeli Dev · Kiosco', loadComponent: () => import('./pages/kiosco/kiosco') },
+  { path: 'riders/:riderId', title: 'FreeDeli Dev · Rider', loadComponent: () => import('./pages/rider/rider') },
   { path: '**', redirectTo: 'main' },
 ];

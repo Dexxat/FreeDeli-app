@@ -6,7 +6,6 @@ const SECCIONES: readonly ItemNav[] = [
   { ruta: '/main', etiqueta: 'MAIN', icono: ICONOS.vivo },
   { ruta: '/ganancias', etiqueta: 'GANANCIAS', icono: ICONOS.pesos },
   { ruta: '/entregas', etiqueta: 'ENTREGAS', icono: ICONOS.lista },
-  { ruta: '/kioscos', etiqueta: 'KIOSCOS', icono: ICONOS.bolsa },
 ];
 
 @Component({

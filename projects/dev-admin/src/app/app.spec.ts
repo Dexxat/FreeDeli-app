@@ -66,6 +66,23 @@ describe('FreeDeli Dev', () => {
     expect(el.querySelector('details')?.textContent).toContain('Comisión FreeDeli');
   });
 
+  it('desde MAIN se abre la ficha del rider con seguimiento y pausa', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const el = await abrir('/main');
+    expect(el.querySelector('a[href="/riders/r1"]')).not.toBeNull();
+    expect(el.querySelector('a[href^="/kioscos/k"]')).not.toBeNull();
+
+    await h.navigateByUrl('/riders/r1');
+    await estable();
+    const ficha = h.routeNativeElement!;
+    expect(ficha.querySelector('h1')?.textContent).toContain('R1 · Lucas Romero');
+    expect(ficha.querySelector('fd-barra-estado li[aria-current=step]')?.textContent).toContain('Retirado');
+    boton(ficha, 'Pausar').click();
+    await estable();
+    expect(TestBed.inject(MockDb).riders().find((r) => r.id === 'r1')!.pausado).toBe(true);
+    expect(ficha.textContent).toContain('Pausado');
+  });
+
   it('KIOSCOS permite pausar', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     const el = await abrir('/kioscos');

@@ -1,5 +1,6 @@
 import { Kiosco } from './kiosco';
-import { EstadoPago, EstadoPedido, ItemPedido } from './pedido';
+import { EstadoPago, EstadoPedido, ItemPedido, Pedido } from './pedido';
+import { Rider } from './rider';
 import { ZonaId } from './zona';
 
 /** Kiosco visto desde FreeDeli Dev, con sus números del día. */
@@ -51,6 +52,7 @@ export interface FilaMain {
   pedidoId: string;
   numero: number;
   zona: ZonaId;
+  kioscoId: string;
   kioscoNombre: string;
   /** Lo que le queda al kiosco. */
   totalKiosco: number;
@@ -88,4 +90,12 @@ export interface EntregaAdmin extends MovimientoKiosco {
   entregadoEn?: Date;
   /** Minutos desde que el rider aceptó hasta que entregó. */
   duracionMin: number | null;
+}
+
+/** Rider visto desde FreeDeli Dev. */
+export interface RiderAdmin extends Pick<Rider, 'id' | 'nombre' | 'telefono' | 'vehiculo' | 'zonas' | 'disponible' | 'pausado' | 'riderDesde'> {
+  entregasHoy: number;
+  ganadoHoy: number;
+  /** Envío que está haciendo ahora, para el seguimiento. */
+  enCurso: Pedido | null;
 }

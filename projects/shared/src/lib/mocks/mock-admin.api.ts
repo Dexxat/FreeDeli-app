@@ -2,7 +2,7 @@ import { Injectable, Injector, computed, inject } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Observable, delay, distinctUntilChanged, map, of, throwError } from 'rxjs';
 import { AdminApi } from '../api/admin.api';
-import { AlertaAdmin, EntregaAdmin, FilaMain, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
+import { AlertaAdmin, EntregaAdmin, FilaMain, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
 import { ZONAS, ZonaId } from '../models/zona';
 import { Pedido } from '../models/pedido';
 import { codigoPedido } from '../models/pedido';
@@ -93,6 +93,21 @@ export class MockAdminApi extends AdminApi {
     return id ? this.db.riders().find((r) => r.id === id)?.nombre : undefined;
   }
 
+  private fila(p: Pedido): FilaMain {
+    return {
+      pedidoId: p.id,
+      numero: p.numero,
+      zona: p.zona,
+      kioscoId: p.kioscoId,
+      kioscoNombre: p.kioscoNombre,
+      totalKiosco: movimientoDePedido(p).netoKiosco,
+      estado: p.estado,
+      riderId: p.riderId,
+      riderNombre: this.nombreRider(p.riderId),
+      gananciaRider: p.estado === 'cancelado' ? 0 : p.gananciaRider + p.propina,
+    };
+  }
+
   pedidosJornada(zonas: ZonaId[]): Observable<FilaMain[]> {
     return toObservable(this.db.pedidos, { injector: this.injector }).pipe(
       map((ps) => {
@@ -100,19 +115,54 @@ export class MockAdminApi extends AdminApi {
         return ps
           .filter((p) => p.creadoEn >= hoy && zonas.includes(p.zona))
           .sort((a, b) => b.creadoEn.getTime() - a.creadoEn.getTime())
-          .map((p) => ({
-            pedidoId: p.id,
-            numero: p.numero,
-            zona: p.zona,
-            kioscoNombre: p.kioscoNombre,
-            totalKiosco: movimientoDePedido(p).netoKiosco,
-            estado: p.estado,
-            riderId: p.riderId,
-            riderNombre: this.nombreRider(p.riderId),
-            gananciaRider: p.estado === 'cancelado' ? 0 : p.gananciaRider + p.propina,
-          }));
+          .map((p) => this.fila(p));
       }),
     );
+  }
+
+  private readonly ridersAdmin = computed<RiderAdmin[]>(() => {
+    const hoy = inicioDelDia(new Date());
+    const pedidos = this.db.pedidos();
+    return this.db.riders().map((r) => {
+      const entregadosHoy = pedidos.filter((p) => p.riderId === r.id && p.estado === 'entregado' && p.creadoEn >= hoy);
+      return {
+        id: r.id,
+        nombre: r.nombre,
+        telefono: r.telefono,
+        vehiculo: r.vehiculo,
+        zonas: r.zonas,
+        disponible: r.disponible,
+        pausado: r.pausado,
+        riderDesde: r.riderDesde,
+        entregasHoy: entregadosHoy.length,
+        ganadoHoy: entregadosHoy.reduce((a, p) => a + p.gananciaRider + p.propina, 0),
+        enCurso: pedidos.find((p) => p.riderId === r.id && ['aceptado', 'retirado', 'en-camino'].includes(p.estado)) ?? null,
+      };
+    });
+  });
+  private readonly riders$ = toObservable(this.ridersAdmin);
+
+  rider(id: string): Observable<RiderAdmin | null> {
+    return this.riders$.pipe(
+      map((rs) => rs.find((r) => r.id === id) ?? null),
+      distinctUntilChanged(),
+    );
+  }
+
+  enviosRider(id: string, periodo: PeriodoAdmin): Observable<FilaMain[]> {
+    const rango = rangoPeriodo(periodo, new Date());
+    const lista = this.db
+      .pedidos()
+      .filter((p) => p.riderId === id && enRango(p.creadoEn, rango))
+      .sort((a, b) => b.creadoEn.getTime() - a.creadoEn.getTime())
+      .map((p) => this.fila(p));
+    return of(lista).pipe(delay(this.latencia));
+  }
+
+  pausarRider(id: string, pausado: boolean): Observable<RiderAdmin> {
+    if (!this.db.riders().some((r) => r.id === id)) return throwError(() => new Error('Rider inexistente.'));
+    this.db.riders.update((rs) => rs.map((r) => (r.id === id ? { ...r, pausado, disponible: pausado ? false : r.disponible } : r)));
+    return of(this.ridersAdmin().find((r) => r.id === id)!).pipe(delay(this.latencia));
   }
 
   private entregados(periodo: PeriodoAdmin, zonas?: ZonaId[]): Pedido[] {

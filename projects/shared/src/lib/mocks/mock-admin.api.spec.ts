@@ -67,4 +67,15 @@ describe('MockAdminApi', () => {
     expect(es.every((e) => e.estado === 'entregado' && e.zona === 'san-miguel')).toBe(true);
     expect(es[0].duracionMin).toBeGreaterThan(0);
   });
+
+  it('ficha del rider con su envío en curso y pausa', async () => {
+    const r = await firstValueFrom(admin.rider('r1'));
+    expect(r!.enCurso?.estado).toBe('retirado');
+    expect(r!.entregasHoy).toBeGreaterThan(0);
+    const envios = await firstValueFrom(admin.enviosRider('r1', 'jornada'));
+    expect(envios.every((e) => e.riderId === 'r1')).toBe(true);
+
+    await firstValueFrom(admin.pausarRider('r2', true));
+    expect(db.riders().find((x) => x.id === 'r2')).toMatchObject({ pausado: true, disponible: false });
+  });
 });

@@ -1,7 +1,7 @@
 @use 'panel';
 
 :host { display: flex; flex-direction: column; gap: 20px; }
-.volver { align-self: flex-start; min-height: 32px; display: inline-flex; align-items: center; }
+.migas { font-size: 14px; color: var(--fd-blue-100); }
 .cabecera { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px; }
 .datos { display: flex; flex-direction: column; gap: 8px; }
 .acciones { display: flex; align-items: center; gap: 10px; }

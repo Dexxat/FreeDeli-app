@@ -15,8 +15,9 @@ export function estadoKiosco(k: Pick<KioscoAdmin, 'abierto' | 'pausado'>): 'Paus
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="encabezado">
-      <h1 class="titulo">KIOSCOS</h1>
-      <p class="sutil">Los kioscos pausados no aparecen en la app de usuarios.</p>
+      <a class="enlace" routerLink="/main">&lt; MAIN</a>
+      <h1 class="titulo">KIOSCOS Y SALDOS</h1>
+      <p class="sutil">Saldo prepago: de ahí se descuentan las comisiones. Sin saldo o pausados, no reciben pedidos.</p>
     </div>
     <div class="tabla-caja">
       <table>

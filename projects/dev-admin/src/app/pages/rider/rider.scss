@@ -1,0 +1,16 @@
+@use 'panel';
+
+:host { display: flex; flex-direction: column; gap: 20px; }
+.migas { font-size: 14px; color: var(--fd-blue-100); }
+.cabecera { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.datos { display: flex; flex-direction: column; gap: 8px; }
+.acciones { display: flex; align-items: center; gap: 10px; }
+.tarjetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.tarjeta { padding: 16px; display: flex; flex-direction: column; gap: 10px; background: #0f1f4a; }
+.valor { font-family: var(--fd-font-pixel); font-size: 18px; line-height: 1; }
+.bloque { display: flex; flex-direction: column; gap: 12px; }
+.fila { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; }
+.seguimiento { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; background: var(--fd-navy-700); box-shadow: inset 4px 0 0 var(--fd-yellow-400); }
+.id { font-family: var(--fd-font-pixel); font-size: 10px; }
+tfoot th, tfoot td { background: var(--fd-navy-900); font-weight: 700; }
+tfoot th { font-size: 9px; }

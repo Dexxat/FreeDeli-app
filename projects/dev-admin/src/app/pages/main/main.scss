@@ -3,6 +3,8 @@
 :host { display: flex; flex-direction: column; gap: 16px; }
 .encabezado { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
 
+.titulo-fila { display: flex; align-items: baseline; gap: 16px; }
+.enlace-sutil { color: inherit; text-decoration: underline; text-decoration-color: var(--fd-blue-500); text-underline-offset: 3px; }
 .alertas { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
 .alertas li { padding: 10px 12px; display: flex; align-items: center; gap: 10px; background: #0f1f4a; font-size: 14px; }
 

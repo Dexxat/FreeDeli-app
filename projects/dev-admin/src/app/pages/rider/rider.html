@@ -1,0 +1,78 @@
+<nav class="migas" aria-label="Ubicación"><a class="enlace" routerLink="/main">MAIN</a> · Rider</nav>
+
+@if (rider(); as r) {
+  <section class="cabecera">
+    <div class="datos">
+      <h1 class="titulo">{{ r.id.toUpperCase() }} · {{ r.nombre }}</h1>
+      <p class="sutil">{{ r.telefono }} · {{ r.vehiculo.modelo }} {{ r.vehiculo.patente }} · Rider desde {{ desde() }}</p>
+      <p class="sutil">Zonas: {{ zonas() }}</p>
+    </div>
+    <div class="acciones">
+      @if (r.pausado) {
+        <span class="chip alerta">Pausado</span>
+      } @else {
+        <span class="chip" [class.ok]="r.disponible">{{ r.disponible ? 'ON' : 'OFF' }}</span>
+      }
+      <button type="button" class="boton" [class.peligro]="!r.pausado" [disabled]="enviando()" (click)="alternarPausa()">
+        {{ r.pausado ? 'Reactivar' : 'Pausar' }}
+      </button>
+    </div>
+  </section>
+
+  <section class="tarjetas">
+    <div class="tarjeta"><span class="sutil">Entregas hoy</span><span class="valor">{{ r.entregasHoy }}</span></div>
+    <div class="tarjeta"><span class="sutil">Ganó hoy</span><span class="valor">{{ r.ganadoHoy | pesos }}</span></div>
+  </section>
+
+  <section class="bloque">
+    <h2 class="subtitulo">SEGUIMIENTO</h2>
+    @if (r.enCurso; as p) {
+      <div class="seguimiento">
+        <div class="fila">
+          <span class="id">{{ codigo(p.numero) }}</span>
+          <span class="sutil">{{ p.kioscoNombre }} → {{ p.destino.direccion }}</span>
+        </div>
+        <fd-barra-estado [estado]="p.estado" />
+      </div>
+    } @else {
+      <p class="sutil">Sin envío en curso.</p>
+    }
+  </section>
+
+  <section class="bloque">
+    <div class="fila">
+      <h2 class="subtitulo">ENVÍOS</h2>
+      <fd-selector-periodo [valor]="periodo()" (cambio)="periodo.set($event)" />
+    </div>
+    @if (envios(); as es) {
+      @if (es.length === 0) {
+        <p class="sutil">Sin envíos en este período.</p>
+      } @else {
+        <div class="tabla-caja">
+          <table>
+            <thead>
+              <tr><th scope="col">Pedido</th><th scope="col">Kiosco</th><th scope="col">Estado</th><th scope="col" class="num">Ganó</th></tr>
+            </thead>
+            <tbody>
+              @for (e of es; track e.pedidoId) {
+                <tr>
+                  <td>{{ codigo(e.numero) }}</td>
+                  <td><a class="enlace" [routerLink]="['/kioscos', e.kioscoId]">{{ e.kioscoNombre }}</a></td>
+                  <td>{{ textoEstado[e.estado] }}</td>
+                  <td class="num">{{ e.estado === 'entregado' ? (e.gananciaRider | pesos) : '—' }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr><th scope="row" colspan="3">TOTAL ENTREGADO</th><td class="num">{{ totalEnvios() | pesos }}</td></tr>
+            </tfoot>
+          </table>
+        </div>
+      }
+    } @else {
+      <p class="sutil">Cargando…</p>
+    }
+  </section>
+} @else if (rider() === null) {
+  <p class="sutil">No existe ese rider.</p>
+}
