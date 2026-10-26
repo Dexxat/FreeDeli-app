@@ -3,7 +3,6 @@ import { firstValueFrom } from 'rxjs';
 import { UsuariosApi } from '../api/usuarios.api';
 import { subtotalProductos, totalPedido } from '../models/pedido';
 import { MockDb, USUARIO_ACTUAL_ID } from './mock-db';
-import { SimulacionRider } from './mock-usuarios.api';
 import { provideFreeDeliMocks } from './provide-mocks';
 
 const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -12,8 +11,8 @@ describe('MockUsuariosApi', () => {
   let api: UsuariosApi;
   let db: MockDb;
 
-  function configurar(simulacionRider: SimulacionRider | null = null) {
-    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0, simulacionRider })] });
+  function configurar(simular?: { cliente?: boolean; kiosco?: boolean; rider?: boolean }) {
+    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0, simular, demoras: { paso: 10 } })] });
     api = TestBed.inject(UsuariosApi);
     db = TestBed.inject(MockDb);
   }
@@ -101,34 +100,46 @@ describe('MockUsuariosApi', () => {
     for (let i = 1; i < r.length; i++) expect(r[i - 1].fecha.getTime()).toBeGreaterThanOrEqual(r[i].fecha.getTime());
   });
 
-  it('el rider simulado lleva el pedido hasta Entregado', async () => {
-    configurar({ aceptar: 10, retirar: 10, salir: 10, entregar: 10 });
+  it('con kiosco y rider simulados, el pedido llega hasta Entregado', async () => {
+    configurar({ kiosco: true, rider: true });
     sinPedidoAbierto();
     const saldoAntes = db.kioscos().find((k) => k.id === 'k3')!.saldo;
     const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k3', items: [{ productoId: 'k3-p4', cantidad: 17 }] }));
     if (!r.ok) throw new Error('no se creó');
+    expect(r.pedido).toMatchObject({ estado: 'esperando', fase: 'stock' });
     const vistos: string[] = [];
-    for (let i = 0; i < 20 && vistos.at(-1) !== 'entregado'; i++) {
+    for (let i = 0; i < 60 && vistos.at(-1) !== 'entregado'; i++) {
       TestBed.tick();
       await esperar(15);
-      const estado = db.pedidos().find((p) => p.id === r.pedido.id)!.estado;
-      if (vistos.at(-1) !== estado) vistos.push(estado);
+      const p = db.pedidos().find((x) => x.id === r.pedido.id)!;
+      const paso = p.fase ?? p.estado;
+      if (vistos.at(-1) !== paso) vistos.push(paso);
     }
-    expect(vistos.at(-1)).toBe('entregado');
+    expect(vistos).toEqual(expect.arrayContaining(['transferencia', 'rider', 'aprobacion', 'aceptado', 'retirado', 'en-camino', 'entregado']));
     expect(db.kioscos().find((k) => k.id === 'k3')!.saldo).toBe(saldoAntes - r.pedido.comisionFreeDeli);
     const rider = await firstValueFrom(api.riderAsignado(r.pedido.id));
     expect(rider).toEqual({ nombre: 'Agustina P.', vehiculo: 'Motomel Blitz 110', patente: 'A456KLM' });
+  });
+
+  it('el cliente acepta un ajuste de stock o cancela', async () => {
+    configurar();
+    sinPedidoAbierto();
+    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }, { productoId: 'k1-p7', cantidad: 2 }] }));
+    if (!r.ok) throw new Error('no se creó');
+    db.guardarPedido({ ...r.pedido, fase: 'ajuste' });
+    expect((await firstValueFrom(api.aceptarAjuste(r.pedido.id))).fase).toBe('transferencia');
+    expect((await firstValueFrom(api.cancelarPedido(r.pedido.id))).estado).toBe('cancelado');
   });
 });
 
 describe('Datos simulados', () => {
   it('todos los pedidos simulados cumplen el pedido mínimo', () => {
-    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0, simulacionRider: null })] });
+    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0 })] });
     for (const p of TestBed.inject(MockDb).pedidos()) expect(subtotalProductos(p)).toBeGreaterThanOrEqual(15_000);
   });
 
   it('los productos de los pedidos existen en el catálogo de su kiosco', () => {
-    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0, simulacionRider: null })] });
+    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0 })] });
     const db = TestBed.inject(MockDb);
     const ids = new Set(db.productos().map((p) => p.id));
     for (const p of db.pedidos()) {

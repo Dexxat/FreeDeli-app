@@ -114,7 +114,7 @@ describe('Ofertas de pedidos (mock)', () => {
     const r = await firstValueFrom(pedidos.aceptarOferta(oferta.pedidoId));
     expect(r.ok).toBe(true);
     TestBed.tick();
-    expect(await firstValueFrom(pedidos.enCursoDelRider())).toMatchObject({ id: oferta.pedidoId, estado: 'aceptado' });
+    expect(await firstValueFrom(pedidos.enCursoDelRider())).toMatchObject({ id: oferta.pedidoId, estado: 'esperando', fase: 'aprobacion' });
     expect(db.ofertas()[RIDER_ACTUAL_ID]).toBeUndefined();
   });
 

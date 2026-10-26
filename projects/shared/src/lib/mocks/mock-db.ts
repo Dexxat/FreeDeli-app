@@ -22,6 +22,8 @@ export const RIDER_ACTUAL_ID = 'r1';
 /** Otro rider, que toma los pedidos que el rider actual no toma. */
 export const OTRO_RIDER_ID = 'r2';
 export const USUARIO_ACTUAL_ID = 'u1';
+/** El kiosco con sesión iniciada en la app de Kioscos. */
+export const KIOSCO_ACTUAL_ID = 'k1';
 
 const KIOSCOS: Kiosco[] = [
   { id: 'k1', nombre: 'Kiosco El Faro', zona: 'san-miguel', direccion: 'Av. Pres. Perón 1420', ubicacion: { lat: -34.5405, lng: -58.712 }, abierto: true, pausado: false, saldo: 48000, tiempoEstimadoMin: 25, costoEnvio: 0, aliasCobro: 'elfaro.kiosco' },
@@ -129,6 +131,34 @@ export class MockDb {
     ]);
   }
 
+  buscarPedido(id: string): Pedido | undefined {
+    return this.pedidos().find((p) => p.id === id);
+  }
+
+  guardarPedido(pedido: Pedido): void {
+    this.pedidos.update((ps) => ps.map((p) => (p.id === pedido.id ? pedido : p)));
+  }
+
+  siguienteNumero(): number {
+    return Math.max(999, ...this.pedidos().map((p) => p.numero)) + 1;
+  }
+
+  /** Pedido nuevo de un cliente simulado en un kiosco, recién llegado (fase stock). */
+  crearPedidoDeCliente(kioscoId: string, ahora = new Date()): Pedido | null {
+    const kiosco = this.kioscos().find((k) => k.id === kioscoId);
+    if (!kiosco || !puedeRecibirPedidos(kiosco)) return null;
+    const numero = this.siguienteNumero();
+    const pedido: Pedido = {
+      ...this.armarPedido(Math.random, [kiosco], ahora, undefined, 'esperando'),
+      numero,
+      id: `ped-${numero}`,
+      fase: 'stock',
+      pago: 'pendiente',
+    };
+    this.pedidos.update((ps) => [...ps, pedido]);
+    return pedido;
+  }
+
   /** Al liberarse el pago, la comisión se descuenta del saldo prepago del kiosco. */
   descontarComision(pedido: Pedido): void {
     this.moverSaldo(pedido.kioscoId, 'comision', -pedido.comisionFreeDeli, codigoPedido(pedido));
@@ -162,8 +192,15 @@ export class MockDb {
   crearPedidoEsperando(zonas: readonly ZonaId[], ahora = new Date()): Pedido | null {
     const kioscos = this.kioscos().filter((k) => puedeRecibirPedidos(k) && zonas.includes(k.zona));
     if (kioscos.length === 0) return null;
-    const numero = Math.max(999, ...this.pedidos().map((p) => p.numero)) + 1;
-    const pedido = { ...this.armarPedido(Math.random, kioscos, ahora, undefined, 'esperando'), numero, id: `ped-${numero}` };
+    const numero = this.siguienteNumero();
+    // Ya pasó por el kiosco: stock confirmado y transferencia recibida. Se ofrece a riders.
+    const pedido: Pedido = {
+      ...this.armarPedido(Math.random, kioscos, ahora, undefined, 'esperando'),
+      numero,
+      id: `ped-${numero}`,
+      fase: 'rider',
+      pago: 'transferido',
+    };
     this.pedidos.update((ps) => [...ps, pedido]);
     return pedido;
   }
@@ -249,6 +286,7 @@ export class MockDb {
 
     // Pedido en curso: lo lleva el rider actual y es del usuario actual.
     const enCurso = nuevo(new Date(ahora.getTime() - 12 * 60_000), RIDER_ACTUAL_ID, 'retirado');
+    enCurso.retiro = { kiosco: new Date(ahora.getTime() - 6 * 60_000), rider: new Date(ahora.getTime() - 6 * 60_000) };
     pedidos.push({
       ...enCurso,
       usuarioId: USUARIO_ACTUAL_ID,

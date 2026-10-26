@@ -6,7 +6,7 @@ import { routes } from './app.routes';
 
 describe('App (shell de Kioscos)', () => {
   it('muestra las 4 secciones', async () => {
-    TestBed.configureTestingModule({ imports: [App], providers: [provideRouter(routes), provideFreeDeliMocks({ latencia: 0, simulacionRider: null })] });
+    TestBed.configureTestingModule({ imports: [App], providers: [provideRouter(routes), provideFreeDeliMocks({ latencia: 0 })] });
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const links = [...(fixture.nativeElement as HTMLElement).querySelectorAll('nav a')].map((a) => a.textContent?.trim());

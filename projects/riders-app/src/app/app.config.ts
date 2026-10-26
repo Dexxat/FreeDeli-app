@@ -8,7 +8,8 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideFreeDeliMocks(),
+    // La persona maneja al rider; el kiosco es simulado.
+    provideFreeDeliMocks({ simular: { kiosco: true } }),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',

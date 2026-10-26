@@ -20,7 +20,7 @@ describe('FreeDeli Dev', () => {
   async function abrir(url: string) {
     TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter(routes, withComponentInputBinding()), provideFreeDeliMocks({ latencia: 0, simulacionRider: null })],
+      providers: [provideRouter(routes, withComponentInputBinding()), provideFreeDeliMocks({ latencia: 0 })],
     });
     h = await RouterTestingHarness.create();
     await h.navigateByUrl(url);

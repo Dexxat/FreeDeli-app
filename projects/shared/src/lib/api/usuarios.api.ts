@@ -25,4 +25,8 @@ export abstract class UsuariosApi {
   /** Último pedido entregado en cada kiosco, del más reciente al más viejo. */
   abstract recientes(limite?: number): Observable<KioscoReciente[]>;
   abstract riderAsignado(pedidoId: string): Observable<RiderPublico | null>;
+  /** Acepta el pedido ajustado por falta de stock. */
+  abstract aceptarAjuste(pedidoId: string): Observable<Pedido>;
+  /** Cancela el pedido. Solo antes de que se busque rider. */
+  abstract cancelarPedido(pedidoId: string): Observable<Pedido>;
 }

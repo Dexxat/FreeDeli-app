@@ -20,7 +20,7 @@ describe('Kiosco (Usuarios)', () => {
   async function abrir(url: string, conPedidoEnCurso = false) {
     TestBed.configureTestingModule({
       providers: [
-        provideFreeDeliMocks({ latencia: 0, simulacionRider: null }),
+        provideFreeDeliMocks({ latencia: 0 }),
         provideRouter([{ path: 'pedir/:kioscoId', component: Kiosco }, { path: '**', children: [] }], withComponentInputBinding()),
       ],
     });
@@ -71,7 +71,7 @@ describe('Kiosco (Usuarios)', () => {
   });
 
   it('"Pedí de nuevo" carga los productos del pedido anterior', async () => {
-    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0, simulacionRider: null })] });
+    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0 })] });
     const anterior = TestBed.inject(MockDb).pedidos().find((p) => p.usuarioId === USUARIO_ACTUAL_ID && p.estado === 'entregado')!;
     TestBed.resetTestingModule();
     const el = await abrir(`/pedir/${anterior.kioscoId}?repetir=${anterior.id}`);

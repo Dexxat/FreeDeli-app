@@ -13,9 +13,12 @@ export type ResultadoEntrega =
 export abstract class PedidosApi {
   /** Emite cada vez que el pedido cambia. */
   abstract observar(pedidoId: string): Observable<Pedido | null>;
-  /** Pedido en curso del rider con sesión iniciada, o null. Emite en cada cambio. */
+  /** Pedido del rider con sesión iniciada (esperando aprobación del kiosco o en curso), o null. Emite en cada cambio. */
   abstract enCursoDelRider(): Observable<Pedido | null>;
-  /** Aceptado → Retirado → En camino. No pasa a Entregado: para eso está confirmarEntrega. */
+  /**
+   * Paso del rider: en Aceptado confirma el retiro (pasa a Retirado cuando también confirma el kiosco);
+   * en Retirado sale en camino. No pasa a Entregado: para eso está confirmarEntrega.
+   */
   abstract avanzarEstado(pedidoId: string): Observable<Pedido>;
   /**
    * Pedido nuevo ofrecido al rider con sesión iniciada, o null. Emite en cada cambio.

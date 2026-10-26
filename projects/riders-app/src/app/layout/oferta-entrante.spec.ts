@@ -56,7 +56,7 @@ describe('OfertaEntrante (Riders)', () => {
     await estable();
     boton('ACEPTAR').click();
     await estable();
-    expect(db.pedidos().find((x) => x.id === p.id)).toMatchObject({ estado: 'aceptado', riderId: RIDER_ACTUAL_ID });
+    expect(db.pedidos().find((x) => x.id === p.id)).toMatchObject({ estado: 'esperando', fase: 'aprobacion', riderId: RIDER_ACTUAL_ID });
     expect(navegar).toHaveBeenCalledWith('/vivo');
     expect(el.querySelector('[role=alertdialog]')).toBeNull();
     expect(el.querySelector('[role=status]')).toBeNull();

@@ -8,7 +8,7 @@ describe('App (shell de Usuarios)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter(routes, withComponentInputBinding()), provideFreeDeliMocks({ latencia: 0, simulacionRider: null })],
+      providers: [provideRouter(routes, withComponentInputBinding()), provideFreeDeliMocks({ latencia: 0 })],
     }).compileComponents();
   });
 

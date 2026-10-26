@@ -10,7 +10,7 @@ describe('MockAdminApi', () => {
   let db: MockDb;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0, simulacionRider: null })] });
+    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0 })] });
     admin = TestBed.inject(AdminApi);
     db = TestBed.inject(MockDb);
   });

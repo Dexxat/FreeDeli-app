@@ -1,6 +1,6 @@
-import { DestroyRef, Injectable, InjectionToken, computed, inject } from '@angular/core';
+import { Injectable, computed, inject } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { EMPTY, Observable, delay, distinctUntilChanged, map, of, switchMap, timer } from 'rxjs';
+import { Observable, delay, distinctUntilChanged, map, of, throwError } from 'rxjs';
 import { ResultadoCrearPedido, UsuariosApi } from '../api/usuarios.api';
 import { Kiosco, Producto } from '../models/kiosco';
 import { Pedido, cantidadProductos, totalPedido } from '../models/pedido';
@@ -8,36 +8,14 @@ import { DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } 
 import { ZonaId } from '../models/zona';
 import { ESTADOS_ABIERTOS, PEDIDO_MINIMO, calcularComision, costoEnvio, distanciaKm, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
 import { FREEDELI_CONFIG } from '../config/freedeli.config';
-import { MockDb, OTRO_RIDER_ID, USUARIO_ACTUAL_ID } from './mock-db';
+import { MockDb, USUARIO_ACTUAL_ID } from './mock-db';
+import { Resultado, aceptarAjuste, cancelarPorCliente } from '../rules/flujo.rules';
 import { LATENCIA_MOCK } from './mock-riders.api';
-
-/**
- * Cuánto tarda el rider simulado en cada paso, en ms.
- * Simula que un rider acepta, retira, sale y entrega (como si ingresara el PIN correcto).
- */
-export interface SimulacionRider {
-  aceptar: number;
-  retirar: number;
-  salir: number;
-  entregar: number;
-}
-
-export const SIMULACION_RIDER_MOCK = new InjectionToken<SimulacionRider | null>('SIMULACION_RIDER_MOCK', {
-  factory: () => ({ aceptar: 6_000, retirar: 10_000, salir: 8_000, entregar: 25_000 }),
-});
-
-const SIGUIENTE: Partial<Record<Pedido['estado'], { estado: Pedido['estado']; paso: keyof SimulacionRider }>> = {
-  esperando: { estado: 'aceptado', paso: 'aceptar' },
-  aceptado: { estado: 'retirado', paso: 'retirar' },
-  retirado: { estado: 'en-camino', paso: 'salir' },
-  'en-camino': { estado: 'entregado', paso: 'entregar' },
-};
 
 @Injectable()
 export class MockUsuariosApi extends UsuariosApi {
   private readonly db = inject(MockDb);
   private readonly latencia = inject(LATENCIA_MOCK);
-  private readonly simulacion = inject(SIMULACION_RIDER_MOCK);
   private readonly config = inject(FREEDELI_CONFIG);
   private readonly pedidos$ = toObservable(this.db.pedidos);
 
@@ -45,42 +23,21 @@ export class MockUsuariosApi extends UsuariosApi {
     () => this.db.pedidos().find((p) => p.usuarioId === USUARIO_ACTUAL_ID && ESTADOS_ABIERTOS.includes(p.estado)) ?? null,
   );
 
-  constructor() {
-    super();
-    const sim = this.simulacion;
-    if (!sim) return;
-    // Rider simulado: avanza un paso del pedido abierto cada cierto tiempo.
-    const sub = toObservable(this.abierto)
-      .pipe(
-        distinctUntilChanged((a, b) => a?.id === b?.id && a?.estado === b?.estado),
-        switchMap((p) => {
-          const sig = p && SIGUIENTE[p.estado];
-          return p && sig ? timer(sim[sig.paso]).pipe(map(() => ({ id: p.id, estado: sig.estado }))) : EMPTY;
-        }),
-      )
-      .subscribe(({ id, estado }) => this.avanzar(id, estado));
-    inject(DestroyRef).onDestroy(() => sub.unsubscribe());
+  private transicion(pedidoId: string, paso: (p: Pedido) => Resultado): Observable<Pedido> {
+    const p = this.db.buscarPedido(pedidoId);
+    if (!p || p.usuarioId !== USUARIO_ACTUAL_ID) return throwError(() => new Error('No encontramos el pedido.'));
+    const r = paso(p);
+    if (!r.ok) return throwError(() => new Error(r.error));
+    this.db.guardarPedido(r.pedido);
+    return this.responder(r.pedido);
   }
 
-  private avanzar(id: string, estado: Pedido['estado']): void {
-    const ahora = new Date();
-    const pedido = this.db.pedidos().find((p) => p.id === id);
-    if (pedido && estado === 'entregado') this.db.descontarComision(pedido);
-    this.db.pedidos.update((ps) =>
-      ps.map((p) =>
-        p.id !== id
-          ? p
-          : {
-              ...p,
-              estado,
-              riderId: p.riderId ?? OTRO_RIDER_ID,
-              aceptadoEn: estado === 'aceptado' ? ahora : p.aceptadoEn,
-              entregadoEn: estado === 'entregado' ? ahora : p.entregadoEn,
-              // El kiosco simulado confirma la transferencia cuando un rider acepta.
-              pago: estado === 'entregado' ? 'liberado' : estado === 'aceptado' ? 'transferido' : p.pago,
-            },
-      ),
-    );
+  aceptarAjuste(pedidoId: string): Observable<Pedido> {
+    return this.transicion(pedidoId, aceptarAjuste);
+  }
+
+  cancelarPedido(pedidoId: string): Observable<Pedido> {
+    return this.transicion(pedidoId, cancelarPorCliente);
   }
 
   private usuario(): Usuario {
@@ -171,6 +128,7 @@ export class MockUsuariosApi extends UsuariosApi {
         comisionFreeDeli: calcularComision(subtotal, this.config.comisionPorcentaje),
         pin: generarPin(),
         estado: 'esperando',
+        fase: 'stock',
         creadoEn: new Date(),
       };
       this.db.pedidos.update((ps) => [...ps, pedido]);

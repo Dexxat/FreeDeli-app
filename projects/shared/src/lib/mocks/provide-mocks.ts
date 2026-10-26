@@ -1,22 +1,39 @@
-import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
+import { EnvironmentProviders, inject, makeEnvironmentProviders, provideEnvironmentInitializer } from '@angular/core';
 import { AdminApi } from '../api/admin.api';
+import { KioscosApi } from '../api/kioscos.api';
 import { PedidosApi } from '../api/pedidos.api';
-import { MockAdminApi } from './mock-admin.api';
 import { RidersApi } from '../api/riders.api';
 import { UsuariosApi } from '../api/usuarios.api';
-import { MockUsuariosApi, SIMULACION_RIDER_MOCK, SimulacionRider } from './mock-usuarios.api';
+import { MockAdminApi } from './mock-admin.api';
+import { MockKioscosApi } from './mock-kioscos.api';
 import { DEMORA_OFERTA_MOCK, MockPedidosApi } from './mock-pedidos.api';
 import { LATENCIA_MOCK, MockRidersApi } from './mock-riders.api';
+import { ACTORES_SIMULADOS, ActoresSimulados, DEMORAS_SIMULACION, DemorasSimulacion, MockSimulador } from './mock-simulador';
+import { MockUsuariosApi } from './mock-usuarios.api';
+
+export interface OpcionesMocks {
+  latencia?: number;
+  demoraOferta?: number;
+  /** Partes que simula el mock. Por defecto, ninguna. */
+  simular?: Partial<ActoresSimulados>;
+  demoras?: Partial<DemorasSimulacion>;
+}
 
 /** Conecta las APIs a los datos simulados en memoria. Cambiar por el backend real cuando exista. */
-export function provideFreeDeliMocks(opciones: { latencia?: number; demoraOferta?: number; simulacionRider?: SimulacionRider | null } = {}): EnvironmentProviders {
+export function provideFreeDeliMocks(opciones: OpcionesMocks = {}): EnvironmentProviders {
+  const actores: ActoresSimulados = { cliente: false, kiosco: false, rider: false, pedidosNuevos: false, ...opciones.simular };
+  const algunActor = Object.values(actores).some(Boolean);
   return makeEnvironmentProviders([
     ...(opciones.latencia !== undefined ? [{ provide: LATENCIA_MOCK, useValue: opciones.latencia }] : []),
     ...(opciones.demoraOferta !== undefined ? [{ provide: DEMORA_OFERTA_MOCK, useValue: opciones.demoraOferta }] : []),
+    { provide: ACTORES_SIMULADOS, useValue: actores },
+    ...(opciones.demoras ? [{ provide: DEMORAS_SIMULACION, useValue: { paso: 7_000, pedidoNuevo: 45_000, ...opciones.demoras } }] : []),
     { provide: RidersApi, useClass: MockRidersApi },
     { provide: PedidosApi, useClass: MockPedidosApi },
     { provide: UsuariosApi, useClass: MockUsuariosApi },
+    { provide: KioscosApi, useClass: MockKioscosApi },
     { provide: AdminApi, useClass: MockAdminApi },
-    ...(opciones.simulacionRider !== undefined ? [{ provide: SIMULACION_RIDER_MOCK, useValue: opciones.simulacionRider }] : []),
+    MockSimulador,
+    ...(algunActor ? [provideEnvironmentInitializer(() => inject(MockSimulador))] : []),
   ]);
 }

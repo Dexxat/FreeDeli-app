@@ -4,3 +4,5 @@ export * from './mock-pedidos.api';
 export * from './provide-mocks';
 export * from './mock-usuarios.api';
 export * from './mock-admin.api';
+export * from './mock-kioscos.api';
+export * from './mock-simulador';

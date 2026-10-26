@@ -16,7 +16,7 @@ describe('Kioscos (Usuarios)', () => {
   async function abrir(url: string) {
     TestBed.configureTestingModule({
       providers: [
-        provideFreeDeliMocks({ latencia: 0, simulacionRider: null }),
+        provideFreeDeliMocks({ latencia: 0 }),
         provideRouter([{ path: 'pedir', component: Kioscos }], withComponentInputBinding()),
       ],
     });
