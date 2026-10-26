@@ -1,4 +1,4 @@
-import { direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules';
+import { calcularComision, direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules';
 
 describe('PIN', () => {
   it('genera 4 dígitos con ceros a la izquierda', () => {
@@ -52,5 +52,15 @@ describe('rangoTiempo', () => {
   it('suma y resta 5 minutos', () => {
     expect(rangoTiempo(25)).toBe('20–30 min');
     expect(rangoTiempo(8)).toBe('5–13 min');
+  });
+});
+
+describe('calcularComision', () => {
+  it('nunca baja de $1.500', () => {
+    expect(calcularComision(10000, 0)).toBe(1500);
+    expect(calcularComision(10000, 10)).toBe(1500);
+  });
+  it('aplica el porcentaje cuando supera el mínimo', () => {
+    expect(calcularComision(30000, 10)).toBe(3000);
   });
 });

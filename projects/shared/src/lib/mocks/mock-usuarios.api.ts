@@ -6,7 +6,8 @@ import { Kiosco, Producto } from '../models/kiosco';
 import { Pedido, cantidadProductos, totalPedido } from '../models/pedido';
 import { DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } from '../models/usuario';
 import { ZonaId } from '../models/zona';
-import { ESTADOS_ABIERTOS, generarPin } from '../rules/pedido.rules';
+import { ESTADOS_ABIERTOS, calcularComision, generarPin } from '../rules/pedido.rules';
+import { FREEDELI_CONFIG } from '../config/freedeli.config';
 import { MockDb, OTRO_RIDER_ID, USUARIO_ACTUAL_ID } from './mock-db';
 import { LATENCIA_MOCK } from './mock-riders.api';
 
@@ -37,6 +38,7 @@ export class MockUsuariosApi extends UsuariosApi {
   private readonly db = inject(MockDb);
   private readonly latencia = inject(LATENCIA_MOCK);
   private readonly simulacion = inject(SIMULACION_RIDER_MOCK);
+  private readonly config = inject(FREEDELI_CONFIG);
   private readonly pedidos$ = toObservable(this.db.pedidos);
 
   private readonly abierto = computed(
@@ -72,7 +74,8 @@ export class MockUsuariosApi extends UsuariosApi {
               riderId: p.riderId ?? OTRO_RIDER_ID,
               aceptadoEn: estado === 'aceptado' ? ahora : p.aceptadoEn,
               entregadoEn: estado === 'entregado' ? ahora : p.entregadoEn,
-              pago: estado === 'entregado' ? 'liberado' : p.pago,
+              // El kiosco simulado confirma la transferencia cuando un rider acepta.
+              pago: estado === 'entregado' ? 'liberado' : estado === 'aceptado' ? 'transferido' : p.pago,
             },
       ),
     );
@@ -123,6 +126,7 @@ export class MockUsuariosApi extends UsuariosApi {
       resultado = { ok: false, motivo: 'pedido-en-curso' };
     } else {
       const u = this.usuario();
+      const subtotal = lineas.reduce((a, i) => a + i.cantidad * catalogo.find((p) => p.id === i.productoId)!.precio, 0);
       const numero = Math.max(999, ...this.db.pedidos().map((p) => p.numero)) + 1;
       const pedido: Pedido = {
         id: `ped-${numero}`,
@@ -139,9 +143,11 @@ export class MockUsuariosApi extends UsuariosApi {
         }),
         costoEnvio: kiosco.costoEnvio,
         propina: 0,
-        gananciaRider: Math.round(kiosco.costoEnvio * 0.8),
-        // Por ahora el pago se da por transferido; el paso de transferencia está pendiente de definir.
-        pago: 'transferido',
+        gananciaRider: kiosco.costoEnvio,
+        // El cliente transfiere al alias del kiosco; queda pendiente hasta que el kiosco lo confirme.
+        pago: 'pendiente',
+        aliasKiosco: kiosco.aliasCobro,
+        comisionFreeDeli: calcularComision(subtotal, this.config.comisionPorcentaje),
         pin: generarPin(),
         estado: 'esperando',
         creadoEn: new Date(),

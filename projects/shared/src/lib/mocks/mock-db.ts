@@ -4,7 +4,7 @@ import { OfertaPedido, Pedido } from '../models/pedido';
 import { Rider } from '../models/rider';
 import { Usuario } from '../models/usuario';
 import { DemandaZona, ZONAS, ZonaId } from '../models/zona';
-import { generarPin } from '../rules/pedido.rules';
+import { COMISION_MINIMA, generarPin } from '../rules/pedido.rules';
 
 /** Generador pseudoaleatorio con semilla, para que los datos simulados sean siempre los mismos. */
 function crearRandom(semilla: number): () => number {
@@ -21,11 +21,11 @@ export const OTRO_RIDER_ID = 'r2';
 export const USUARIO_ACTUAL_ID = 'u1';
 
 const KIOSCOS: Kiosco[] = [
-  { id: 'k1', nombre: 'Kiosco El Faro', zona: 'san-miguel', direccion: 'Av. Pres. Perón 1420', abierto: true, pausado: false, saldo: 48000, tiempoEstimadoMin: 25, costoEnvio: 1500 },
-  { id: 'k2', nombre: 'Maxikiosco 24', zona: 'san-miguel', direccion: 'Belgrano 980', abierto: true, pausado: false, saldo: 12500, tiempoEstimadoMin: 20, costoEnvio: 1200 },
-  { id: 'k3', nombre: 'Kiosco La Estación', zona: 'muniz', direccion: 'Av. Ricchieri 455', abierto: true, pausado: false, saldo: 30200, tiempoEstimadoMin: 30, costoEnvio: 1800 },
-  { id: 'k4', nombre: 'Drugstore Bella', zona: 'bella-vista', direccion: 'Senador Morón 1210', abierto: true, pausado: false, saldo: 61000, tiempoEstimadoMin: 35, costoEnvio: 2000 },
-  { id: 'k5', nombre: 'Kiosco Pixel', zona: 'bella-vista', direccion: 'Av. Gaspar Campos 3300', abierto: false, pausado: false, saldo: 5000, tiempoEstimadoMin: 30, costoEnvio: 1700 },
+  { id: 'k1', nombre: 'Kiosco El Faro', zona: 'san-miguel', direccion: 'Av. Pres. Perón 1420', abierto: true, pausado: false, saldo: 48000, tiempoEstimadoMin: 25, costoEnvio: 1500, aliasCobro: 'elfaro.kiosco' },
+  { id: 'k2', nombre: 'Maxikiosco 24', zona: 'san-miguel', direccion: 'Belgrano 980', abierto: true, pausado: false, saldo: 12500, tiempoEstimadoMin: 20, costoEnvio: 1200, aliasCobro: 'maxi24.sm' },
+  { id: 'k3', nombre: 'Kiosco La Estación', zona: 'muniz', direccion: 'Av. Ricchieri 455', abierto: true, pausado: false, saldo: 30200, tiempoEstimadoMin: 30, costoEnvio: 1800, aliasCobro: 'laestacion.muniz' },
+  { id: 'k4', nombre: 'Drugstore Bella', zona: 'bella-vista', direccion: 'Senador Morón 1210', abierto: true, pausado: false, saldo: 61000, tiempoEstimadoMin: 35, costoEnvio: 2000, aliasCobro: 'drugstore.bella' },
+  { id: 'k5', nombre: 'Kiosco Pixel', zona: 'bella-vista', direccion: 'Av. Gaspar Campos 3300', abierto: false, pausado: false, saldo: 5000, tiempoEstimadoMin: 30, costoEnvio: 1700, aliasCobro: 'kiosco.pixel' },
 ];
 
 const PRODUCTOS = [
@@ -160,8 +160,10 @@ export class MockDb {
       items,
       costoEnvio: kiosco.costoEnvio,
       propina: random() < 0.35 ? pick([300, 500, 1000]) : 0,
-      gananciaRider: Math.round(kiosco.costoEnvio * 0.8),
+      gananciaRider: kiosco.costoEnvio,
       pago: estado === 'entregado' ? 'liberado' : 'transferido',
+      aliasKiosco: kiosco.aliasCobro,
+      comisionFreeDeli: COMISION_MINIMA,
       pin: generarPin(random),
       estado,
       riderId,

@@ -12,8 +12,10 @@ export interface Kiosco {
   saldo: number;
   /** Tiempo estimado de entrega, en minutos. */
   tiempoEstimadoMin: number;
-  /** Costo de envío en pesos. */
+  /** Costo de envío en pesos. Lo paga el cliente y es la ganancia del rider. */
   costoEnvio: number;
+  /** Alias al que el cliente transfiere el pedido. */
+  aliasCobro: string;
 }
 
 export interface Producto {

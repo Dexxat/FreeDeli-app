@@ -3,11 +3,13 @@ import { InjectionToken } from '@angular/core';
 export interface FreeDeliConfig {
   /** WhatsApp de la empresa, con código de país y sin "+" ni espacios. */
   whatsapp: string;
+  /** Porcentaje del subtotal de productos que cobra FreeDeli. La comisión nunca baja de COMISION_MINIMA. */
+  comisionPorcentaje: number;
 }
 
 /** Valores por defecto. Reemplazar el WhatsApp por el real con provideFreeDeliConfig(). */
 export const FREEDELI_CONFIG = new InjectionToken<FreeDeliConfig>('FREEDELI_CONFIG', {
-  factory: () => ({ whatsapp: '5491100000000' }),
+  factory: () => ({ whatsapp: '5491100000000', comisionPorcentaje: 0 }),
 });
 
 export function provideFreeDeliConfig(config: FreeDeliConfig) {

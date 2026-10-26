@@ -72,7 +72,10 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 - **Recorrido del dinero:** el cliente le paga al kiosco y el kiosco le paga al rider.
 - **Liberación:** el pago del kiosco se libera cuando el rider ingresa el PIN del cliente. Así se completa el pedido.
 - **Comisión de FreeDeli:** de lo que cobra el kiosco, como mínimo **$1.500** por pedido van al alias de la empresa. Se descuentan directamente del pago del cliente.
-- _Pendiente de definir:_ quién retiene el dinero hasta la entrega, si la comisión es fija o un porcentaje con mínimo de $1.500, y si el envío del rider sale del pago del cliente.
+- **Quién retiene:** el cliente transfiere al alias del kiosco. El kiosco retiene el dinero hasta que el rider ingresa el PIN.
+- **Al ingresar el PIN:** el kiosco le transfiere el costo de envío al rider y la comisión a FreeDeli.
+- **Envío:** lo paga el cliente junto con los productos y es la ganancia del rider.
+- **Comisión:** un porcentaje del pedido, nunca menos de $1.500. _Pendiente: definir el porcentaje._ Mientras tanto rige el mínimo de $1.500.
 
 ---
 

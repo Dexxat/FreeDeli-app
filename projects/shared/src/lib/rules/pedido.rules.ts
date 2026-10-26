@@ -46,6 +46,14 @@ export function estadosDeBarra(estado: EstadoPedido): Record<PasoEstado, EstadoP
   return resultado;
 }
 
+/** Comisión mínima de FreeDeli por pedido, en pesos. */
+export const COMISION_MINIMA = 1500;
+
+/** Porcentaje del subtotal de productos, nunca menos de COMISION_MINIMA. */
+export function calcularComision(subtotal: number, porcentaje: number): number {
+  return Math.max(COMISION_MINIMA, Math.round((subtotal * porcentaje) / 100));
+}
+
 /** Segundos que tiene el rider para aceptar un pedido nuevo. */
 export const SEGUNDOS_PARA_ACEPTAR = 30;
 

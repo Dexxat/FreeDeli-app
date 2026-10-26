@@ -56,6 +56,7 @@ describe('MockUsuariosApi', () => {
     expect(totalPedido(r.pedido)).toBe(2 * 2800 + 1500);
     expect(r.pedido.pin).toMatch(/^\d{4}$/);
     expect(r.pedido.destino.direccion).toBe('Belgrano 845');
+    expect(r.pedido).toMatchObject({ pago: 'pendiente', aliasKiosco: 'elfaro.kiosco', comisionFreeDeli: 1500, gananciaRider: 1500 });
   });
 
   it('rechaza kiosco cerrado, carrito vacío y productos de otro kiosco', async () => {

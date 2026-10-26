@@ -50,6 +50,10 @@ export interface Pedido {
   /** Lo que gana el rider por el envío (sin propina). */
   gananciaRider: number;
   pago: EstadoPago;
+  /** Alias del kiosco al que transfiere el cliente. */
+  aliasKiosco: string;
+  /** Lo que el kiosco le transfiere a FreeDeli al liberarse el pago. */
+  comisionFreeDeli: number;
   /** PIN de 4 dígitos. Solo lo ve el usuario. */
   pin: string;
   estado: EstadoPedido;
