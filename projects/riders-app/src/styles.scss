@@ -1,0 +1,16 @@
+@use 'brand-tokens' as brand;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--fd-navy-800);
+  color: var(--fd-cloud);
+  font-family: var(--fd-font-body);
+}

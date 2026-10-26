@@ -1,0 +1,53 @@
+// FreeDeli · tokens de marca
+// Uso en Angular: copiar a src/styles/ e importar con @use 'brand-tokens' as brand;
+// Las custom properties (:root) quedan disponibles en toda la app.
+
+// ---- Paleta ----
+$navy-900: #0A1633;   // contorno de los sprites, fondo profundo
+$navy-800: #0B1736;   // fondo oscuro del logo
+$navy-700: #16306F;   // azul marino principal (marca)
+$blue-500: #2E5BBF;   // azul brillante ("Deli", acentos)
+$blue-300: #8FB4FF;   // celeste (acentos sobre oscuro)
+$blue-100: #BFD3FF;   // sombra del texto sobre claro
+$blue-50:  #EEF2FA;   // fondo claro
+$cloud:    #F4F7FF;   // blanco nube
+$cloud-shade: #B9CBEB;
+$yellow-400: #FFD23F; // luz de kiosco / faro (único color cálido)
+$amber-400:  #FFB020; // luz trasera / detalles
+$gray-400:   #9AA3B5; // metal
+$ink:        #14161C; // neumáticos / asiento
+
+// ---- Tipografía ----
+$font-pixel: 'Press Start 2P', monospace; // títulos, logo, botones cortos
+$font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; // textos largos (la pixel cansa en párrafos)
+
+// ---- Estilo pixel ----
+$pixel-shadow: 6px 6px 0 $blue-100;       // sombra escalonada sobre claro
+$pixel-shadow-dark: 6px 6px 0 $blue-500;  // sobre oscuro
+
+:root {
+  --fd-navy-900: #{$navy-900};
+  --fd-navy-800: #{$navy-800};
+  --fd-navy-700: #{$navy-700};
+  --fd-blue-500: #{$blue-500};
+  --fd-blue-300: #{$blue-300};
+  --fd-blue-100: #{$blue-100};
+  --fd-blue-50: #{$blue-50};
+  --fd-cloud: #{$cloud};
+  --fd-yellow-400: #{$yellow-400};
+  --fd-amber-400: #{$amber-400};
+  --fd-font-pixel: #{$font-pixel};
+  --fd-font-body: #{$font-body};
+}
+
+@font-face {
+  font-family: 'Press Start 2P';
+  src: url('/assets/fonts/press-start-2p.woff2') format('woff2');
+  font-display: swap;
+}
+
+// Para que los sprites PNG/SVG escalados no se vean borrosos
+.fd-pixel {
+  image-rendering: pixelated;
+  shape-rendering: crispEdges;
+}
