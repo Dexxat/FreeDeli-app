@@ -1,0 +1,17 @@
+# Las cuatro apps de FreeDeli, compiladas y servidas por Caddy con HTTPS automático.
+#   docker build -f deploy/Dockerfile.web .
+
+FROM node:24-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+COPY angular.json tsconfig.json ./
+COPY projects projects
+RUN for app in usuarios-app kioscos-app riders-app dev-admin; do npx ng build "$app" --configuration production; done
+
+FROM caddy:2.10-alpine
+COPY deploy/Caddyfile /etc/caddy/Caddyfile
+COPY --from=build /app/dist/usuarios-app/browser /srv/usuarios
+COPY --from=build /app/dist/kioscos-app/browser /srv/kioscos
+COPY --from=build /app/dist/riders-app/browser /srv/riders
+COPY --from=build /app/dist/dev-admin/browser /srv/dev

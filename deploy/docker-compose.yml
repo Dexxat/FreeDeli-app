@@ -1,0 +1,65 @@
+# FreeDeli en un VPS: Postgres, la API y Caddy (las cuatro apps con HTTPS).
+#   cd deploy && cp .env.example .env   # completar
+#   docker compose up -d --build
+
+name: freedeli
+
+services:
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: freedeli
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Definí POSTGRES_PASSWORD en deploy/.env}
+      POSTGRES_DB: freedeli
+      TZ: America/Argentina/Buenos_Aires
+    volumes:
+      - postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U freedeli -d freedeli"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://freedeli:${POSTGRES_PASSWORD}@postgres:5432/freedeli
+      JWT_SECRET: ${JWT_SECRET:?Definí JWT_SECRET en deploy/.env}
+      DEV_EMAIL: ${DEV_EMAIL:?Definí DEV_EMAIL en deploy/.env}
+      DEV_CLAVE: ${DEV_CLAVE:?Definí DEV_CLAVE en deploy/.env}
+      CORS_ORIGENES: https://${DOMINIO},https://kioscos.${DOMINIO},https://riders.${DOMINIO},https://dev.${DOMINIO}
+      COMISION_PORCENTAJE: ${COMISION_PORCENTAJE:-10}
+      TARIFA_BASE: ${TARIFA_BASE:-1000}
+      TARIFA_POR_KM: ${TARIFA_POR_KM:-400}
+      ALIAS_FREEDELI: ${ALIAS_FREEDELI:-freedeli.pagos}
+      TZ: America/Argentina/Buenos_Aires
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMINIO: ${DOMINIO:?Definí DOMINIO en deploy/.env}
+      EMAIL_ADMIN: ${EMAIL_ADMIN:?Definí EMAIL_ADMIN en deploy/.env}
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  postgres:
+  caddy_data:
+  caddy_config:

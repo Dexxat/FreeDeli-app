@@ -84,6 +84,10 @@ describe('Auth y altas', () => {
     expect(r.body.message).toBe('Tu cuenta está esperando la aprobación de FreeDeli.');
   });
 
+  it('la salud responde sin sesión', async () => {
+    await api().get('/api/salud').expect(200).expect({ ok: true });
+  });
+
   it('sin token no hay acceso', async () => {
     await api().get('/api/auth/yo').expect(401);
     await api().get('/api/auth/yo').set('Authorization', 'Bearer cualquiera').expect(401);

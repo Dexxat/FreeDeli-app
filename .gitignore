@@ -48,3 +48,7 @@ Thumbs.db
 projects/**/*.js
 projects/**/*.js.map
 projects/**/*.d.ts
+
+# Despliegue
+deploy/.env
+deploy/respaldos/

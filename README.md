@@ -12,6 +12,7 @@ Plataforma que conecta kioscos 24 hs del barrio con riders para hacer envíos a 
 | `projects/dev-admin` | Panel FreeDeli Dev del dueño (compu, usable en celular) |
 | `projects/shared` | Librería común: modelos y reglas del dominio, componentes, mocks y cliente HTTP |
 | `backend` | API con NestJS y Postgres; ver [backend/README.md](backend/README.md) |
+| `deploy` | Despliegue en un VPS con Docker Compose y Caddy; ver [deploy/README.md](deploy/README.md) |
 
 Las reglas del pedido (`projects/shared/src/lib/rules`) son las mismas en las apps y en la API.
 

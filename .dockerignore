@@ -1,0 +1,11 @@
+# Lo que no hace falta mandar a Docker al construir.
+**/node_modules
+**/dist
+**/.angular
+backend/.pgdata
+backend/.env
+backend/src/generated
+deploy/.env
+deploy/respaldos
+design
+.git

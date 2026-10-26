@@ -1,0 +1,58 @@
+# FreeDeli · un subdominio por app. La API se sirve en /api de cada uno, así no hace falta CORS.
+# DOMINIO viene del entorno (deploy/.env), por ejemplo freedeli.com.ar.
+{
+	email {$EMAIL_ADMIN}
+}
+
+(app) {
+	encode zstd gzip
+
+	# API y tiempo real (Server-Sent Events): sin buffer, para que los eventos lleguen al instante.
+	handle /api/* {
+		reverse_proxy api:3000 {
+			flush_interval -1
+		}
+	}
+
+	handle {
+		root * {args[0]}
+		# Lo que cambia en cada versión no se cachea (la PWA busca actualizaciones acá).
+		@sinCache path /index.html /ngsw.json /ngsw-worker.js /manifest.webmanifest
+		header @sinCache Cache-Control "no-cache"
+		# Los archivos con hash en el nombre sí se cachean por mucho tiempo.
+		@conHash path_regexp ^/(main|chunk|polyfills|styles)-[A-Za-z0-9_-]{8}\.(js|css)$
+		header @conHash Cache-Control "public, max-age=31536000, immutable"
+		# Rutas de la app (Angular): todo lo que no es un archivo va a index.html.
+		try_files {path} /index.html
+		file_server
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
+{$DOMINIO} {
+	import app /srv/usuarios
+}
+
+www.{$DOMINIO} {
+	redir https://{$DOMINIO}{uri} permanent
+}
+
+kioscos.{$DOMINIO} {
+	import app /srv/kioscos
+}
+
+riders.{$DOMINIO} {
+	import app /srv/riders
+}
+
+dev.{$DOMINIO} {
+	import app /srv/dev
+	# Panel del dueño: que no lo indexen los buscadores.
+	header X-Robots-Tag "noindex, nofollow"
+}
