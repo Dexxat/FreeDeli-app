@@ -163,12 +163,29 @@
                 }
               ],
               "outputHashing": "all",
-              "serviceWorker": "projects/usuarios-app/ngsw-config.json"
+              "serviceWorker": "projects/usuarios-app/ngsw-config.json",
+              "fileReplacements": [
+                {
+                  "replace": "projects/usuarios-app/src/environments/environment.ts",
+                  "with": "projects/usuarios-app/src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "api": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "projects/usuarios-app/src/environments/environment.ts",
+                  "with": "projects/usuarios-app/src/environments/environment.api.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -181,6 +198,9 @@
             },
             "development": {
               "buildTarget": "usuarios-app:build:development"
+            },
+            "api": {
+              "buildTarget": "usuarios-app:build:api"
             }
           },
           "defaultConfiguration": "development"

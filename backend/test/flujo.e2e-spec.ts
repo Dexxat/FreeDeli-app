@@ -78,6 +78,7 @@ describe('Flujo completo del pedido', () => {
   it('rechaza pedidos por debajo del mínimo', async () => {
     const coca = productos.find((p) => p.precio === 2800)!;
     const r = await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 2 }] }).expect(409);
+    expect(r.body).toMatchObject({ codigo: 'pedido-minimo' });
     expect(r.body.message).toContain('pedido mínimo');
   });
 

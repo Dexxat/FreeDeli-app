@@ -18,6 +18,8 @@ export interface DatosShell {
   volver?: string;
   /** Oculta la navegación inferior (por ejemplo, al armar el pedido). */
   sinNav?: boolean;
+  /** Oculta el header (ingreso y registro). */
+  sinHeader?: boolean;
 }
 
 @Component({
@@ -26,7 +28,9 @@ export interface DatosShell {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="app">
-      <fd-usuario-header [volver]="shell().volver ?? null" />
+      @if (!shell().sinHeader) {
+        <fd-usuario-header [volver]="shell().volver ?? null" />
+      }
       <main class="contenido">
         <router-outlet />
       </main>

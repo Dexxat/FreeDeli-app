@@ -1,0 +1,19 @@
+<main class="pantalla">
+  <form class="caja" (ngSubmit)="crear()" novalidate>
+    <h1 class="titulo">CREAR CUENTA</h1>
+    <label class="campo">Nombre y apellido<input name="nombre" autocomplete="name" [(ngModel)]="datos.nombre" /></label>
+    <label class="campo">Teléfono<input name="telefono" type="tel" autocomplete="tel" [(ngModel)]="datos.telefono" /></label>
+    <label class="campo">Email<input name="email" type="email" autocomplete="email" [(ngModel)]="datos.email" /></label>
+    <label class="campo">Contraseña (mínimo 8)<input name="clave" type="password" autocomplete="new-password" [(ngModel)]="datos.clave" /></label>
+    <label class="campo">Dirección de entrega (calle y altura)<input name="direccion" autocomplete="street-address" [(ngModel)]="datos.direccion" /></label>
+    <label class="campo">Depto, timbre u otras indicaciones<input name="notas" [(ngModel)]="datos.notas" /></label>
+    <label class="campo">Zona
+      <select name="zona" [(ngModel)]="datos.zona">
+        @for (z of zonas; track z.id) { <option [value]="z.id">{{ z.nombre }}</option> }
+      </select>
+    </label>
+    @if (error(); as e) { <p class="error" role="alert">{{ e }}</p> }
+    <button type="submit" class="boton" [disabled]="enviando()">{{ enviando() ? 'CREANDO…' : 'CREAR CUENTA' }}</button>
+    <p class="pie">¿Ya tenés cuenta? <a routerLink="/ingresar">Ingresar</a></p>
+  </form>
+</main>

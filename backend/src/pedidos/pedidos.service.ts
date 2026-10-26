@@ -73,20 +73,22 @@ export class PedidosService {
     const usuario = await this.db.usuario.findUniqueOrThrow({ where: { id: usuarioId } });
     const kiosco = await this.db.kiosco.findUnique({ where: { id: nuevo.kioscoId }, include: { cuenta: true } });
     if (!kiosco || kiosco.cuenta?.estado !== 'APROBADA' || !puedeRecibirPedidos(kiosco)) {
-      throw new ConflictException('El kiosco no está recibiendo pedidos.');
+      throw new ConflictException({ statusCode: 409, codigo: 'kiosco-cerrado', message: 'El kiosco no está recibiendo pedidos.' });
     }
     const catalogo = await this.db.producto.findMany({ where: { kioscoId: kiosco.id, disponible: true } });
     const lineas = nuevo.items.filter((i) => i.cantidad > 0);
-    if (lineas.length === 0) throw new BadRequestException('Agregá al menos un producto.');
+    if (lineas.length === 0) throw new BadRequestException({ statusCode: 400, codigo: 'sin-productos', message: 'Agregá al menos un producto.' });
     const items = lineas.map((l) => {
       const prod = catalogo.find((p) => p.id === l.productoId);
-      if (!prod) throw new ConflictException('Algún producto ya no está disponible.');
+      if (!prod) throw new ConflictException({ statusCode: 409, codigo: 'producto-inexistente', message: 'Algún producto ya no está disponible.' });
       return { productoId: prod.id, nombre: prod.nombre, cantidad: l.cantidad, precioUnitario: prod.precio };
     });
     const subtotal = items.reduce((a, i) => a + i.cantidad * i.precioUnitario, 0);
-    if (subtotal < PEDIDO_MINIMO) throw new ConflictException(`El pedido mínimo es de $${PEDIDO_MINIMO.toLocaleString('es-AR')} en productos.`);
+    if (subtotal < PEDIDO_MINIMO) {
+      throw new ConflictException({ statusCode: 409, codigo: 'pedido-minimo', message: `El pedido mínimo es de $${PEDIDO_MINIMO.toLocaleString('es-AR')} en productos.` });
+    }
     if (await this.db.pedido.findFirst({ where: { usuarioId, estado: { in: ABIERTOS_DB } } })) {
-      throw new ConflictException('Ya tenés un pedido en curso.');
+      throw new ConflictException({ statusCode: 409, codigo: 'pedido-en-curso', message: 'Ya tenés un pedido en curso.' });
     }
     const km = distanciaKm({ lat: kiosco.lat, lng: kiosco.lng }, { lat: usuario.lat, lng: usuario.lng });
     const envio = costoEnvio(km, this.reglas.tarifaEnvio);
