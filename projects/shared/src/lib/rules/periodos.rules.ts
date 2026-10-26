@@ -1,4 +1,4 @@
-import { PeriodoGanancias, PeriodoHistorial } from '../models/rider';
+import { PeriodoGanancias, PeriodoHistorial } from '../models/rider.js';
 
 export interface Rango {
   desde: Date;

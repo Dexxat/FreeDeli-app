@@ -1,5 +1,5 @@
-import { Pedido } from '../models/pedido';
-import { movimientoDePedido } from './admin.rules';
+import { Pedido } from '../models/pedido.js';
+import { movimientoDePedido } from './admin.rules.js';
 
 const base: Pedido = {
   id: 'x', numero: 1, zona: 'muniz', kioscoId: 'k3', kioscoNombre: 'K', kioscoDireccion: '', usuarioId: 'u1',

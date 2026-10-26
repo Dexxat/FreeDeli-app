@@ -1,5 +1,5 @@
-import { Kiosco } from './kiosco';
-import { Ubicacion, ZonaId } from './zona';
+import { Kiosco } from './kiosco.js';
+import { Ubicacion, ZonaId } from './zona.js';
 
 export interface DireccionEntrega {
   direccion: string;

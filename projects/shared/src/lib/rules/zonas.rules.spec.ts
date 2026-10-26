@@ -1,4 +1,4 @@
-import { alternarZona, pedidosPorRider, repartirProbabilidad } from './zonas.rules';
+import { alternarZona, pedidosPorRider, repartirProbabilidad } from './zonas.rules.js';
 
 describe('repartirProbabilidad', () => {
   it('1 zona: 100 %', () => {

@@ -1,7 +1,7 @@
-import { Kiosco } from './kiosco';
-import { EstadoPago, EstadoPedido, ItemPedido, Pedido } from './pedido';
-import { Rider } from './rider';
-import { ZonaId } from './zona';
+import { Kiosco } from './kiosco.js';
+import { EstadoPago, EstadoPedido, ItemPedido, Pedido } from './pedido.js';
+import { Rider } from './rider.js';
+import { ZonaId } from './zona.js';
 
 /** Kiosco visto desde FreeDeli Dev, con sus números del día. */
 export interface KioscoAdmin extends Kiosco {

@@ -1,6 +1,6 @@
-import { Pedido } from '../models/pedido';
-import { BarraGanancia, PeriodoGanancias, ResumenGanancias } from '../models/rider';
-import { enRango, inicioDelDia, rangoPeriodo, sumarDias } from './periodos.rules';
+import { Pedido } from '../models/pedido.js';
+import { BarraGanancia, PeriodoGanancias, ResumenGanancias } from '../models/rider.js';
+import { enRango, inicioDelDia, rangoPeriodo, sumarDias } from './periodos.rules.js';
 
 const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 

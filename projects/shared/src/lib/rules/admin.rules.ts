@@ -1,5 +1,5 @@
-import { MovimientoKiosco } from '../models/admin';
-import { Pedido, totalPedido } from '../models/pedido';
+import { MovimientoKiosco } from '../models/admin.js';
+import { Pedido, totalPedido } from '../models/pedido.js';
 
 /** Debajo de este saldo, el kiosco se marca en alerta. */
 export const SALDO_BAJO = 10_000;

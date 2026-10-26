@@ -1,5 +1,5 @@
-import { Pedido, subtotalProductos } from '../models/pedido';
-import { calcularComision } from './pedido.rules';
+import { Pedido, subtotalProductos } from '../models/pedido.js';
+import { calcularComision } from './pedido.rules.js';
 
 /**
  * Transiciones del flujo de un pedido. Son funciones puras: reciben el pedido y

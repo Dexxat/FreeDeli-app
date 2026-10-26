@@ -1,0 +1,23 @@
+import { Kiosco } from '../models/kiosco.js';
+import { Ubicacion } from '../models/zona.js';
+import { EstadoPedido, OfertaPedido, PasoEstado, Pedido } from '../models/pedido.js';
+export declare function generarPin(random?: () => number): string;
+export declare function pinValido(pin: string): boolean;
+export declare function siguienteEstado(estado: EstadoPedido): EstadoPedido | null;
+export type EstadoPaso = 'completado' | 'actual' | 'pendiente';
+export declare function estadosDeBarra(estado: EstadoPedido): Record<PasoEstado, EstadoPaso>;
+export declare function distanciaKm(a: Ubicacion, b: Ubicacion): number;
+export declare function costoEnvio(km: number, tarifa: {
+    base: number;
+    porKm: number;
+}): number;
+export declare const PEDIDO_MINIMO = 15000;
+export declare function puedeRecibirPedidos(k: Pick<Kiosco, 'abierto' | 'pausado' | 'saldo'>): boolean;
+export declare const COMISION_MINIMA = 1500;
+export declare function calcularComision(subtotal: number, porcentaje: number): number;
+export declare const SEGUNDOS_PARA_ACEPTAR = 30;
+export declare function direccionAproximada(direccion: string): string;
+export declare function armarOferta(p: Pedido, ahora: Date, segundos?: number): OfertaPedido;
+export declare function rangoTiempo(minutos: number): string;
+export declare const ESTADOS_ABIERTOS: readonly Pedido['estado'][];
+export declare function minutosParaLlegar(p: Pick<Pedido, 'estado' | 'aceptadoEn'>, tiempoEstimadoMin: number, ahora: Date): number | null;

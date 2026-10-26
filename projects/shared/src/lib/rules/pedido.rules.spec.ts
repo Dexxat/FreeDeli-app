@@ -1,4 +1,4 @@
-import { PEDIDO_MINIMO, costoEnvio, distanciaKm, calcularComision, puedeRecibirPedidos, minutosParaLlegar, direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules';
+import { PEDIDO_MINIMO, costoEnvio, distanciaKm, calcularComision, puedeRecibirPedidos, minutosParaLlegar, direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules.js';
 
 describe('PIN', () => {
   it('genera 4 dígitos con ceros a la izquierda', () => {

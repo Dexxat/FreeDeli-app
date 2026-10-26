@@ -1,4 +1,4 @@
-import { Pedido } from '../models/pedido';
+import { Pedido } from '../models/pedido.js';
 import {
   aceptarAjuste,
   aprobarRider,
@@ -10,7 +10,7 @@ import {
   entregarConPin,
   quienDebeActuar,
   salirEnCamino,
-} from './flujo.rules';
+} from './flujo.rules.js';
 
 const ahora = new Date(2026, 9, 26, 20, 0);
 

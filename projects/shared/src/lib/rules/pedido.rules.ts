@@ -1,6 +1,6 @@
-import { Kiosco } from '../models/kiosco';
-import { Ubicacion } from '../models/zona';
-import { EstadoPedido, OfertaPedido, PASOS_ESTADO, PasoEstado, Pedido, cantidadProductos } from '../models/pedido';
+import { Kiosco } from '../models/kiosco.js';
+import { Ubicacion } from '../models/zona.js';
+import { EstadoPedido, OfertaPedido, PASOS_ESTADO, PasoEstado, Pedido, cantidadProductos } from '../models/pedido.js';
 
 /** Genera un PIN de entrega de 4 dígitos (0000–9999). */
 export function generarPin(random: () => number = Math.random): string {

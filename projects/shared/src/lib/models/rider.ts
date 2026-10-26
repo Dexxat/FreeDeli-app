@@ -1,4 +1,4 @@
-import { ZonaId } from './zona';
+import { ZonaId } from './zona.js';
 
 export interface Rider {
   id: string;

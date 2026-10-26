@@ -1,4 +1,4 @@
-import { ZonaId } from './zona';
+import { ZonaId } from './zona.js';
 
 /**
  * Estados de un pedido.

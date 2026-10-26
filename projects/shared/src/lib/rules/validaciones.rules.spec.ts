@@ -1,4 +1,4 @@
-import { aliasCbuValido, emailValido, patenteValida, telefonoValido } from './validaciones.rules';
+import { aliasCbuValido, emailValido, patenteValida, telefonoValido } from './validaciones.rules.js';
 
 describe('validaciones', () => {
   it('email', () => {

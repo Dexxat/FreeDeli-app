@@ -1,8 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "./src"
+    "rootDir": ".."
   },
-  "include": ["src"],
+  "include": ["src", "../projects/shared/src/lib/dominio.ts", "../projects/shared/src/lib/models/*.ts", "../projects/shared/src/lib/rules/*.ts"],
   "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
 }

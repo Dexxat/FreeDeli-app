@@ -1,6 +1,6 @@
-import { Pedido } from '../models/pedido';
-import { resumirGanancias } from './ganancias.rules';
-import { rangoPeriodo } from './periodos.rules';
+import { Pedido } from '../models/pedido.js';
+import { resumirGanancias } from './ganancias.rules.js';
+import { rangoPeriodo } from './periodos.rules.js';
 
 const ahora = new Date(2026, 9, 26, 15, 0); // lunes 26/10/2026
 

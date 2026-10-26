@@ -1,4 +1,4 @@
-import { Ubicacion, ZonaId } from './zona';
+import { Ubicacion, ZonaId } from './zona.js';
 
 export interface Kiosco {
   id: string;

@@ -1,4 +1,4 @@
-import { DemandaZona, ZONAS, ZonaId } from '../models/zona';
+import { DemandaZona, ZONAS, ZonaId } from '../models/zona.js';
 
 /**
  * Reparte el 100 % de las chances en partes iguales entre las zonas elegidas.
