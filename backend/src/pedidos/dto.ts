@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength, ValidateNested } from 'class-validator';
 import { ZONAS_API, type ZonaApi } from '../comun/zonas.js';
 
 export class LineaDto {
@@ -54,6 +54,7 @@ export class PausaDto {
 }
 
 export class PerfilRiderDto {
+  @IsOptional() @IsEmail({}, { message: 'Ingresá un email válido.' }) email?: string;
   @IsOptional() @Matches(/^[\d\s\-+()]{10,20}$/, { message: 'Ingresá un teléfono con código de área.' }) telefono?: string;
   @IsOptional() @IsString() @MinLength(2) @MaxLength(60) vehiculoModelo?: string;
   @IsOptional() @Matches(/^(\d{3}[A-Za-z]{3}|[A-Za-z]\d{3}[A-Za-z]{3})$/, { message: 'Usá el formato A123BCD o 123ABC.' }) patente?: string;

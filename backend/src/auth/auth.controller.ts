@@ -29,9 +29,9 @@ export class AuthController {
     return this.auth.ingresar(dto.email, dto.clave);
   }
 
-  /** Estado actual de la cuenta. Sirve para saber si ya fue aprobada. */
+  /** Estado actual de la cuenta y un token nuevo. Sirve para seguir de largo cuando Dev la aprueba. */
   @PermitirPendiente() @Get('yo')
   yo(@SesionActual() sesion: Sesion) {
-    return this.auth.yo(sesion.sub);
+    return this.auth.renovar(sesion.sub);
   }
 }

@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
 import { ICONOS, ItemNav, NavInferior } from '@freedeli/shared';
 import { RiderStore } from './core/rider.store';
 import { OfertaEntrante } from './layout/oferta-entrante';
@@ -18,16 +20,18 @@ const SECCIONES: readonly ItemNav[] = [
   imports: [RouterOutlet, RiderHeader, NavInferior, OfertaEntrante],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="app">
-      <fd-rider-header [disponible]="store.disponible()" />
-      <main class="contenido">
-        <router-outlet />
-      </main>
-      @if (!store.sesionCerrada()) {
+    @if (sinShell()) {
+      <router-outlet />
+    } @else {
+      <div class="app">
+        <fd-rider-header [disponible]="store.disponible()" />
+        <main class="contenido">
+          <router-outlet />
+        </main>
         <fd-nav-inferior [items]="secciones" />
         <fd-oferta-entrante />
-      }
-    </div>
+      </div>
+    }
   `,
   styles: `
     :host { display: block; }
@@ -49,5 +53,19 @@ const SECCIONES: readonly ItemNav[] = [
 })
 export class App {
   protected readonly store = inject(RiderStore);
+  private readonly router = inject(Router);
+
+  /** Ingreso, registro y espera de aprobación van sin header ni navegación. */
+  protected readonly sinShell = toSignal(
+    this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map(() => {
+        let r = this.router.routerState.snapshot.root;
+        while (r.firstChild) r = r.firstChild;
+        return !!r.data['sinShell'];
+      }),
+    ),
+    { initialValue: true },
+  );
   protected readonly secciones = SECCIONES;
 }

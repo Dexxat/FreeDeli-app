@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, ConflictException, Controller, ForbiddenException, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { PERIODOS_HISTORIAL, PERIODOS_RIDER, periodoDe } from '../comun/consultas.js';
 import { Roles, SesionActual, type Sesion } from '../auth/sesion.js';
 import { Perfiles } from '../comun/perfiles.js';
@@ -23,8 +23,16 @@ export class RiderController {
 
   @Get()
   async perfil(@SesionActual() s: Sesion) {
-    const r = await this.db.rider.findUniqueOrThrow({ where: { cuentaId: s.sub } });
-    return { ...r, zonas: r.zonas.map(zonaApi), vehiculo: { modelo: r.vehiculoModelo, patente: r.patente }, cobro: { aliasCbu: r.aliasCbu } };
+    const r = await this.db.rider.findUniqueOrThrow({ where: { cuentaId: s.sub }, include: { cuenta: { select: { email: true } } } });
+    const { cuenta, ...rider } = r;
+    return {
+      ...rider,
+      email: cuenta.email,
+      zonas: r.zonas.map(zonaApi),
+      vehiculo: { modelo: r.vehiculoModelo, patente: r.patente },
+      cobro: { aliasCbu: r.aliasCbu },
+      preferencias: { notificaciones: r.notificaciones, sonidos8bit: r.sonidos8bit },
+    };
   }
 
   /** Interruptor ON/OFF y zonas. */
@@ -44,7 +52,13 @@ export class RiderController {
 
   @Patch('perfil')
   async editarPerfil(@SesionActual() s: Sesion, @Body() dto: PerfilRiderDto) {
-    await this.db.rider.update({ where: { cuentaId: s.sub }, data: { ...dto, patente: dto.patente?.toUpperCase() } });
+    const { email, ...resto } = dto;
+    if (email) {
+      const otra = await this.db.cuenta.findUnique({ where: { email: email.toLowerCase() } });
+      if (otra && otra.id !== s.sub) throw new ConflictException('Ya hay una cuenta con ese email.');
+      await this.db.cuenta.update({ where: { id: s.sub }, data: { email: email.toLowerCase() } });
+    }
+    await this.db.rider.update({ where: { cuentaId: s.sub }, data: { ...resto, patente: resto.patente?.toUpperCase() } });
     return this.perfil(s);
   }
 

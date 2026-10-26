@@ -110,7 +110,6 @@ export default class Perfil {
   protected readonly puedeSalir = computed(() => !this.pedidoEnCurso());
 
   protected async cerrarSesion(): Promise<void> {
-    await this.store.cerrarSesion();
-    await this.router.navigateByUrl('/sesion-cerrada');
+    await this.router.navigateByUrl(await this.store.cerrarSesion());
   }
 }

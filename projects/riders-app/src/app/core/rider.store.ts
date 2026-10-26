@@ -1,5 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { CambiosPerfilRider, Rider, RidersApi, ZonaId, alternarZona } from '@freedeli/shared';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { catchError, of, switchMap } from 'rxjs';
+import { API_URL, CambiosPerfilRider, Rider, RidersApi, SesionService, ZonaId, alternarZona } from '@freedeli/shared';
 
 /** Estado del rider con sesión iniciada, compartido por el header y las pantallas. */
 @Injectable({ providedIn: 'root' })
@@ -12,8 +14,14 @@ export class RiderStore {
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
 
+  private readonly sesion = inject(SesionService);
+  private readonly conApi = !!inject(API_URL, { optional: true });
+
   constructor() {
-    this.api.perfil().subscribe((r) => this.rider.set(r));
+    // Se recarga al iniciar o cerrar sesión. Con la API y sin sesión no hay rider.
+    toObservable(this.sesion.token)
+      .pipe(switchMap((token) => (this.conApi && !token ? of(null) : this.api.perfil().pipe(catchError(() => of(null))))))
+      .subscribe((r) => this.rider.set(r));
   }
 
   /** Actualización optimista: se ve al instante y se revierte si la API falla. */
@@ -52,11 +60,17 @@ export class RiderStore {
   /** Sin autenticación real todavía: se desconecta y queda marcado como sesión cerrada. */
   readonly sesionCerrada = signal(false);
 
-  async cerrarSesion(): Promise<void> {
+  /** Pasa a OFF y cierra la sesión. Devuelve a dónde ir después. */
+  async cerrarSesion(): Promise<string> {
     if (this.disponible()) {
       await this.aplicar({ disponible: false }, () => this.api.setDisponible(false));
     }
+    if (this.conApi) {
+      this.sesion.cerrar();
+      return '/ingresar';
+    }
     this.sesionCerrada.set(true);
+    return '/sesion-cerrada';
   }
 
   /** Devuelve false si no se pudo porque era la última zona elegida. */

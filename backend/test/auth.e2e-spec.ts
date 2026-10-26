@@ -30,7 +30,8 @@ describe('Auth y altas', () => {
 
     const login = await api().post('/api/auth/ingresar').send({ email: 'MARTINA@test.local', clave: usuario.clave }).expect(200);
     await api().get('/api/auth/yo').set('Authorization', `Bearer ${login.body.token}`).expect(200).expect((res) => {
-      expect(res.body).toMatchObject({ rol: 'USUARIO', estado: 'APROBADA' });
+      expect(res.body.cuenta).toMatchObject({ rol: 'USUARIO', estado: 'APROBADA' });
+      expect(res.body.token).toEqual(expect.any(String));
     });
   });
 
@@ -64,6 +65,11 @@ describe('Auth y altas', () => {
     expect(alta.kiosco).toMatchObject({ nombre: 'Kiosco El Faro', zona: 'SAN_MIGUEL' });
 
     await api().post(`/api/cuentas/${alta.id}/aprobar`).set('Authorization', `Bearer ${tokenDev}`).expect(200);
+    // Con el token viejo (pendiente) no puede operar; /auth/yo le da uno nuevo ya aprobado.
+    await api().get('/api/kiosco').set('Authorization', `Bearer ${tokenKiosco}`).expect(403);
+    const renovado = await api().get('/api/auth/yo').set('Authorization', `Bearer ${tokenKiosco}`).expect(200);
+    expect(renovado.body.cuenta.estado).toBe('APROBADA');
+    await api().get('/api/kiosco').set('Authorization', `Bearer ${renovado.body.token}`).expect(200);
     const login = await api().post('/api/auth/ingresar').send({ email: 'faro@test.local', clave: 'claveKiosco1' }).expect(200);
     expect(login.body.cuenta.estado).toBe('APROBADA');
   });

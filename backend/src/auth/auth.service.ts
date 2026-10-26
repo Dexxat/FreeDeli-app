@@ -125,8 +125,10 @@ export class AuthService implements OnApplicationBootstrap {
     return this.sesion(cuenta);
   }
 
-  async yo(id: string) {
-    const cuenta = await this.db.cuenta.findUniqueOrThrow({ where: { id }, select: { id: true, email: true, rol: true, estado: true } });
-    return cuenta;
+  /** Estado actual de la cuenta con un token nuevo (por ejemplo, recién aprobada). */
+  async renovar(id: string): Promise<RespuestaSesion> {
+    const cuenta = await this.db.cuenta.findUnique({ where: { id } });
+    if (!cuenta) throw new UnauthorizedException('La cuenta ya no existe.');
+    return this.sesion(cuenta);
   }
 }

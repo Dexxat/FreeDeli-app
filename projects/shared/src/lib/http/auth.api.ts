@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 import { ZonaId } from '../models/zona.js';
 import { API_URL } from './api-url';
 import { Cuenta, RespuestaSesion, SesionService } from './sesion';
@@ -60,9 +60,12 @@ export class AuthApi {
     return this.http.post<RespuestaSesion>(`${this.url}/auth/registro/rider`, datos).pipe(tap(this.guardar));
   }
 
-  /** Estado actual de la cuenta (sirve para saber si ya fue aprobada). */
+  /** Estado actual de la cuenta con un token nuevo (sirve para seguir cuando Dev la aprueba). */
   yo(): Observable<Cuenta> {
-    return this.http.get<Cuenta>(`${this.url}/auth/yo`).pipe(tap((c) => this.sesion.actualizarCuenta(c)));
+    return this.http.get<RespuestaSesion>(`${this.url}/auth/yo`).pipe(
+      tap(this.guardar),
+      map((r) => r.cuenta),
+    );
   }
 }
 

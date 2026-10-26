@@ -35,8 +35,9 @@ describe('Perfiles, reportes y panel Dev', () => {
     const demanda = (await e.api().get('/api/rider/demanda').set(auth(e.rider)).expect(200)).body;
     // Otros archivos de test dejan riders conectados en la misma base: al menos este.
     expect(demanda.find((d: { zona: string }) => d.zona === 'san-miguel').ridersActivos).toBeGreaterThanOrEqual(1);
-    const perfil = (await e.api().patch('/api/rider/perfil').set(auth(e.rider)).send({ patente: 'b456cde', sonidos8bit: false }).expect(200)).body;
-    expect(perfil).toMatchObject({ vehiculo: { patente: 'B456CDE' }, sonidos8bit: false });
+    const perfil = (await e.api().patch('/api/rider/perfil').set(auth(e.rider)).send({ patente: 'b456cde', sonidos8bit: false, email: 'lucas-nuevo@test.local' }).expect(200)).body;
+    expect(perfil).toMatchObject({ vehiculo: { patente: 'B456CDE' }, preferencias: { sonidos8bit: false }, email: 'lucas-nuevo@test.local' });
+    await e.api().patch('/api/rider/perfil').set(auth(e.rider)).send({ email: 'dev@test.local' }).expect(409);
   });
 
   it('kiosco: historial, ganancias, saldo y datos', async () => {

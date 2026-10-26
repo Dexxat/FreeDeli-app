@@ -39,6 +39,7 @@ export class EventosController {
     if (e.tipo === 'oferta') return rol === Rol.RIDER && e.riderId === perfilId;
     if (rol === Rol.USUARIO) return e.pedido.usuarioId === perfilId;
     if (rol === Rol.KIOSCO) return e.pedido.kioscoId === perfilId;
-    return e.pedido.riderId === perfilId;
+    // El rider también se entera si el kiosco lo rechazó para ese pedido.
+    return e.pedido.riderId === perfilId || (!!perfilId && !!e.pedido.ridersRechazados?.includes(perfilId));
   }
 }

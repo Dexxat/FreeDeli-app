@@ -84,12 +84,29 @@
                 }
               ],
               "outputHashing": "all",
-              "serviceWorker": "projects/riders-app/ngsw-config.json"
+              "serviceWorker": "projects/riders-app/ngsw-config.json",
+              "fileReplacements": [
+                {
+                  "replace": "projects/riders-app/src/environments/environment.ts",
+                  "with": "projects/riders-app/src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "api": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "projects/riders-app/src/environments/environment.ts",
+                  "with": "projects/riders-app/src/environments/environment.api.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -102,6 +119,9 @@
             },
             "development": {
               "buildTarget": "riders-app:build:development"
+            },
+            "api": {
+              "buildTarget": "riders-app:build:api"
             }
           },
           "defaultConfiguration": "development"
