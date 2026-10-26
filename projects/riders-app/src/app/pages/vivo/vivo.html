@@ -1,0 +1,107 @@
+@if (entregado(); as p) {
+  <section class="exito" aria-live="polite">
+    <p class="exito-titulo">¡ENTREGADO!</p>
+    <p class="exito-codigo">Pedido {{ codigo(p) }}</p>
+    <p class="exito-monto">+{{ p.gananciaRider + p.propina | pesos }}</p>
+    @if (p.propina > 0) {
+      <p class="sutil">Envío {{ p.gananciaRider | pesos }} + propina {{ p.propina | pesos }}</p>
+    }
+    <a class="boton-primario" routerLink="/inicio" (click)="cerrarEntregado()">SEGUIR</a>
+  </section>
+} @else if (pedido(); as p) {
+  <section class="tarjeta">
+    <div class="tarjeta-encabezado">
+      <h1 class="codigo">PEDIDO {{ codigo(p) }}</h1>
+      <span class="chip">{{ zona(p.zona).toUpperCase() }}</span>
+    </div>
+    <div class="tiempo">
+      <span class="reloj" role="timer">{{ tiempo() }}</span>
+      <span class="sutil">minutos en curso</span>
+    </div>
+    <fd-barra-estado [estado]="p.estado" />
+  </section>
+
+  <section class="ruta">
+    <div class="parada retiro">
+      <span class="parada-tipo">RETIRO</span>
+      <span class="parada-nombre">{{ p.kioscoNombre }}</span>
+      <span class="parada-dir">{{ p.kioscoDireccion }}, {{ zona(p.zona) }}</span>
+    </div>
+    <div class="conector" aria-hidden="true"></div>
+    <div class="parada entrega">
+      <span class="parada-tipo">ENTREGA</span>
+      <span class="parada-nombre">{{ p.destino.nombre }}</span>
+      <span class="parada-dir">{{ p.destino.direccion }}</span>
+      @if (p.destino.notas) {
+        <span class="nota">Nota: {{ p.destino.notas }}</span>
+      }
+    </div>
+  </section>
+
+  <section class="datos">
+    <div class="dato">
+      <span class="dato-etiqueta">Productos</span>
+      <span class="dato-valor">{{ cantidad(p) }}</span>
+    </div>
+    <div class="dato">
+      <span class="dato-etiqueta">Cobro</span>
+      @if (p.cobro === 'pagado') {
+        <span class="dato-valor chico">PAGADO</span>
+      } @else {
+        <span class="dato-valor chico cobrar">COBRAR {{ subtotal(p) + p.costoEnvio | pesos }}</span>
+      }
+    </div>
+    <div class="dato">
+      <span class="dato-etiqueta">Tu ganancia</span>
+      <span class="dato-valor ganancia">{{ p.gananciaRider | pesos }}</span>
+    </div>
+  </section>
+
+  <details class="productos">
+    <summary>Ver productos</summary>
+    <ul>
+      @for (item of p.items; track $index) {
+        <li><span>{{ item.cantidad }} × {{ item.nombre }}</span><span>{{ item.cantidad * item.precioUnitario | pesos }}</span></li>
+      }
+    </ul>
+  </details>
+
+  <section class="acciones">
+    <div class="secundarios">
+      <a class="boton-secundario" [href]="linkMapa()" target="_blank" rel="noopener">Cómo llegar</a>
+      <a class="boton-secundario" [href]="linkWhatsApp()" target="_blank" rel="noopener">WhatsApp FreeDeli</a>
+    </div>
+
+    @switch (p.estado) {
+      @case ('aceptado') {
+        <button type="button" class="boton-primario" [disabled]="enviando()" (click)="avanzar(p)">YA LO RETIRÉ</button>
+      }
+      @case ('retirado') {
+        <button type="button" class="boton-primario" [disabled]="enviando()" (click)="avanzar(p)">SALGO EN CAMINO</button>
+      }
+      @case ('en-camino') {
+        <fieldset class="pin">
+          <legend>PIN DEL CLIENTE</legend>
+          <fd-pin-input [(valor)]="pin" [invalido]="!!errorPin()" [deshabilitado]="enviando()" />
+          @if (errorPin(); as error) {
+            <span class="pin-error" role="alert">{{ error }}</span>
+          } @else {
+            <span class="pin-ayuda">Pedile al cliente su PIN de 4 dígitos al entregar.</span>
+          }
+        </fieldset>
+        <button type="button" class="boton-primario" [disabled]="enviando()" (click)="confirmarEntrega(p)">CONFIRMAR ENTREGA</button>
+      }
+    }
+  </section>
+} @else if (pedido() === null) {
+  <section class="vacio">
+    <h1 class="titulo">PEDIDO EN CURSO</h1>
+    <p class="vacio-texto">No tenés ningún pedido en curso.</p>
+    @if (!store.disponible()) {
+      <p class="sutil">Activate en Inicio para empezar a recibir pedidos.</p>
+      <a class="boton-primario" routerLink="/inicio">IR A INICIO</a>
+    } @else {
+      <p class="sutil">Estás en línea. Te avisamos cuando te asignen uno.</p>
+    }
+  </section>
+}

@@ -33,6 +33,8 @@ const PRODUCTOS = [
   { id: 'p6', nombre: 'Chicles menta', precio: 600 },
 ];
 
+const NOMBRES = ['Martina R.', 'Joaquín P.', 'Sofía G.', 'Tomás L.', 'Valentina M.', 'Nicolás F.'];
+
 const CALLES = ['Paunero', 'Sarmiento', 'Italia', 'Mitre', 'Conesa', 'Pardo', 'Muñoz', 'Tribulato'];
 
 /**
@@ -102,6 +104,7 @@ export class MockDb {
         kioscoDireccion: kiosco.direccion,
         usuarioId: 'u1',
         destino: {
+          nombre: pick(NOMBRES),
           direccion: `${pick(CALLES)} ${100 + Math.floor(random() * 2900)}`,
           notas: random() < 0.4 ? 'Timbre 2B, dejar en portería' : undefined,
         },

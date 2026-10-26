@@ -36,7 +36,8 @@ export interface Pedido {
   kioscoNombre: string;
   kioscoDireccion: string;
   usuarioId: string;
-  destino: { direccion: string; notas?: string };
+  /** Quién recibe: nombre corto del usuario, por ejemplo "Martina R.". */
+  destino: { nombre: string; direccion: string; notas?: string };
   items: ItemPedido[];
   costoEnvio: number;
   propina: number;
@@ -58,4 +59,13 @@ export function subtotalProductos(p: Pick<Pedido, 'items'>): number {
 
 export function totalPedido(p: Pick<Pedido, 'items' | 'costoEnvio'>): number {
   return subtotalProductos(p) + p.costoEnvio;
+}
+
+/** Código visible del pedido, por ejemplo "#A-1042". */
+export function codigoPedido(p: Pick<Pedido, 'numero'>): string {
+  return `#A-${p.numero}`;
+}
+
+export function cantidadProductos(p: Pick<Pedido, 'items'>): number {
+  return p.items.reduce((acc, i) => acc + i.cantidad, 0);
 }
