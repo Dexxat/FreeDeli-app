@@ -1,0 +1,48 @@
+@if (pedido(); as p) {
+  <section class="exito">
+    <svg aria-hidden="true" viewBox="0 0 16 16" width="96" height="96" shape-rendering="crispEdges">
+      <rect x="2" y="0" width="12" height="16" fill="#FFD23F" /><rect x="0" y="2" width="16" height="12" fill="#FFD23F" />
+      <rect x="1" y="1" width="14" height="14" fill="#FFD23F" />
+      <rect x="3" y="8" width="2" height="2" fill="#0A1633" /><rect x="5" y="10" width="2" height="2" fill="#0A1633" />
+      <rect x="7" y="8" width="2" height="2" fill="#0A1633" /><rect x="9" y="6" width="2" height="2" fill="#0A1633" />
+      <rect x="11" y="4" width="2" height="2" fill="#0A1633" />
+    </svg>
+    <h1 class="titulo">PEDIDO REALIZADO</h1>
+    <p class="texto">Le avisamos a los riders de la zona. Apenas uno lo acepte, vas a poder seguirlo en vivo.</p>
+  </section>
+
+  <section class="pago" aria-labelledby="titulo-pago">
+    <h2 id="titulo-pago" class="subtitulo">PAGO POR TRANSFERENCIA</h2>
+    @if (p.pago === 'pendiente') {
+      <p class="pago-texto">Transferí <strong>{{ total(p) | pesos }}</strong> al alias del kiosco:</p>
+      <div class="alias">
+        <span class="alias-valor">{{ p.aliasKiosco }}</span>
+        <button type="button" (click)="copiarAlias(p.aliasKiosco)">{{ copiado() ? 'COPIADO' : 'COPIAR' }}</button>
+      </div>
+      <p class="sutil">El kiosco retiene el pago hasta que le des tu PIN al rider.</p>
+    } @else {
+      <p class="pago-texto ok" role="status">Transferencia confirmada por el kiosco.</p>
+    }
+  </section>
+
+  <section class="tarjeta">
+    <div class="fila">
+      <span class="codigo">PEDIDO {{ codigo(p) }}</span>
+      <span class="chip">{{ zona(p.zona).toUpperCase() }}</span>
+    </div>
+    <fd-barra-estado [estado]="p.estado" />
+    <span class="sutil" aria-live="polite">{{ textoEstado() }}</span>
+  </section>
+
+  <section class="resumen">
+    <div><span>Kiosco</span><strong>{{ p.kioscoNombre }}</strong></div>
+    <div><span>Productos</span><strong>{{ cantidad(p) }}</strong></div>
+    <div><span>Envío</span><strong>{{ p.costoEnvio | pesos }}</strong></div>
+    <div class="final"><strong>Total</strong><strong class="amarillo">{{ total(p) | pesos }}</strong></div>
+  </section>
+
+  <a class="boton" [routerLink]="['/pedido', p.id]">VER SEGUIMIENTO</a>
+} @else if (pedido() === null) {
+  <p class="texto" role="alert">No encontramos este pedido.</p>
+  <a class="boton" routerLink="/inicio">IR AL INICIO</a>
+}

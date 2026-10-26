@@ -92,3 +92,14 @@ describe('MockUsuariosApi', () => {
     expect(rider).toEqual({ nombre: 'Agustina P.', vehiculo: 'Motomel Blitz 110', patente: 'A456KLM' });
   });
 });
+
+describe('Datos simulados', () => {
+  it('los productos de los pedidos existen en el catálogo de su kiosco', () => {
+    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0, simulacionRider: null })] });
+    const db = TestBed.inject(MockDb);
+    const ids = new Set(db.productos().map((p) => p.id));
+    for (const p of db.pedidos()) {
+      for (const i of p.items) expect(ids.has(i.productoId) && i.productoId.startsWith(p.kioscoId + '-')).toBe(true);
+    }
+  });
+});

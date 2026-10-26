@@ -1,0 +1,51 @@
+@if (kiosco(); as k) {
+  <div class="contenido">
+    <section class="cabecera">
+      <h1 class="nombre">{{ k.nombre }}</h1>
+      <span class="sutil">{{ zona(k.zona) }} · {{ tiempo(k.tiempoEstimadoMin) }} · Envío {{ k.costoEnvio | pesos }}</span>
+    </section>
+
+    @if (!k.abierto || k.pausado) {
+      <p class="aviso" role="alert">Este kiosco está cerrado ahora.</p>
+    }
+
+    <h2 class="subtitulo">PRODUCTOS</h2>
+    <ul class="productos">
+      @for (p of productos(); track p.id) {
+        <li>
+          <span class="producto">
+            <span class="producto-nombre">{{ p.nombre }}</span>
+            <span class="precio">{{ p.precio | pesos }}</span>
+          </span>
+          <span class="contador">
+            <button type="button" class="menos" [attr.aria-label]="'Quitar ' + p.nombre" [disabled]="!cantidades()[p.id]" (click)="cambiar(p, -1)">-</button>
+            <span class="cantidad" aria-live="polite" [attr.aria-label]="(cantidades()[p.id] ?? 0) + ' de ' + p.nombre">{{ cantidades()[p.id] ?? 0 }}</span>
+            <button type="button" class="mas" [attr.aria-label]="'Agregar ' + p.nombre" [disabled]="(cantidades()[p.id] ?? 0) >= maximo" (click)="cambiar(p, 1)">+</button>
+          </span>
+        </li>
+      }
+    </ul>
+  </div>
+
+  <div class="barra">
+    <div class="resumen">
+      <span>{{ cantidad() }} {{ cantidad() === 1 ? 'producto' : 'productos' }} + envío {{ k.costoEnvio | pesos }}</span>
+      <span class="total">{{ total() | pesos }}</span>
+    </div>
+    @if (error(); as e) {
+      <p class="error" role="alert">{{ e }}</p>
+    }
+    @if (store.pedidoEnCurso(); as enCurso) {
+      <a class="boton" [routerLink]="['/pedido', enCurso.id]">VER MI PEDIDO EN CURSO</a>
+    } @else {
+      <button type="button" class="boton" [disabled]="enviando() || cantidad() === 0 || !k.abierto || k.pausado" (click)="hacerPedido()">
+        HACER PEDIDO
+      </button>
+    }
+  </div>
+} @else if (kiosco() === null) {
+  <div class="contenido">
+    <p class="aviso" role="alert">No encontramos este kiosco.</p>
+    <a class="enlace" routerLink="/pedir">Ver kioscos abiertos</a>
+  </div>
+}

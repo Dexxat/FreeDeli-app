@@ -1,0 +1,49 @@
+@use 'pixel';
+
+:host { display: flex; flex-direction: column; gap: 22px; padding: 32px 16px 24px; }
+
+.exito { display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; }
+.titulo { margin: 0; font-family: var(--fd-font-pixel); font-size: 16px; line-height: 1.5; color: var(--fd-yellow-400); }
+.texto { margin: 0; font-size: 15px; line-height: 1.5; color: var(--fd-blue-100); }
+.subtitulo { margin: 0; font-family: var(--fd-font-pixel); font-size: 10px; color: var(--fd-blue-100); }
+.sutil { margin: 0; font-size: 13px; color: var(--fd-blue-100); }
+
+.pago { padding: 14px; display: flex; flex-direction: column; gap: 10px; background: #0f1f4a; border-left: 4px solid var(--fd-yellow-400); }
+.pago-texto { margin: 0; font-size: 15px; }
+.ok { color: var(--fd-blue-300); font-weight: 700; }
+.alias {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 8px 8px 12px;
+  background: var(--fd-blue-50); color: var(--fd-navy-900);
+  button {
+    min-height: 44px; padding: 0 12px;
+    border: none; cursor: pointer;
+    background: var(--fd-navy-700); color: #fff;
+    font-family: var(--fd-font-pixel); font-size: 9px;
+    &:focus-visible { outline: 3px solid var(--fd-yellow-400); outline-offset: 2px; }
+  }
+}
+.alias-valor { font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+
+.tarjeta { padding: 14px; display: flex; flex-direction: column; gap: 12px; background: var(--fd-navy-700); }
+.fila { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.codigo { font-family: var(--fd-font-pixel); font-size: 11px; }
+.chip { padding: 6px 8px; background: var(--fd-navy-900); color: var(--fd-blue-300); font-family: var(--fd-font-pixel); font-size: 8px; }
+
+.resumen {
+  display: flex; flex-direction: column; gap: 2px;
+  div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; background: #0f1f4a; font-size: 14px; }
+  span { color: var(--fd-blue-100); }
+  .final { background: var(--fd-navy-900); }
+}
+.amarillo { color: var(--fd-yellow-400); }
+
+.boton {
+  margin: 4px 4px 10px;
+  min-height: 56px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--fd-yellow-400); color: var(--fd-navy-900);
+  font-family: var(--fd-font-pixel); font-size: 12px; text-decoration: none;
+  @include pixel.borde(var(--fd-amber-400), var(--fd-navy-900));
+  &:focus-visible { outline: 3px solid #fff; outline-offset: 6px; }
+}

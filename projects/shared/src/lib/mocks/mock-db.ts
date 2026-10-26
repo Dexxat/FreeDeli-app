@@ -142,7 +142,7 @@ export class MockDb {
     const kiosco = pick(kioscos);
     const items = Array.from({ length: 1 + Math.floor(random() * 3) }, () => {
       const prod = pick(PRODUCTOS);
-      return { productoId: prod.id, nombre: prod.nombre, cantidad: 1 + Math.floor(random() * 2), precioUnitario: prod.precio };
+      return { productoId: `${kiosco.id}-${prod.id}`, nombre: prod.nombre, cantidad: 1 + Math.floor(random() * 2), precioUnitario: prod.precio };
     });
     return {
       id: '',

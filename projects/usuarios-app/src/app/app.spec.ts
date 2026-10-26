@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideFreeDeliMocks } from '@freedeli/shared';
 import { App } from './app';
 import { routes } from './app.routes';
@@ -8,7 +8,7 @@ describe('App (shell de Usuarios)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter(routes), provideFreeDeliMocks({ latencia: 0 })],
+      providers: [provideRouter(routes, withComponentInputBinding()), provideFreeDeliMocks({ latencia: 0, simulacionRider: null })],
     }).compileComponents();
   });
 
