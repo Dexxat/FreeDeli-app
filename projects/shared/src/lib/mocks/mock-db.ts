@@ -1,7 +1,8 @@
 import { Injectable, signal } from '@angular/core';
-import { Kiosco } from '../models/kiosco';
+import { Kiosco, Producto } from '../models/kiosco';
 import { OfertaPedido, Pedido } from '../models/pedido';
 import { Rider } from '../models/rider';
+import { Usuario } from '../models/usuario';
 import { DemandaZona, ZONAS, ZonaId } from '../models/zona';
 import { generarPin } from '../rules/pedido.rules';
 
@@ -15,6 +16,9 @@ function crearRandom(semilla: number): () => number {
 }
 
 export const RIDER_ACTUAL_ID = 'r1';
+/** Otro rider, que toma los pedidos que el rider actual no toma. */
+export const OTRO_RIDER_ID = 'r2';
+export const USUARIO_ACTUAL_ID = 'u1';
 
 const KIOSCOS: Kiosco[] = [
   { id: 'k1', nombre: 'Kiosco El Faro', zona: 'san-miguel', direccion: 'Av. Pres. Perón 1420', abierto: true, pausado: false, saldo: 48000, tiempoEstimadoMin: 25, costoEnvio: 1500 },
@@ -31,7 +35,12 @@ const PRODUCTOS = [
   { id: 'p4', nombre: 'Agua mineral 500 ml', precio: 900 },
   { id: 'p5', nombre: 'Cerveza lata 473 ml', precio: 1900 },
   { id: 'p6', nombre: 'Chicles menta', precio: 600 },
+  { id: 'p7', nombre: 'Hielo 2 kg', precio: 1500 },
+  { id: 'p8', nombre: 'Galletitas rellenas', precio: 1600 },
 ];
+
+/** Catálogo: cada kiosco abierto vende todos los productos. */
+const CATALOGO: Producto[] = KIOSCOS.flatMap((k) => PRODUCTOS.map((p) => ({ ...p, id: `${k.id}-${p.id}`, kioscoId: k.id })));
 
 const NOMBRES = ['Martina R.', 'Joaquín P.', 'Sofía G.', 'Tomás L.', 'Valentina M.', 'Nicolás F.'];
 
@@ -44,6 +53,17 @@ const CALLES = ['Paunero', 'Sarmiento', 'Italia', 'Mitre', 'Conesa', 'Pardo', 'M
 @Injectable({ providedIn: 'root' })
 export class MockDb {
   readonly kioscos = signal<Kiosco[]>(KIOSCOS);
+  readonly productos = signal<Producto[]>(CATALOGO);
+  readonly usuarios = signal<Usuario[]>([
+    {
+      id: USUARIO_ACTUAL_ID,
+      nombre: 'Martina',
+      nombreCorto: 'Martina R.',
+      telefono: '+54 9 11 5555-0199',
+      email: 'martina@example.com',
+      direccion: { direccion: 'Belgrano 845', notas: 'Depto 2B, tocar timbre', zona: 'san-miguel' },
+    },
+  ]);
   readonly riders = signal<Rider[]>([
     {
       id: RIDER_ACTUAL_ID,
@@ -58,6 +78,20 @@ export class MockDb {
       zonas: ['san-miguel'],
       pausado: false,
       riderDesde: new Date(2026, 2, 3),
+    },
+    {
+      id: OTRO_RIDER_ID,
+      nombre: 'Agustina Paz',
+      telefono: '+54 9 11 5555-0177',
+      email: 'agustina.paz@example.com',
+      dni: '40.112.334',
+      vehiculo: { modelo: 'Motomel Blitz 110', patente: 'A456KLM' },
+      cobro: { aliasCbu: 'agus.paz.fd' },
+      preferencias: { notificaciones: true, sonidos8bit: false },
+      disponible: true,
+      zonas: ['san-miguel', 'muniz', 'bella-vista'],
+      pausado: false,
+      riderDesde: new Date(2025, 10, 12),
     },
   ]);
   readonly pedidos = signal<Pedido[]>([]);
@@ -117,7 +151,7 @@ export class MockDb {
       kioscoId: kiosco.id,
       kioscoNombre: kiosco.nombre,
       kioscoDireccion: kiosco.direccion,
-      usuarioId: 'u1',
+      usuarioId: `u${1 + Math.floor(random() * 4)}`,
       destino: {
         nombre: pick(NOMBRES),
         direccion: `${pick(CALLES)} ${100 + Math.floor(random() * 2900)}`,
@@ -161,11 +195,16 @@ export class MockDb {
     // Pedidos de hoy de otros riders, para la demanda por zona.
     for (let i = 0; i < 14; i++) {
       const creadoEn = new Date(ahora.getTime() - Math.floor(random() * 6 * 60) * 60_000);
-      pedidos.push(nuevo(creadoEn, 'otro', 'entregado'));
+      pedidos.push(nuevo(creadoEn, OTRO_RIDER_ID, 'entregado'));
     }
 
-    // Pedido en curso del rider actual.
-    pedidos.push(nuevo(new Date(ahora.getTime() - 12 * 60_000), RIDER_ACTUAL_ID, 'retirado'));
+    // Pedido en curso: lo lleva el rider actual y es del usuario actual.
+    const enCurso = nuevo(new Date(ahora.getTime() - 12 * 60_000), RIDER_ACTUAL_ID, 'retirado');
+    pedidos.push({
+      ...enCurso,
+      usuarioId: USUARIO_ACTUAL_ID,
+      destino: { nombre: 'Martina R.', direccion: 'Belgrano 845', notas: 'Depto 2B, tocar timbre' },
+    });
 
     // Numerar por orden de creación, como lo haría el backend.
     return pedidos

@@ -67,7 +67,7 @@ describe('OfertaEntrante (Riders)', () => {
     await estable();
     boton('Rechazar').click();
     await estable();
-    expect(db.pedidos().find((x) => x.id === p.id)!.riderId).toBe('otro');
+    expect(db.pedidos().find((x) => x.id === p.id)!.riderId).toBe('r2');
     expect(el.querySelector('[role=status]')?.textContent).toContain('Seguís en línea');
   });
 

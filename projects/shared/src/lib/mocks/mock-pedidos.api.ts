@@ -4,7 +4,7 @@ import { EMPTY, Observable, delay, distinctUntilChanged, map, of, switchMap, thr
 import { PedidosApi, ResultadoAceptar, ResultadoEntrega } from '../api/pedidos.api';
 import { OfertaPedido, Pedido } from '../models/pedido';
 import { armarOferta, siguienteEstado } from '../rules/pedido.rules';
-import { MockDb, RIDER_ACTUAL_ID } from './mock-db';
+import { MockDb, OTRO_RIDER_ID, RIDER_ACTUAL_ID } from './mock-db';
 import { LATENCIA_MOCK } from './mock-riders.api';
 
 /** Cuánto tarda en llegar un pedido nuevo cuando el rider queda libre y ON, en ms. */
@@ -67,7 +67,7 @@ export class MockPedidosApi extends PedidosApi {
     this.quitarOferta();
     const p = this.buscar(pedidoId);
     if (p && p.estado === 'esperando') {
-      this.guardar({ ...p, estado: 'aceptado', riderId: 'otro', aceptadoEn: new Date() });
+      this.guardar({ ...p, estado: 'aceptado', riderId: OTRO_RIDER_ID, aceptadoEn: new Date() });
     }
   }
 

@@ -120,7 +120,7 @@ describe('Ofertas de pedidos (mock)', () => {
     const oferta = await recibirOferta();
     await firstValueFrom(pedidos.rechazarOferta(oferta.pedidoId));
     const p = db.pedidos().find((x) => x.id === oferta.pedidoId)!;
-    expect(p.riderId).toBe('otro');
+    expect(p.riderId).toBe('r2');
     expect(db.riders()[0].disponible).toBe(true);
   });
 

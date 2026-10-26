@@ -69,3 +69,11 @@ export function armarOferta(p: Pedido, ahora: Date, segundos = SEGUNDOS_PARA_ACE
     expiraEn: new Date(ahora.getTime() + segundos * 1000),
   };
 }
+
+/** 25 → "20–30 min": el estimado del kiosco con un margen de 5 minutos. */
+export function rangoTiempo(minutos: number): string {
+  return `${Math.max(5, minutos - 5)}–${minutos + 5} min`;
+}
+
+/** Estados en los que el pedido sigue abierto para el usuario. */
+export const ESTADOS_ABIERTOS: readonly Pedido['estado'][] = ['esperando', 'aceptado', 'retirado', 'en-camino'];

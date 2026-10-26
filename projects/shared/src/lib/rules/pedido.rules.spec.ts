@@ -1,4 +1,4 @@
-import { direccionAproximada, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules';
+import { direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules';
 
 describe('PIN', () => {
   it('genera 4 dígitos con ceros a la izquierda', () => {
@@ -45,5 +45,12 @@ describe('direccionAproximada', () => {
   });
   it('sin altura devuelve la calle', () => {
     expect(direccionAproximada('Plaza San Martín')).toBe('Plaza San Martín');
+  });
+});
+
+describe('rangoTiempo', () => {
+  it('suma y resta 5 minutos', () => {
+    expect(rangoTiempo(25)).toBe('20–30 min');
+    expect(rangoTiempo(8)).toBe('5–13 min');
   });
 });
