@@ -8,8 +8,8 @@ import { Pedido } from '../models/pedido';
 import { codigoPedido } from '../models/pedido';
 import { PeriodoHistorial } from '../models/rider';
 import { MINUTOS_DEMORA, SALDO_BAJO, movimientoDePedido } from '../rules/admin.rules';
+import { entregaAdmin, filaMain, gananciasAdmin } from '../rules/reportes.rules';
 
-const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 import { COMISION_MINIMA, ESTADOS_ABIERTOS, puedeRecibirPedidos } from '../rules/pedido.rules';
 import { enRango, inicioDelDia, rangoPeriodo, sumarDias } from '../rules/periodos.rules';
 import { MockDb } from './mock-db';
@@ -94,18 +94,7 @@ export class MockAdminApi extends AdminApi {
   }
 
   private fila(p: Pedido): FilaMain {
-    return {
-      pedidoId: p.id,
-      numero: p.numero,
-      zona: p.zona,
-      kioscoId: p.kioscoId,
-      kioscoNombre: p.kioscoNombre,
-      totalKiosco: movimientoDePedido(p).netoKiosco,
-      estado: p.estado,
-      riderId: p.riderId,
-      riderNombre: this.nombreRider(p.riderId),
-      gananciaRider: p.estado === 'cancelado' ? 0 : p.gananciaRider + p.propina,
-    };
+    return filaMain(p, this.nombreRider(p.riderId));
   }
 
   pedidosJornada(zonas: ZonaId[]): Observable<FilaMain[]> {
@@ -174,51 +163,11 @@ export class MockAdminApi extends AdminApi {
   }
 
   ganancias(periodo: PeriodoAdmin): Observable<GananciasAdmin> {
-    const ahora = new Date();
-    const lista = this.entregados(periodo);
-    const total = lista.reduce((a, p) => a + p.comisionFreeDeli, 0);
-    const barras: GananciasAdmin['barras'] = [];
-    if (periodo === 'jornada') {
-      for (let h = 0; h <= ahora.getHours(); h++) {
-        const monto = lista.filter((p) => p.creadoEn.getHours() === h).reduce((a, p) => a + p.comisionFreeDeli, 0);
-        barras.push({ etiqueta: h.toString().padStart(2, '0'), monto });
-      }
-    } else {
-      const { desde, hasta } = rangoPeriodo(periodo, ahora);
-      for (let d = desde; d < hasta; d = sumarDias(d, 1)) {
-        const dia = d.getTime();
-        const monto = lista.filter((p) => inicioDelDia(p.creadoEn).getTime() === dia).reduce((a, p) => a + p.comisionFreeDeli, 0);
-        barras.push({ etiqueta: periodo === 'semana' ? DIAS[d.getDay()] : String(d.getDate()), monto });
-      }
-    }
-    return of({
-      periodo,
-      total,
-      pedidos: lista.length,
-      promedioPorPedido: lista.length ? Math.round(total / lista.length) : 0,
-      facturado: lista.reduce((a, p) => a + movimientoDePedido(p).totalCliente, 0),
-      porZona: ZONAS.map(({ id }) => {
-        const deZona = lista.filter((p) => p.zona === id);
-        return { zona: id, total: deZona.reduce((a, p) => a + p.comisionFreeDeli, 0), pedidos: deZona.length };
-      }),
-      barras,
-    }).pipe(delay(this.latencia));
+    return of(gananciasAdmin(this.db.pedidos(), periodo, new Date())).pipe(delay(this.latencia));
   }
 
   entregas(periodo: PeriodoAdmin, zonas: ZonaId[]): Observable<EntregaAdmin[]> {
-    const lista = this.entregados(periodo, zonas).map((p) => ({
-      ...movimientoDePedido(p),
-      zona: p.zona,
-      kioscoNombre: p.kioscoNombre,
-      riderId: p.riderId,
-      riderNombre: this.nombreRider(p.riderId),
-      destino: p.destino.direccion,
-      items: p.items,
-      aceptadoEn: p.aceptadoEn,
-      entregadoEn: p.entregadoEn,
-      duracionMin:
-        p.aceptadoEn && p.entregadoEn ? Math.round((p.entregadoEn.getTime() - p.aceptadoEn.getTime()) / 60_000) : null,
-    }));
+    const lista = this.entregados(periodo, zonas).map((p) => entregaAdmin(p, this.nombreRider(p.riderId)));
     return of(lista).pipe(delay(this.latencia));
   }
 

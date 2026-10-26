@@ -1,8 +1,9 @@
-import { Body, Controller, Get, HttpCode, NotFoundException, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, NotFoundException, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { DireccionDto } from './dto.js';
 import { Roles, SesionActual, type Sesion } from '../auth/sesion.js';
 import { Perfiles } from '../comun/perfiles.js';
 import { ReglasConfig } from '../comun/reglas.config.js';
-import { ZONAS_API, zonaApi, zonaDb, type ZonaApi } from '../comun/zonas.js';
+import { ZONAS_API, geolocalizar, zonaApi, zonaDb, type ZonaApi } from '../comun/zonas.js';
 import { aceptarAjuste, cancelarPorCliente, costoEnvio, distanciaKm, puedeRecibirPedidos } from '../dominio.js';
 import { EstadoCuenta, EstadoPedido, Rol } from '../generated/prisma/enums.js';
 import { PedidosService } from '../pedidos/pedidos.service.js';
@@ -19,6 +20,29 @@ export class UsuarioController {
     private readonly pedidos: PedidosService,
     private readonly reglas: ReglasConfig,
   ) {}
+
+  @Get('usuario/perfil')
+  async perfil(@SesionActual() s: Sesion) {
+    const u = await this.db.usuario.findUniqueOrThrow({ where: { cuentaId: s.sub }, include: { cuenta: { select: { email: true } } } });
+    return {
+      id: u.id,
+      nombre: u.nombre,
+      nombreCorto: u.nombreCorto,
+      telefono: u.telefono,
+      email: u.cuenta.email,
+      direccion: { direccion: u.direccion, notas: u.notas ?? undefined, zona: zonaApi(u.zona), ubicacion: { lat: u.lat, lng: u.lng } },
+    };
+  }
+
+  @Patch('usuario/direccion')
+  async cambiarDireccion(@SesionActual() s: Sesion, @Body() dto: DireccionDto) {
+    const { lat, lng } = geolocalizar(dto.direccion, dto.zona);
+    await this.db.usuario.update({
+      where: { cuentaId: s.sub },
+      data: { direccion: dto.direccion.trim(), notas: dto.notas?.trim() || null, zona: zonaDb(dto.zona), lat, lng },
+    });
+    return this.perfil(s);
+  }
 
   /** Kioscos que reciben pedidos, con distancia y envío hasta la dirección del usuario. */
   @Get('kioscos')

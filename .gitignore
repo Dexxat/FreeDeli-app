@@ -43,3 +43,8 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
+
+# Compilados que no deben vivir junto a las fuentes
+projects/**/*.js
+projects/**/*.js.map
+projects/**/*.d.ts

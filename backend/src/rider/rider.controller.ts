@@ -1,11 +1,12 @@
-import { Body, Controller, ForbiddenException, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { PERIODOS_HISTORIAL, PERIODOS_RIDER, periodoDe } from '../comun/consultas.js';
 import { Roles, SesionActual, type Sesion } from '../auth/sesion.js';
 import { Perfiles } from '../comun/perfiles.js';
-import { zonaApi, zonaDb } from '../comun/zonas.js';
-import { confirmarRetiro, entregarConPin, salirEnCamino } from '../dominio.js';
-import { EstadoPedido, FasePedido, Rol } from '../generated/prisma/enums.js';
+import { ZONAS_API, zonaApi, zonaDb } from '../comun/zonas.js';
+import { confirmarRetiro, entregarConPin, inicioDelDia, rangoPeriodo, resumirGanancias, salirEnCamino } from '../dominio.js';
+import { EstadoCuenta, EstadoPedido, FasePedido, Rol } from '../generated/prisma/enums.js';
 import { DespachoService } from '../pedidos/despacho.service.js';
-import { EstadoRiderDto, PinDto } from '../pedidos/dto.js';
+import { EstadoRiderDto, PerfilRiderDto, PinDto } from '../pedidos/dto.js';
 import { PedidosService } from '../pedidos/pedidos.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -34,8 +35,54 @@ export class RiderController {
     const zonas = dto.zonas ?? r.zonas.map(zonaApi);
     if (dto.disponible && zonas.length === 0) throw new ForbiddenException('Elegí al menos una zona.');
     const act = await this.db.rider.update({ where: { id: r.id }, data: { disponible: dto.disponible, zonas: dto.zonas?.map(zonaDb) } });
+    // Horas online: abre un tramo al pasar a ON y lo cierra al pasar a OFF.
+    if (!r.disponible && act.disponible) await this.db.sesionOnline.create({ data: { riderId: r.id } });
+    if (r.disponible && !act.disponible) await this.db.sesionOnline.updateMany({ where: { riderId: r.id, hasta: null }, data: { hasta: new Date() } });
     if (act.disponible) await this.despacho.barrer();
     return { disponible: act.disponible, zonas: act.zonas.map(zonaApi), pausado: act.pausado };
+  }
+
+  @Patch('perfil')
+  async editarPerfil(@SesionActual() s: Sesion, @Body() dto: PerfilRiderDto) {
+    await this.db.rider.update({ where: { cuentaId: s.sub }, data: { ...dto, patente: dto.patente?.toUpperCase() } });
+    return this.perfil(s);
+  }
+
+  /** Pedidos de la jornada y riders activos por zona, para elegir dónde ponerse en cola. */
+  @Get('demanda')
+  async demanda() {
+    const hoy = inicioDelDia(new Date());
+    const [pedidos, riders] = await Promise.all([
+      this.db.pedido.groupBy({ by: ['zona'], where: { creadoEn: { gte: hoy } }, _count: true }),
+      this.db.rider.findMany({ where: { disponible: true, pausado: false, cuenta: { estado: EstadoCuenta.APROBADA } }, select: { zonas: true } }),
+    ]);
+    return ZONAS_API.map((zona) => ({
+      zona,
+      pedidosJornada: pedidos.find((p) => p.zona === zonaDb(zona))?._count ?? 0,
+      ridersActivos: riders.filter((r) => r.zonas.includes(zonaDb(zona))).length,
+    }));
+  }
+
+  @Get('historial')
+  async historial(@SesionActual() s: Sesion, @Query('periodo') periodo?: string) {
+    const { desde, hasta } = rangoPeriodo(periodoDe(periodo, PERIODOS_HISTORIAL), new Date());
+    return this.pedidos.buscar({
+      riderId: await this.perfiles.riderId(s.sub),
+      estado: { in: [EstadoPedido.ENTREGADO, EstadoPedido.CANCELADO] },
+      creadoEn: { gte: desde, lt: hasta },
+    });
+  }
+
+  @Get('ganancias')
+  async ganancias(@SesionActual() s: Sesion, @Query('periodo') periodo?: string) {
+    const p = periodoDe(periodo, PERIODOS_RIDER);
+    const ahora = new Date();
+    const { desde, hasta } = rangoPeriodo(p, ahora);
+    const riderId = await this.perfiles.riderId(s.sub);
+    const pedidos = await this.pedidos.buscar({ riderId, estado: EstadoPedido.ENTREGADO, creadoEn: { gte: desde, lt: hasta } });
+    const sesiones = await this.db.sesionOnline.findMany({ where: { riderId, desde: { lt: hasta }, OR: [{ hasta: null }, { hasta: { gt: desde } }] } });
+    const ms = sesiones.reduce((a, x) => a + Math.max(0, Math.min((x.hasta ?? ahora).getTime(), hasta.getTime()) - Math.max(x.desde.getTime(), desde.getTime())), 0);
+    return resumirGanancias(pedidos, p, ahora, Math.round((ms / 3_600_000) * 10) / 10);
   }
 
   @Get('oferta')

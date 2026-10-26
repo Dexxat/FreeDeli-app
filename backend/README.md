@@ -58,8 +58,23 @@ Cada cambio de estado usa las mismas reglas que las apps (`projects/shared/src/l
 | GET | `/api/rider/oferta` · `/pedido` | Rider | Oferta vigente y pedido en curso |
 | POST | `/api/rider/ofertas/:pedidoId/aceptar` · `/rechazar` | Rider | Responder la oferta |
 | POST | `/api/rider/pedidos/:id/retiro` · `/en-camino` · `/entregar` | Rider | Pasos del rider; entregar pide el PIN |
-| POST | `/api/admin/kioscos/:id/saldo` | Dev | Acredita una carga de saldo |
 | GET | `/api/eventos?token=` | Todos | Tiempo real (Server-Sent Events): cada cuenta recibe solo lo suyo |
+
+## Perfiles y reportes
+
+| Método | Ruta | Quién |
+|---|---|---|
+| GET · PATCH | `/api/usuario/perfil` · `/api/usuario/direccion` | Usuario |
+| GET | `/api/kiosco/historial` · `/ganancias` · `/saldo`; PATCH `/api/kiosco/datos` | Kiosco |
+| GET | `/api/rider` · `/historial` · `/ganancias` · `/demanda`; PATCH `/api/rider/perfil` | Rider |
+| GET | `/api/admin/resumen` · `/pedidos-jornada?zonas=` · `/ganancias` · `/entregas` | Dev |
+| GET | `/api/admin/kioscos` · `/kioscos/:id` · `/movimientos` · `/saldo`; POST `/saldo` · `/pausa` | Dev |
+| GET | `/api/admin/riders/:id` · `/envios`; POST `/pausa` | Dev |
+| GET · POST · PATCH | `/api/admin/conflictos` | Dev |
+
+Los períodos (`?periodo=`) son `hoy`/`semana`/`mes` en historiales, `jornada`/`semana`/`mes` en ganancias de kiosco y Dev, y `jornada`/`semana`/`mes-pasado` en las del rider. Los cálculos de ganancias y entregas son las mismas reglas que usan las apps (`rules/reportes.rules.ts`). Las horas online del rider salen de sus tramos ON/OFF.
+
+Los días se cuentan en la hora local del servidor: correrlo con `TZ=America/Argentina/Buenos_Aires`.
 
 Las ofertas se dan a un rider por vez, al que hace más tiempo que no recibe una, con 30 segundos para responder. Si vence o la rechaza, pasa al siguiente.
 

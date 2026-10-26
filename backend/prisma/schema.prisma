@@ -150,6 +150,7 @@ model Rider {
   riderDesde     DateTime @default(now())
   pedidos        Pedido[]
   ofertas        Oferta[]
+  sesionesOnline SesionOnline[]
 }
 
 model Pedido {
@@ -249,4 +250,15 @@ model NotaConflicto {
   conflicto   Conflicto @relation(fields: [conflictoId], references: [id], onDelete: Cascade)
   fecha       DateTime  @default(now())
   texto       String
+}
+
+/// Tramo en que el rider estuvo ON. Sirve para las horas online de Ganancias.
+model SesionOnline {
+  id      String    @id @default(uuid())
+  riderId String
+  rider   Rider     @relation(fields: [riderId], references: [id])
+  desde   DateTime  @default(now())
+  hasta   DateTime?
+
+  @@index([riderId, desde])
 }

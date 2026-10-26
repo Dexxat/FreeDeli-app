@@ -42,6 +42,37 @@ export class CambiosProductoDto {
   @IsOptional() @IsBoolean() disponible?: boolean;
 }
 
+export class DatosKioscoDto {
+  @IsString() @MinLength(3) @MaxLength(60) nombre!: string;
+  @IsString() @Matches(/\d/, { message: 'Ingresá la calle y la altura.' }) @MaxLength(120) direccion!: string;
+  @Matches(/^(\d{22}|[A-Za-z0-9.-]{6,20})$/, { message: 'Alias de 6 a 20 caracteres o CBU de 22 dígitos.' }) aliasCobro!: string;
+  @IsInt() @Min(5) @Max(120) tiempoEstimadoMin!: number;
+}
+
+export class PausaDto {
+  @IsBoolean() pausado!: boolean;
+}
+
+export class PerfilRiderDto {
+  @IsOptional() @Matches(/^[\d\s\-+()]{10,20}$/, { message: 'Ingresá un teléfono con código de área.' }) telefono?: string;
+  @IsOptional() @IsString() @MinLength(2) @MaxLength(60) vehiculoModelo?: string;
+  @IsOptional() @Matches(/^(\d{3}[A-Za-z]{3}|[A-Za-z]\d{3}[A-Za-z]{3})$/, { message: 'Usá el formato A123BCD o 123ABC.' }) patente?: string;
+  @IsOptional() @Matches(/^(\d{22}|[A-Za-z0-9.-]{6,20})$/, { message: 'Alias de 6 a 20 caracteres o CBU de 22 dígitos.' }) aliasCbu?: string;
+  @IsOptional() @IsBoolean() notificaciones?: boolean;
+  @IsOptional() @IsBoolean() sonidos8bit?: boolean;
+}
+
+export class NuevoConflictoDto {
+  @IsOptional() @IsUUID() pedidoId?: string;
+  @IsIn(['demora', 'producto', 'pago', 'rider', 'kiosco', 'cliente', 'otro']) tipo!: string;
+  @IsString() @MinLength(3, { message: 'Describí el conflicto.' }) @MaxLength(500) descripcion!: string;
+}
+
+export class CambioConflictoDto {
+  @IsOptional() @IsIn(['abierto', 'en-seguimiento', 'resuelto']) estado?: string;
+  @IsOptional() @IsString() @MaxLength(500) nota?: string;
+}
+
 export class CargaSaldoDto {
   @IsInt() @Min(1) monto!: number;
   @IsOptional() @IsString() @MaxLength(80) referencia?: string;

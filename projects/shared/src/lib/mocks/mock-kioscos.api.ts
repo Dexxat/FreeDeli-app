@@ -3,11 +3,11 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { Observable, delay, distinctUntilChanged, filter, of, throwError } from 'rxjs';
 import { KioscosApi } from '../api/kioscos.api';
 import { FREEDELI_CONFIG } from '../config/freedeli.config';
-import { DatosKiosco, GananciasKiosco, MovimientoKiosco, MovimientoSaldo, PeriodoAdmin } from '../models/admin';
+import { DatosKiosco, GananciasKiosco, MovimientoSaldo, PeriodoAdmin } from '../models/admin';
 import { Kiosco, Producto } from '../models/kiosco';
 import { PeriodoHistorial } from '../models/rider';
-import { movimientoDePedido } from '../rules/admin.rules';
-import { enRango, inicioDelDia, rangoPeriodo, sumarDias } from '../rules/periodos.rules';
+import { gananciasKiosco } from '../rules/reportes.rules';
+import { enRango, rangoPeriodo } from '../rules/periodos.rules';
 import { aliasCbuValido } from '../rules/validaciones.rules';
 import { Pedido } from '../models/pedido';
 import { RiderPublico } from '../models/usuario';
@@ -98,35 +98,7 @@ export class MockKioscosApi extends KioscosApi {
   }
 
   ganancias(periodo: PeriodoAdmin): Observable<GananciasKiosco> {
-    const ahora = new Date();
-    const rango = rangoPeriodo(periodo, ahora);
-    const entregados = this.propios().filter((p) => p.estado === 'entregado' && enRango(p.creadoEn, rango));
-    const movs = entregados.map((p) => ({ p, m: movimientoDePedido(p) }));
-    const suma = (f: (m: MovimientoKiosco) => number) => movs.reduce((a, x) => a + f(x.m), 0);
-    const barras: GananciasKiosco['barras'] = [];
-    if (periodo === 'jornada') {
-      for (let h = 0; h <= ahora.getHours(); h++) {
-        barras.push({ etiqueta: String(h).padStart(2, '0'), monto: movs.filter((x) => x.p.creadoEn.getHours() === h).reduce((a, x) => a + x.m.netoKiosco, 0) });
-      }
-    } else {
-      const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-      for (let d = rango.desde; d < rango.hasta; d = sumarDias(d, 1)) {
-        const dia = d.getTime();
-        barras.push({
-          etiqueta: periodo === 'semana' ? dias[d.getDay()] : String(d.getDate()),
-          monto: movs.filter((x) => inicioDelDia(x.p.creadoEn).getTime() === dia).reduce((a, x) => a + x.m.netoKiosco, 0),
-        });
-      }
-    }
-    return of({
-      periodo,
-      pedidos: entregados.length,
-      cobrado: suma((m) => m.totalCliente),
-      envios: suma((m) => m.envioRider),
-      comisiones: suma((m) => m.comisionFreeDeli),
-      neto: suma((m) => m.netoKiosco),
-      barras,
-    }).pipe(delay(this.latencia));
+    return of(gananciasKiosco(this.propios(), periodo, new Date())).pipe(delay(this.latencia));
   }
 
   actualizarDatos(datos: DatosKiosco): Observable<Kiosco> {

@@ -1,11 +1,13 @@
-import { Body, Controller, Get, HttpCode, NotFoundException, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, NotFoundException, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { PERIODOS_ADMIN, PERIODOS_HISTORIAL, periodoDe } from '../comun/consultas.js';
 import { Roles, SesionActual, type Sesion } from '../auth/sesion.js';
 import { Perfiles } from '../comun/perfiles.js';
 import { ReglasConfig } from '../comun/reglas.config.js';
 import { zonaApi } from '../comun/zonas.js';
-import { aprobarRider, confirmarRetiro, confirmarStock, confirmarTransferencia } from '../dominio.js';
-import { Rol } from '../generated/prisma/enums.js';
-import { AprobarRiderDto, CambiosProductoDto, ProductoDto, StockDto } from '../pedidos/dto.js';
+import { aprobarRider, confirmarRetiro, confirmarStock, confirmarTransferencia, gananciasKiosco, rangoPeriodo } from '../dominio.js';
+import { EstadoPedido, Rol } from '../generated/prisma/enums.js';
+import { geolocalizar } from '../comun/zonas.js';
+import { AprobarRiderDto, CambiosProductoDto, DatosKioscoDto, ProductoDto, StockDto } from '../pedidos/dto.js';
 import { PedidosService } from '../pedidos/pedidos.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -55,6 +57,41 @@ export class KioscoController {
   @Post('pedidos/:id/envio') @HttpCode(200)
   async envio(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string) {
     return this.pedidos.transicionar(id, await this.propio(s), (p) => confirmarRetiro(p, 'kiosco', new Date()));
+  }
+
+  /** Pedidos terminados del período, del más nuevo al más viejo. */
+  @Get('historial')
+  async historial(@SesionActual() s: Sesion, @Query('periodo') periodo?: string) {
+    const { desde, hasta } = rangoPeriodo(periodoDe(periodo, PERIODOS_HISTORIAL), new Date());
+    return this.pedidos.buscar({
+      kioscoId: await this.perfiles.kioscoId(s.sub),
+      estado: { in: [EstadoPedido.ENTREGADO, EstadoPedido.CANCELADO] },
+      creadoEn: { gte: desde, lt: hasta },
+    });
+  }
+
+  @Get('ganancias')
+  async ganancias(@SesionActual() s: Sesion, @Query('periodo') periodo?: string) {
+    const p = periodoDe(periodo, PERIODOS_ADMIN);
+    const ahora = new Date();
+    const { desde } = rangoPeriodo(p, ahora);
+    const pedidos = await this.pedidos.buscar({ kioscoId: await this.perfiles.kioscoId(s.sub), estado: EstadoPedido.ENTREGADO, creadoEn: { gte: desde } });
+    return gananciasKiosco(pedidos, p, ahora);
+  }
+
+  /** Cargas y comisiones del saldo prepago. */
+  @Get('saldo')
+  async saldo(@SesionActual() s: Sesion) {
+    return this.db.movimientoSaldo.findMany({ where: { kioscoId: await this.perfiles.kioscoId(s.sub) }, orderBy: { fecha: 'desc' }, take: 200 });
+  }
+
+  @Patch('datos')
+  async datos(@SesionActual() s: Sesion, @Body() dto: DatosKioscoDto) {
+    const k = await this.db.kiosco.findUniqueOrThrow({ where: { cuentaId: s.sub } });
+    const direccion = dto.direccion.trim();
+    const ubic = direccion === k.direccion ? { lat: k.lat, lng: k.lng } : geolocalizar(direccion, zonaApi(k.zona));
+    await this.db.kiosco.update({ where: { id: k.id }, data: { nombre: dto.nombre.trim(), direccion, aliasCobro: dto.aliasCobro, tiempoEstimadoMin: dto.tiempoEstimadoMin, ...ubic } });
+    return this.perfil(s);
   }
 
   @Get('riders/:id')
