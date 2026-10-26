@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { Subject, firstValueFrom, take, toArray } from 'rxjs';
+import { Observable, Subject, firstValueFrom, take, toArray } from 'rxjs';
 import { Pedido } from '../models/pedido.js';
 import { API_URL } from './api-url';
 import { EventosCliente } from './eventos';
@@ -29,7 +29,7 @@ describe('HttpUsuariosApi', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: API_URL, useValue: URL },
-        { provide: EventosCliente, useValue: { pedidos$: eventos } },
+        { provide: EventosCliente, useValue: { pedidos$: eventos, alConectar: <T>(cargar: () => Observable<T>) => cargar() } },
         HttpUsuariosApi,
       ],
     });

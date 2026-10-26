@@ -2,6 +2,7 @@
 
 :host { display: flex; flex-direction: column; gap: 24px; max-width: 900px; }
 .indice { display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; }
+.salir { margin-left: auto; background: none; border: none; cursor: pointer; color: var(--fd-amber-400); font: inherit; font-weight: 700; }
 .indice a { color: var(--fd-blue-300); font-weight: 600; }
 .seccion { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: #0f1f4a; scroll-margin-top: 16px; }
 .formulario { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }

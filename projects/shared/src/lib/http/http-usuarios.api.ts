@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, defer, distinctUntilChanged, filter, map, merge, of, scan, startWith, switchMap } from 'rxjs';
+import { Observable, catchError, distinctUntilChanged, filter, map, merge, of, scan, startWith, switchMap } from 'rxjs';
 import { ResultadoCrearPedido, UsuariosApi } from '../api/usuarios.api.js';
 import { Kiosco, Producto } from '../models/kiosco.js';
 import { Pedido, cantidadProductos, totalPedido } from '../models/pedido.js';
@@ -54,7 +54,7 @@ export class HttpUsuariosApi extends UsuariosApi {
 
   /** El pedido abierto: lo trae una vez y lo mantiene al día con los eventos. */
   pedidoEnCurso(): Observable<Pedido | null> {
-    return defer(() => this.http.get<Pedido | null>(`${this.url}/pedidos/en-curso`)).pipe(
+    return this.eventos.alConectar(() => this.http.get<Pedido | null>(`${this.url}/pedidos/en-curso`)).pipe(
       map((p) => (p ? revivirPedido(p) : null)),
       switchMap((inicial) =>
         this.eventos.pedidos$.pipe(
@@ -68,7 +68,7 @@ export class HttpUsuariosApi extends UsuariosApi {
   }
 
   pedido(id: string): Observable<Pedido | null> {
-    return defer(() => this.http.get<Pedido>(`${this.url}/pedidos/${id}`)).pipe(
+    return this.eventos.alConectar(() => this.http.get<Pedido>(`${this.url}/pedidos/${id}`)).pipe(
       map(revivirPedido),
       catchError(() => of(null)),
       switchMap((inicial) => merge(of(inicial), this.eventos.pedidos$.pipe(filter((p) => p.id === id)))),

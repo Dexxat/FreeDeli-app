@@ -362,12 +362,29 @@
                 }
               ],
               "outputHashing": "all",
-              "serviceWorker": "projects/kioscos-app/ngsw-config.json"
+              "serviceWorker": "projects/kioscos-app/ngsw-config.json",
+              "fileReplacements": [
+                {
+                  "replace": "projects/kioscos-app/src/environments/environment.ts",
+                  "with": "projects/kioscos-app/src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "api": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "projects/kioscos-app/src/environments/environment.ts",
+                  "with": "projects/kioscos-app/src/environments/environment.api.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -380,6 +397,9 @@
             },
             "development": {
               "buildTarget": "kioscos-app:build:development"
+            },
+            "api": {
+              "buildTarget": "kioscos-app:build:api"
             }
           },
           "defaultConfiguration": "development"

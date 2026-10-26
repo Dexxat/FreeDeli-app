@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { ICONOS, ItemNav } from '@freedeli/shared';
 
 const SECCIONES: readonly ItemNav[] = [
@@ -15,6 +17,9 @@ const SECCIONES: readonly ItemNav[] = [
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    @if (sinShell()) {
+      <router-outlet />
+    } @else {
     <div class="app">
       <aside class="lateral">
         <a class="marca" routerLink="/inicio" aria-label="FreeDeli Kioscos, ir al inicio">
@@ -38,6 +43,7 @@ const SECCIONES: readonly ItemNav[] = [
         <router-outlet />
       </main>
     </div>
+    }
   `,
   styles: `
     .app { min-height: 100dvh; display: grid; grid-template-columns: 220px minmax(0, 1fr); background: var(--fd-navy-800); }
@@ -81,4 +87,18 @@ const SECCIONES: readonly ItemNav[] = [
 })
 export class App {
   protected readonly secciones = SECCIONES;
+  private readonly router = inject(Router);
+
+  /** Ingreso, alta y espera de aprobación van sin menú. */
+  protected readonly sinShell = toSignal(
+    this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map(() => {
+        let r = this.router.routerState.snapshot.root;
+        while (r.firstChild) r = r.firstChild;
+        return !!r.data['sinShell'];
+      }),
+    ),
+    { initialValue: true },
+  );
 }

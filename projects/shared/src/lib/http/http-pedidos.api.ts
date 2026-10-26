@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, defer, distinctUntilChanged, filter, map, of, scan, startWith, switchMap, tap, throwError } from 'rxjs';
+import { Observable, catchError, distinctUntilChanged, filter, map, of, scan, startWith, switchMap, tap, throwError } from 'rxjs';
 import { PedidosApi, ResultadoAceptar, ResultadoEntrega } from '../api/pedidos.api.js';
 import { OfertaPedido, Pedido } from '../models/pedido.js';
 import { API_URL } from './api-url';
@@ -36,7 +36,7 @@ export class HttpPedidosApi extends PedidosApi {
   }
 
   enCursoDelRider(): Observable<Pedido | null> {
-    return defer(() => this.http.get<{ id: string } | null>(`${this.url}/rider`)).pipe(
+    return this.eventos.alConectar(() => this.http.get<{ id: string } | null>(`${this.url}/rider`)).pipe(
       tap((r) => (this.riderId = r?.id)),
       switchMap(() => this.http.get<Pedido | null>(`${this.url}/rider/pedido`)),
       map((p) => (p ? revivirPedido(p) : null)),
@@ -56,7 +56,7 @@ export class HttpPedidosApi extends PedidosApi {
   }
 
   ofertaParaRider(): Observable<OfertaPedido | null> {
-    return defer(() => this.http.get<OfertaPedido | null>(`${this.url}/rider/oferta`)).pipe(
+    return this.eventos.alConectar(() => this.http.get<OfertaPedido | null>(`${this.url}/rider/oferta`)).pipe(
       map((o) => (o?.pedidoId ? revivirOferta(o) : null)),
       switchMap((inicial) => this.eventos.ofertas$.pipe(startWith(inicial))),
       distinctUntilChanged((a, b) => a?.pedidoId === b?.pedidoId && a?.expiraEn.getTime() === b?.expiraEn.getTime()),

@@ -4,6 +4,7 @@
   <a href="#datos">Datos del kiosco</a>
   <a href="#saldo">Cargar saldo</a>
   <a href="#catalogo">Catálogo y precios</a>
+  @if (conApi) { <button type="button" class="salir" (click)="salir()">Cerrar sesión</button> }
 </nav>
 
 <section id="datos" class="seccion" aria-labelledby="titulo-datos">
@@ -32,7 +33,7 @@
   }
   <p class="texto">Para cargar saldo, transferí al alias de FreeDeli. Cuando FreeDeli confirme la transferencia, se acredita acá. De este saldo se descuentan las comisiones de cada pedido entregado.</p>
   <div class="alias">
-    <span class="alias-valor">{{ aliasFreeDeli }}</span>
+    <span class="alias-valor">{{ aliasFreeDeli() }}</span>
     <button type="button" class="boton" (click)="copiarAlias()">{{ copiado() ? 'COPIADO' : 'COPIAR' }}</button>
   </div>
   @if (saldo().length > 0) {
