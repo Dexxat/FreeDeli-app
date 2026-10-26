@@ -1,4 +1,4 @@
-import { PEDIDO_MINIMO, calcularComision, puedeRecibirPedidos, minutosParaLlegar, direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules';
+import { PEDIDO_MINIMO, costoEnvio, distanciaKm, calcularComision, puedeRecibirPedidos, minutosParaLlegar, direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules';
 
 describe('PIN', () => {
   it('genera 4 dígitos con ceros a la izquierda', () => {
@@ -87,5 +87,16 @@ describe('puedeRecibirPedidos', () => {
   });
   it('el pedido mínimo da justo la comisión mínima', () => {
     expect(calcularComision(PEDIDO_MINIMO, 10)).toBe(1500);
+  });
+});
+
+describe('envío por distancia', () => {
+  it('calcula la distancia en km', () => {
+    expect(distanciaKm({ lat: -34.5433, lng: -58.7117 }, { lat: -34.5626, lng: -58.6895 })).toBe(3);
+  });
+  it('base + por km, redondeado a $100 para arriba', () => {
+    expect(costoEnvio(0, { base: 1000, porKm: 400 })).toBe(1000);
+    expect(costoEnvio(2.3, { base: 1000, porKm: 400 })).toBe(2000);
+    expect(costoEnvio(2.6, { base: 1000, porKm: 400 })).toBe(2100);
   });
 });

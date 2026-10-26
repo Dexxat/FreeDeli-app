@@ -3,8 +3,9 @@ import { Kiosco, Producto } from '../models/kiosco';
 import { OfertaPedido, Pedido } from '../models/pedido';
 import { Rider } from '../models/rider';
 import { Usuario } from '../models/usuario';
-import { DemandaZona, ZONAS, ZonaId } from '../models/zona';
-import { PEDIDO_MINIMO, calcularComision, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
+import { CENTRO_ZONA, DemandaZona, Ubicacion, ZONAS, ZonaId } from '../models/zona';
+import { PEDIDO_MINIMO, calcularComision, costoEnvio, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
+import { TARIFA_ENVIO_PROVISORIA } from '../config/freedeli.config';
 
 /** Generador pseudoaleatorio con semilla, para que los datos simulados sean siempre los mismos. */
 function crearRandom(semilla: number): () => number {
@@ -21,11 +22,11 @@ export const OTRO_RIDER_ID = 'r2';
 export const USUARIO_ACTUAL_ID = 'u1';
 
 const KIOSCOS: Kiosco[] = [
-  { id: 'k1', nombre: 'Kiosco El Faro', zona: 'san-miguel', direccion: 'Av. Pres. Perón 1420', abierto: true, pausado: false, saldo: 48000, tiempoEstimadoMin: 25, costoEnvio: 1500, aliasCobro: 'elfaro.kiosco' },
-  { id: 'k2', nombre: 'Maxikiosco 24', zona: 'san-miguel', direccion: 'Belgrano 980', abierto: true, pausado: false, saldo: 12500, tiempoEstimadoMin: 20, costoEnvio: 1200, aliasCobro: 'maxi24.sm' },
-  { id: 'k3', nombre: 'Kiosco La Estación', zona: 'muniz', direccion: 'Av. Ricchieri 455', abierto: true, pausado: false, saldo: 30200, tiempoEstimadoMin: 30, costoEnvio: 1800, aliasCobro: 'laestacion.muniz' },
-  { id: 'k4', nombre: 'Drugstore Bella', zona: 'bella-vista', direccion: 'Senador Morón 1210', abierto: true, pausado: false, saldo: 61000, tiempoEstimadoMin: 35, costoEnvio: 2000, aliasCobro: 'drugstore.bella' },
-  { id: 'k5', nombre: 'Kiosco Pixel', zona: 'bella-vista', direccion: 'Av. Gaspar Campos 3300', abierto: false, pausado: false, saldo: 5000, tiempoEstimadoMin: 30, costoEnvio: 1700, aliasCobro: 'kiosco.pixel' },
+  { id: 'k1', nombre: 'Kiosco El Faro', zona: 'san-miguel', direccion: 'Av. Pres. Perón 1420', ubicacion: { lat: -34.5405, lng: -58.712 }, abierto: true, pausado: false, saldo: 48000, tiempoEstimadoMin: 25, costoEnvio: 0, aliasCobro: 'elfaro.kiosco' },
+  { id: 'k2', nombre: 'Maxikiosco 24', zona: 'san-miguel', direccion: 'Belgrano 980', ubicacion: { lat: -34.5452, lng: -58.7085 }, abierto: true, pausado: false, saldo: 12500, tiempoEstimadoMin: 20, costoEnvio: 0, aliasCobro: 'maxi24.sm' },
+  { id: 'k3', nombre: 'Kiosco La Estación', zona: 'muniz', direccion: 'Av. Ricchieri 455', ubicacion: { lat: -34.5478, lng: -58.699 }, abierto: true, pausado: false, saldo: 30200, tiempoEstimadoMin: 30, costoEnvio: 0, aliasCobro: 'laestacion.muniz' },
+  { id: 'k4', nombre: 'Drugstore Bella', zona: 'bella-vista', direccion: 'Senador Morón 1210', ubicacion: { lat: -34.5611, lng: -58.6912 }, abierto: true, pausado: false, saldo: 61000, tiempoEstimadoMin: 35, costoEnvio: 0, aliasCobro: 'drugstore.bella' },
+  { id: 'k5', nombre: 'Kiosco Pixel', zona: 'bella-vista', direccion: 'Av. Gaspar Campos 3300', ubicacion: { lat: -34.565, lng: -58.686 }, abierto: false, pausado: false, saldo: 5000, tiempoEstimadoMin: 30, costoEnvio: 0, aliasCobro: 'kiosco.pixel' },
 ];
 
 const PRODUCTOS = [
@@ -61,7 +62,7 @@ export class MockDb {
       nombreCorto: 'Martina R.',
       telefono: '+54 9 11 5555-0199',
       email: 'martina@example.com',
-      direccion: { direccion: 'Belgrano 845', notas: 'Depto 2B, tocar timbre', zona: 'san-miguel' },
+      direccion: { direccion: 'Belgrano 845', notas: 'Depto 2B, tocar timbre', zona: 'san-miguel', ubicacion: { lat: -34.5447, lng: -58.7101 } },
     },
   ]);
   readonly riders = signal<Rider[]>([
@@ -99,6 +100,18 @@ export class MockDb {
   readonly otrosRidersActivos = signal<Record<ZonaId, number>>({ 'san-miguel': 4, muniz: 1, 'bella-vista': 2 });
   /** Horas online del rider actual por período (simulado). */
   readonly horasOnline = { jornada: 3.5, semana: 26, 'mes-pasado': 112 } as const;
+
+  /**
+   * Geolocalización simulada: el centro de la zona más un corrimiento fijo según el texto.
+   * El backend real usará un servicio de mapas.
+   */
+  geolocalizar(direccion: string, zona: ZonaId): Ubicacion {
+    let h = 0;
+    for (const c of direccion) h = (h * 31 + c.charCodeAt(0)) | 0;
+    const desvio = (n: number) => (((n % 1000) + 1000) % 1000) / 1000 - 0.5;
+    const centro = CENTRO_ZONA[zona];
+    return { lat: centro.lat + desvio(h) * 0.02, lng: centro.lng + desvio(h >> 10) * 0.02 };
+  }
 
   /** Al liberarse el pago, la comisión se descuenta del saldo prepago del kiosco. */
   descontarComision(pedido: Pedido): void {
@@ -145,6 +158,8 @@ export class MockDb {
   ): Pedido {
     const pick = <T>(xs: readonly T[]) => xs[Math.floor(random() * xs.length)];
     const kiosco = pick(kioscos);
+    // Entrega a entre 0,5 y 4 km del kiosco.
+    const km = Math.round((0.5 + random() * 3.5) * 10) / 10;
     // Productos al azar hasta superar el pedido mínimo.
     const items: Pedido['items'] = [];
     let subtotal = 0;
@@ -170,9 +185,10 @@ export class MockDb {
         notas: random() < 0.4 ? 'Timbre 2B, dejar en portería' : undefined,
       },
       items,
-      costoEnvio: kiosco.costoEnvio,
+      costoEnvio: costoEnvio(km, TARIFA_ENVIO_PROVISORIA),
+      distanciaKm: km,
       propina: random() < 0.35 ? pick([300, 500, 1000]) : 0,
-      gananciaRider: kiosco.costoEnvio,
+      gananciaRider: costoEnvio(km, TARIFA_ENVIO_PROVISORIA),
       pago: estado === 'entregado' ? 'liberado' : 'transferido',
       aliasKiosco: kiosco.aliasCobro,
       comisionFreeDeli: calcularComision(subtotal, 10),

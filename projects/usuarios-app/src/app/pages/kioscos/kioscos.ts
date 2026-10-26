@@ -6,6 +6,11 @@ import { startWith, switchMap } from 'rxjs';
 
 const FILTROS: { id: ZonaId | null; etiqueta: string }[] = [{ id: null, etiqueta: 'Todas' }, ...ZONAS.map((z) => ({ id: z.id, etiqueta: z.nombre }))];
 
+/** 2.3 → "2,3 km". */
+export function formatearKm(km?: number): string {
+  return km === undefined ? '' : `${km.toLocaleString('es-AR', { maximumFractionDigits: 1 })} km`;
+}
+
 /** Inicial para el cuadrito del kiosco: "Kiosco El Faro" → "E". */
 export function inicialKiosco(nombre: string): string {
   return nombre.replace(/^(Maxikiosco|Kiosco|Drugstore)\s+/i, '').replace(/^(El|La|Los|Las)\s+/i, '').charAt(0).toUpperCase();
@@ -34,6 +39,7 @@ export default class Kioscos {
   protected readonly nombreZona = nombreZona;
   protected readonly tiempo = rangoTiempo;
   protected readonly inicial = inicialKiosco;
+  protected readonly km = formatearKm;
 
   protected filtrar(zona: ZonaId | null): void {
     void this.router.navigate([], { queryParams: { zona }, replaceUrl: true });

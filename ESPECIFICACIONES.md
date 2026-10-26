@@ -87,7 +87,7 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 - **Comisión:** el 10 % del subtotal de productos, nunca menos de $1.500.
 - **Pedido mínimo:** $15.000 en productos. Con el 10 % da justo la comisión mínima de $1.500.
 - **Saldo prepago del kiosco:** el kiosco carga crédito en FreeDeli. Al liberarse cada pago, la comisión se descuenta de ese saldo. Si no le alcanza para la comisión mínima, no recibe pedidos.
-- **Costo de envío:** depende de la distancia entre el kiosco y la entrega. _Pendiente: definir la tarifa._ Mientras tanto se usa un costo fijo por kiosco.
+- **Costo de envío:** base + un valor por km de distancia entre el kiosco y la entrega, redondeado a $100 para arriba. _Pendiente: definir los montos._ Por ahora se usan valores provisorios: $1.000 de base y $400 por km.
 
 ---
 

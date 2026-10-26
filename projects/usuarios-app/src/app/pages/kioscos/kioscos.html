@@ -17,7 +17,7 @@
             <span class="inicial" aria-hidden="true">{{ inicial(k.nombre) }}</span>
             <span class="datos">
               <span class="nombre">{{ k.nombre }}</span>
-              <span class="detalle">{{ nombreZona(k.zona) }} · {{ tiempo(k.tiempoEstimadoMin) }}</span>
+              <span class="detalle">{{ nombreZona(k.zona) }} · {{ km(k.distanciaKm) }} · {{ tiempo(k.tiempoEstimadoMin) }}</span>
               <span class="envio">Envío {{ k.costoEnvio | pesos }}</span>
             </span>
             <span class="flecha" aria-hidden="true">&gt;</span>

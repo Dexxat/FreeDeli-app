@@ -37,7 +37,8 @@ describe('Kioscos (Usuarios)', () => {
     expect(nombres(el)).toEqual(['Kiosco El Faro', 'Maxikiosco 24', 'Kiosco La Estación', 'Drugstore Bella']);
     expect(el.querySelector('[aria-pressed=true]')?.textContent?.trim()).toBe('Todas');
     expect(el.textContent).toContain('20–30 min');
-    expect(el.textContent).toContain('Envío $1.500');
+    expect(el.textContent).toContain('Envío $1.200');
+    expect(el.textContent).toContain('0,5 km');
   });
 
   it('filtra por zona desde la URL', async () => {

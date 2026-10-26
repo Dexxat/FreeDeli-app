@@ -29,7 +29,7 @@ describe('Realizado (Usuarios)', () => {
     const el = h.routeNativeElement!;
     expect(el.textContent).toContain(`PEDIDO #A-${r.pedido.numero}`);
     expect(el.querySelector('.alias-valor')?.textContent).toBe('laestacion.muniz');
-    expect(el.textContent).toContain('Transferí $17.100');
+    expect(el.textContent).toContain(`Transferí $${(15300 + r.pedido.costoEnvio).toLocaleString('es-AR')}`);
     expect(el.textContent).toContain('Buscando rider');
     expect(el.querySelectorAll('fd-barra-estado li.pendiente')).toHaveLength(4);
     expect(el.querySelector('a[href$="' + r.pedido.id + '"]')?.textContent).toContain('VER SEGUIMIENTO');

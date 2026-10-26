@@ -1,10 +1,11 @@
-import { ZonaId } from './zona';
+import { Ubicacion, ZonaId } from './zona';
 
 export interface Kiosco {
   id: string;
   nombre: string;
   zona: ZonaId;
   direccion: string;
+  ubicacion: Ubicacion;
   abierto: boolean;
   /** Pausado desde FreeDeli Dev. */
   pausado: boolean;
@@ -12,8 +13,13 @@ export interface Kiosco {
   saldo: number;
   /** Tiempo estimado de entrega, en minutos. */
   tiempoEstimadoMin: number;
-  /** Costo de envío en pesos. Lo paga el cliente y es la ganancia del rider. */
+  /**
+   * Costo de envío hasta la dirección del usuario actual, según la distancia.
+   * Lo calcula el servidor; lo paga el cliente y es la ganancia del rider.
+   */
   costoEnvio: number;
+  /** Distancia hasta la dirección del usuario actual, en km. */
+  distanciaKm?: number;
   /** Alias al que el cliente transfiere el pedido. */
   aliasCobro: string;
 }

@@ -53,10 +53,12 @@ describe('MockUsuariosApi', () => {
     if (!r.ok) return;
     expect(r.pedido.estado).toBe('esperando');
     expect(r.pedido.items).toEqual([{ productoId: 'k1-p1', nombre: 'Coca-Cola 1,5 L', cantidad: 6, precioUnitario: 2800 }]);
-    expect(totalPedido(r.pedido)).toBe(6 * 2800 + 1500);
+    // El Faro queda a unos 500 m de Belgrano 845: $1.000 + 0,5 km × $400 = $1.200.
+    expect(r.pedido.distanciaKm).toBe(0.5);
+    expect(totalPedido(r.pedido)).toBe(6 * 2800 + 1200);
     expect(r.pedido.pin).toMatch(/^\d{4}$/);
     expect(r.pedido.destino.direccion).toBe('Belgrano 845');
-    expect(r.pedido).toMatchObject({ pago: 'pendiente', aliasKiosco: 'elfaro.kiosco', comisionFreeDeli: 1680, gananciaRider: 1500 });
+    expect(r.pedido).toMatchObject({ pago: 'pendiente', aliasKiosco: 'elfaro.kiosco', comisionFreeDeli: 1680, gananciaRider: 1200, costoEnvio: 1200 });
   });
 
   it('rechaza kiosco cerrado, carrito vacío y productos de otro kiosco', async () => {
@@ -65,6 +67,14 @@ describe('MockUsuariosApi', () => {
     expect(await firstValueFrom(api.crearPedido({ kioscoId: 'k5', items: [{ productoId: 'k5-p1', cantidad: 1 }] }))).toEqual({ ok: false, motivo: 'kiosco-cerrado' });
     expect(await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [] }))).toEqual({ ok: false, motivo: 'sin-productos' });
     expect(await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k2-p1', cantidad: 6 }] }))).toEqual({ ok: false, motivo: 'producto-inexistente' });
+  });
+
+  it('el envío depende de la distancia a la dirección del usuario', async () => {
+    configurar();
+    const cerca = await firstValueFrom(api.kiosco('k1'));
+    const lejos = await firstValueFrom(api.kiosco('k4'));
+    expect(cerca!.distanciaKm).toBeLessThan(lejos!.distanciaKm!);
+    expect(cerca!.costoEnvio).toBeLessThan(lejos!.costoEnvio);
   });
 
   it('exige el pedido mínimo de $15.000 en productos', async () => {

@@ -6,7 +6,7 @@ import { Kiosco, Producto } from '../models/kiosco';
 import { Pedido, cantidadProductos, totalPedido } from '../models/pedido';
 import { DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } from '../models/usuario';
 import { ZonaId } from '../models/zona';
-import { ESTADOS_ABIERTOS, PEDIDO_MINIMO, calcularComision, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
+import { ESTADOS_ABIERTOS, PEDIDO_MINIMO, calcularComision, costoEnvio, distanciaKm, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
 import { FREEDELI_CONFIG } from '../config/freedeli.config';
 import { MockDb, OTRO_RIDER_ID, USUARIO_ACTUAL_ID } from './mock-db';
 import { LATENCIA_MOCK } from './mock-riders.api';
@@ -96,16 +96,31 @@ export class MockUsuariosApi extends UsuariosApi {
   }
 
   cambiarDireccion(direccion: DireccionEntrega): Observable<Usuario> {
-    this.db.usuarios.update((us) => us.map((u) => (u.id === USUARIO_ACTUAL_ID ? { ...u, direccion: { ...direccion } } : u)));
+    const ubicacion = this.db.geolocalizar(direccion.direccion, direccion.zona);
+    this.db.usuarios.update((us) => us.map((u) => (u.id === USUARIO_ACTUAL_ID ? { ...u, direccion: { ...direccion, ubicacion } } : u)));
     return this.responder(this.usuario());
   }
 
+  /** El kiosco con distancia y costo de envío hasta la dirección del usuario. */
+  private paraUsuario(k: Kiosco): Kiosco {
+    const u = this.usuario();
+    const destino = u.direccion.ubicacion ?? this.db.geolocalizar(u.direccion.direccion, u.direccion.zona);
+    const km = distanciaKm(k.ubicacion, destino);
+    return { ...k, distanciaKm: km, costoEnvio: costoEnvio(km, this.config.tarifaEnvio) };
+  }
+
   kioscosAbiertos(zona?: ZonaId): Observable<Kiosco[]> {
-    return this.responder(this.db.kioscos().filter((k) => puedeRecibirPedidos(k) && (!zona || k.zona === zona)));
+    return this.responder(
+      this.db
+        .kioscos()
+        .filter((k) => puedeRecibirPedidos(k) && (!zona || k.zona === zona))
+        .map((k) => this.paraUsuario(k)),
+    );
   }
 
   kiosco(id: string): Observable<Kiosco | null> {
-    return this.responder(this.db.kioscos().find((k) => k.id === id) ?? null);
+    const k = this.db.kioscos().find((x) => x.id === id);
+    return this.responder(k ? this.paraUsuario(k) : null);
   }
 
   productos(kioscoId: string): Observable<Producto[]> {
@@ -113,7 +128,8 @@ export class MockUsuariosApi extends UsuariosApi {
   }
 
   crearPedido(nuevo: NuevoPedido): Observable<ResultadoCrearPedido> {
-    const kiosco = this.db.kioscos().find((k) => k.id === nuevo.kioscoId);
+    const encontrado = this.db.kioscos().find((k) => k.id === nuevo.kioscoId);
+    const kiosco = encontrado ? this.paraUsuario(encontrado) : undefined;
     const catalogo = this.db.productos().filter((p) => p.kioscoId === nuevo.kioscoId);
     const lineas = nuevo.items.filter((i) => Number.isInteger(i.cantidad) && i.cantidad > 0);
 
@@ -146,6 +162,7 @@ export class MockUsuariosApi extends UsuariosApi {
           return { productoId: prod.id, nombre: prod.nombre, cantidad: i.cantidad, precioUnitario: prod.precio };
         }),
         costoEnvio: kiosco.costoEnvio,
+        distanciaKm: kiosco.distanciaKm ?? 0,
         propina: 0,
         gananciaRider: kiosco.costoEnvio,
         // El cliente transfiere al alias del kiosco; queda pendiente hasta que el kiosco lo confirme.

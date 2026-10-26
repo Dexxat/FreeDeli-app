@@ -5,11 +5,21 @@ export interface FreeDeliConfig {
   whatsapp: string;
   /** Porcentaje del subtotal de productos que cobra FreeDeli. La comisión nunca baja de COMISION_MINIMA. */
   comisionPorcentaje: number;
+  /** Costo de envío = base + porKm × distancia, redondeado a $100 para arriba. */
+  tarifaEnvio: TarifaEnvio;
 }
+
+export interface TarifaEnvio {
+  base: number;
+  porKm: number;
+}
+
+/** Valores provisorios hasta definir la tarifa real. */
+export const TARIFA_ENVIO_PROVISORIA: TarifaEnvio = { base: 1000, porKm: 400 };
 
 /** Valores por defecto. Reemplazar el WhatsApp por el real con provideFreeDeliConfig(). */
 export const FREEDELI_CONFIG = new InjectionToken<FreeDeliConfig>('FREEDELI_CONFIG', {
-  factory: () => ({ whatsapp: '5491100000000', comisionPorcentaje: 10 }),
+  factory: () => ({ whatsapp: '5491100000000', comisionPorcentaje: 10, tarifaEnvio: TARIFA_ENVIO_PROVISORIA }),
 });
 
 export function provideFreeDeliConfig(config: FreeDeliConfig) {

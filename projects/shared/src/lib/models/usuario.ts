@@ -1,10 +1,12 @@
 import { Kiosco } from './kiosco';
-import { ZonaId } from './zona';
+import { Ubicacion, ZonaId } from './zona';
 
 export interface DireccionEntrega {
   direccion: string;
   notas?: string;
   zona: ZonaId;
+  /** La pone el servidor al geolocalizar la dirección. */
+  ubicacion?: Ubicacion;
 }
 
 export interface Usuario {

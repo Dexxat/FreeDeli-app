@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { PEDIDO_MINIMO, PesosPipe, Producto, UsuariosApi, nombreZona, rangoTiempo } from '@freedeli/shared';
 import { combineLatest, distinctUntilChanged, filter, map, shareReplay, switchMap, take, tap } from 'rxjs';
 import { UsuarioStore } from '../../core/usuario.store';
+import { formatearKm } from '../kioscos/kioscos';
 
 const MOTIVOS = {
   'kiosco-cerrado': 'El kiosco cerró recién. Elegí otro.',
@@ -54,6 +55,7 @@ export default class Kiosco {
   protected readonly zona = nombreZona;
   protected readonly tiempo = rangoTiempo;
   protected readonly maximo = MAXIMO_POR_PRODUCTO;
+  protected readonly km = formatearKm;
 
   constructor() {
     // "Pedí de nuevo": carga los productos del pedido anterior que sigan en el catálogo.

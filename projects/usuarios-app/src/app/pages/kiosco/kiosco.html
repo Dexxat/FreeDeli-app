@@ -2,7 +2,7 @@
   <div class="contenido">
     <section class="cabecera">
       <h1 class="nombre">{{ k.nombre }}</h1>
-      <span class="sutil">{{ zona(k.zona) }} · {{ tiempo(k.tiempoEstimadoMin) }} · Envío {{ k.costoEnvio | pesos }}</span>
+      <span class="sutil">{{ zona(k.zona) }} · {{ km(k.distanciaKm) }} · {{ tiempo(k.tiempoEstimadoMin) }} · Envío {{ k.costoEnvio | pesos }}</span>
     </section>
 
     @if (!k.abierto || k.pausado) {

@@ -1,4 +1,5 @@
 import { Kiosco } from '../models/kiosco';
+import { Ubicacion } from '../models/zona';
 import { EstadoPedido, OfertaPedido, PASOS_ESTADO, PasoEstado, Pedido, cantidadProductos } from '../models/pedido';
 
 /** Genera un PIN de entrega de 4 dígitos (0000–9999). */
@@ -45,6 +46,20 @@ export function estadosDeBarra(estado: EstadoPedido): Record<PasoEstado, EstadoP
     }
   });
   return resultado;
+}
+
+/** Distancia en línea recta entre dos puntos, en km, con un decimal. */
+export function distanciaKm(a: Ubicacion, b: Ubicacion): number {
+  const rad = (g: number) => (g * Math.PI) / 180;
+  const dLat = rad(b.lat - a.lat);
+  const dLng = rad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return Math.round(2 * 6371 * Math.asin(Math.sqrt(h)) * 10) / 10;
+}
+
+/** Base + valor por km, redondeado a $100 para arriba. */
+export function costoEnvio(km: number, tarifa: { base: number; porKm: number }): number {
+  return Math.ceil((tarifa.base + tarifa.porKm * km) / 100) * 100;
 }
 
 /** Monto mínimo de productos por pedido, en pesos. Con el 10 % da la comisión mínima. */

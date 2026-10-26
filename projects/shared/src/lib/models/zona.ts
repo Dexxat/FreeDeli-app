@@ -12,6 +12,18 @@ export const ZONAS: readonly Zona[] = [
   { id: 'bella-vista', nombre: 'Bella Vista' },
 ];
 
+export interface Ubicacion {
+  lat: number;
+  lng: number;
+}
+
+/** Centro aproximado de cada zona. */
+export const CENTRO_ZONA: Record<ZonaId, Ubicacion> = {
+  'san-miguel': { lat: -34.5433, lng: -58.7117 },
+  muniz: { lat: -34.5486, lng: -58.6997 },
+  'bella-vista': { lat: -34.5626, lng: -58.6895 },
+};
+
 export function nombreZona(id: ZonaId): string {
   return ZONAS.find((z) => z.id === id)?.nombre ?? id;
 }

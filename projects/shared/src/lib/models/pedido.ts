@@ -46,6 +46,8 @@ export interface Pedido {
   destino: { nombre: string; direccion: string; notas?: string };
   items: ItemPedido[];
   costoEnvio: number;
+  /** Distancia del kiosco a la entrega, en km. Define el costo de envío. */
+  distanciaKm: number;
   propina: number;
   /** Lo que gana el rider por el envío (sin propina). */
   gananciaRider: number;

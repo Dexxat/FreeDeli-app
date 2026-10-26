@@ -7,7 +7,7 @@ const ahora = new Date(2026, 9, 26, 15, 0); // lunes 26/10/2026
 function pedido(entregadoEn: Date, gananciaRider: number, propina = 0, estado: Pedido['estado'] = 'entregado'): Pedido {
   return {
     id: String(Math.random()), numero: 1, zona: 'muniz', kioscoId: 'k', kioscoNombre: 'K', kioscoDireccion: '',
-    usuarioId: 'u', destino: { nombre: '', direccion: '' }, items: [], costoEnvio: 0, propina, gananciaRider, pago: 'liberado', aliasKiosco: '', comisionFreeDeli: 0,
+    usuarioId: 'u', destino: { nombre: '', direccion: '' }, items: [], costoEnvio: 0, distanciaKm: 0, propina, gananciaRider, pago: 'liberado', aliasKiosco: '', comisionFreeDeli: 0,
     pin: '0000', estado, creadoEn: entregadoEn, entregadoEn,
   };
 }

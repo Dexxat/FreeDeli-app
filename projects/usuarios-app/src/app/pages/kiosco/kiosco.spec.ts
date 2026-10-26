@@ -46,15 +46,15 @@ describe('Kiosco (Usuarios)', () => {
     agregar(el, 'Coca-Cola 1,5 L');
     agregar(el, 'Alfajor triple');
     await estable();
-    expect(el.querySelector('.resumen')?.textContent).toContain('3 productos + envío $1.500');
-    expect(el.querySelector('.total')?.textContent?.trim()).toBe('$8.300');
+    expect(el.querySelector('.resumen')?.textContent).toContain('3 productos + envío $1.200');
+    expect(el.querySelector('.total')?.textContent?.trim()).toBe('$8.000');
     expect(el.querySelector('.minimo')?.textContent).toContain('Te faltan $8.200');
     expect(boton(el, 'HACER PEDIDO').disabled).toBe(true);
 
     for (let i = 0; i < 3; i++) agregar(el, 'Coca-Cola 1,5 L');
     await estable();
     expect(el.querySelector('.minimo')).toBeNull();
-    expect(el.querySelector('.total')?.textContent?.trim()).toBe('$16.700');
+    expect(el.querySelector('.total')?.textContent?.trim()).toBe('$16.400');
 
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     boton(el, 'HACER PEDIDO').click();

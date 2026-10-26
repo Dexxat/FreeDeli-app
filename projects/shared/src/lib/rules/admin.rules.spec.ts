@@ -5,7 +5,7 @@ const base: Pedido = {
   id: 'x', numero: 1, zona: 'muniz', kioscoId: 'k3', kioscoNombre: 'K', kioscoDireccion: '', usuarioId: 'u1',
   destino: { nombre: '', direccion: '' },
   items: [{ productoId: 'k3-p1', nombre: 'Coca', cantidad: 2, precioUnitario: 2800 }],
-  costoEnvio: 1800, propina: 500, gananciaRider: 1800, pago: 'liberado', aliasKiosco: 'a', comisionFreeDeli: 1500,
+  costoEnvio: 1800, distanciaKm: 2, propina: 500, gananciaRider: 1800, pago: 'liberado', aliasKiosco: 'a', comisionFreeDeli: 1500,
   pin: '0000', estado: 'entregado', creadoEn: new Date(),
 };
 
