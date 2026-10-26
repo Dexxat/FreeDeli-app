@@ -38,3 +38,8 @@ export interface ResumenGanancias {
   /** Por hora (jornada), por día (semana) o por semana (mes pasado). */
   barras: BarraGanancia[];
 }
+
+/** Código corto y legible del rider: "R-31B3F5" para un id largo, o el id en mayúsculas si ya es corto. */
+export function codigoRider(id: string): string {
+  return id.length > 8 ? `R-${id.replace(/-/g, '').slice(0, 6).toUpperCase()}` : id.toUpperCase();
+}

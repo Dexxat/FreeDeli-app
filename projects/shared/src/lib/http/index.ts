@@ -10,3 +10,4 @@ export * from './provide-api';
 export * from './http-riders.api';
 export * from './http-pedidos.api';
 export * from './http-kioscos.api';
+export * from './http-admin.api';

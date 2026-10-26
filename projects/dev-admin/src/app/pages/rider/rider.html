@@ -3,7 +3,7 @@
 @if (rider(); as r) {
   <section class="cabecera">
     <div class="datos">
-      <h1 class="titulo">{{ r.id.toUpperCase() }} · {{ r.nombre }}</h1>
+      <h1 class="titulo">{{ codigoRider(r.id) }} · {{ r.nombre }}</h1>
       <p class="sutil">{{ r.telefono }} · {{ r.vehiculo.modelo }} {{ r.vehiculo.patente }} · Rider desde {{ desde() }}</p>
       <p class="sutil">Zonas: {{ zonas() }}</p>
     </div>

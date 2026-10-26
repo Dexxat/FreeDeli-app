@@ -163,3 +163,13 @@ export interface GananciasKiosco {
 }
 
 export type DatosKiosco = Pick<Kiosco, 'nombre' | 'direccion' | 'aliasCobro' | 'tiempoEstimadoMin'>;
+
+/** Kiosco o rider que se registró y espera la aprobación del dueño. */
+export interface AltaPendiente {
+  id: string;
+  email: string;
+  rol: 'KIOSCO' | 'RIDER';
+  creadaEn: Date;
+  kiosco?: { nombre: string; direccion: string; zona: ZonaId; aliasCobro: string };
+  rider?: { nombre: string; telefono: string; dni: string; vehiculoModelo: string; patente: string };
+}

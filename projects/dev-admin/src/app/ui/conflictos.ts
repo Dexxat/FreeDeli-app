@@ -47,6 +47,8 @@ export const TEXTO_ESTADO_CONFLICTO: Record<EstadoConflicto, string> = {
   `,
   styles: `
     @use 'panel';
+    /* Sin caja propia: no suma espacio en MAIN cuando no muestra nada. */
+    :host { display: contents; }
     dialog {
       width: min(480px, calc(100% - 32px));
       padding: 20px;

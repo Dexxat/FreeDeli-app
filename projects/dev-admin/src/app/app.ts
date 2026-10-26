@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { ICONOS, ItemNav } from '@freedeli/shared';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { API_URL, ICONOS, ItemNav, SesionService } from '@freedeli/shared';
+import { filter, map } from 'rxjs';
 
 const SECCIONES: readonly ItemNav[] = [
   { ruta: '/main', etiqueta: 'MAIN', icono: ICONOS.vivo },
@@ -13,6 +15,9 @@ const SECCIONES: readonly ItemNav[] = [
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    @if (sinShell()) {
+      <router-outlet />
+    } @else {
     <div class="app">
       <aside class="lateral">
         <a class="marca" routerLink="/main" aria-label="FreeDeli Dev, ir a MAIN">
@@ -32,11 +37,15 @@ const SECCIONES: readonly ItemNav[] = [
           }
         </nav>
         <a class="whatsapp" href="https://web.whatsapp.com/" target="_blank" rel="noopener">Abrir WhatsApp de la empresa</a>
+        @if (conApi) {
+          <button type="button" class="salir" (click)="salir()">Cerrar sesión</button>
+        }
       </aside>
       <main class="contenido">
         <router-outlet />
       </main>
     </div>
+    }
   `,
   styles: `
     .app { min-height: 100dvh; display: grid; grid-template-columns: 240px minmax(0, 1fr); background: var(--fd-navy-800); }
@@ -60,6 +69,7 @@ const SECCIONES: readonly ItemNav[] = [
       font-family: var(--fd-font-pixel); font-size: 9px;
     }
     nav a.activo { background: var(--fd-navy-700); color: var(--fd-yellow-400); box-shadow: inset 4px 0 0 var(--fd-yellow-400); }
+    .salir { background: none; border: none; cursor: pointer; color: var(--fd-amber-400); font: inherit; font-size: 13px; font-weight: 700; text-align: left; }
     .whatsapp { margin-top: auto; padding: 12px; background: var(--fd-navy-700); color: #fff; font-size: 13px; font-weight: 600; text-align: center; text-decoration: none; }
     a:focus-visible { outline: 3px solid var(--fd-yellow-400); outline-offset: 2px; }
     .contenido { min-width: 0; padding: 28px 32px 40px; }
@@ -77,4 +87,24 @@ const SECCIONES: readonly ItemNav[] = [
 })
 export class App {
   protected readonly secciones = SECCIONES;
+  private readonly router = inject(Router);
+  private readonly sesion = inject(SesionService);
+  protected readonly conApi = !!inject(API_URL, { optional: true });
+
+  protected readonly sinShell = toSignal(
+    this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map(() => {
+        let r = this.router.routerState.snapshot.root;
+        while (r.firstChild) r = r.firstChild;
+        return !!r.data['sinShell'];
+      }),
+    ),
+    { initialValue: true },
+  );
+
+  protected salir(): void {
+    this.sesion.cerrar();
+    void this.router.navigateByUrl('/ingresar');
+  }
 }

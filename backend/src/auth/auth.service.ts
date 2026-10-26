@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { hashearClave, verificarClave } from './clave.js';
 import type { RegistroKioscoDto, RegistroRiderDto, RegistroUsuarioDto } from './dto.js';
 import type { Sesion } from './sesion.js';
+import { EventosService } from '../eventos/eventos.service.js';
 
 export interface RespuestaSesion {
   token: string;
@@ -21,6 +22,7 @@ export class AuthService implements OnApplicationBootstrap {
     private readonly db: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly eventos: EventosService,
   ) {}
 
   /** Crea la cuenta del dueño (única instancia de FreeDeli Dev) si no existe. */
@@ -90,6 +92,7 @@ export class AuthService implements OnApplicationBootstrap {
         },
       },
     });
+    this.eventos.emitir({ tipo: 'alta', cuentaId: cuenta.id });
     return this.sesion(cuenta);
   }
 
@@ -115,6 +118,7 @@ export class AuthService implements OnApplicationBootstrap {
         },
       },
     });
+    this.eventos.emitir({ tipo: 'alta', cuentaId: cuenta.id });
     return this.sesion(cuenta);
   }
 

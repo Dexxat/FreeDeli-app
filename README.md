@@ -27,7 +27,7 @@ npx ng serve dev-admin --port 4302
 npx ng serve kioscos-app --port 4303
 ```
 
-Contra la API local (Usuarios, Riders y Kioscos ya están conectadas):
+Contra la API local (las cuatro apps están conectadas):
 
 ```bash
 cd backend && npm run db           # Postgres embebido, en otra terminal
@@ -35,6 +35,7 @@ cd backend && npm run start:dev    # API en http://localhost:3000/api
 npx ng serve usuarios-app -c api --port 4301
 npx ng serve riders-app -c api --port 4300
 npx ng serve kioscos-app -c api --port 4303
+npx ng serve dev-admin -c api --port 4302    # ingresa con DEV_EMAIL y DEV_CLAVE de backend/.env
 ```
 
 ## Tests

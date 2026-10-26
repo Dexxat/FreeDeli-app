@@ -16,6 +16,8 @@
   }
 }
 
+<fd-panel-altas />
+
 <fd-dialogo-conflicto #dialogo />
 <fd-panel-conflictos [dialogo]="dialogo" />
 
@@ -44,7 +46,7 @@
           </div>
           <div class="lado derecha">
             @if (f.riderId) {
-              <a class="id enlace-sutil" [routerLink]="['/riders', f.riderId]" [attr.aria-label]="'Ficha de ' + f.riderNombre">{{ f.riderId.toUpperCase() }}</a>
+              <a class="id enlace-sutil" [routerLink]="['/riders', f.riderId]" [attr.aria-label]="'Ficha de ' + f.riderNombre">{{ codigoRider(f.riderId) }}</a>
               <span class="detalle">{{ f.riderNombre }}</span>
               <span class="monto" [class.pendiente]="f.estado !== 'entregado'">
                 {{ f.gananciaRider | pesos }} <span class="sutil">{{ f.estado === 'entregado' ? 'ganó' : 'a cobrar' }}</span>

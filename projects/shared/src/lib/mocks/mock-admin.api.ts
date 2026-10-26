@@ -1,8 +1,8 @@
-import { Injectable, Injector, computed, inject } from '@angular/core';
+import { Injectable, Injector, computed, inject, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Observable, delay, distinctUntilChanged, map, of, throwError } from 'rxjs';
 import { AdminApi } from '../api/admin.api';
-import { AlertaAdmin, Conflicto, MovimientoSaldo, EntregaAdmin, EstadoConflicto, FilaMain, NuevoConflicto, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
+import { AlertaAdmin, AltaPendiente, Conflicto, MovimientoSaldo, EntregaAdmin, EstadoConflicto, FilaMain, NuevoConflicto, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
 import { ZONAS, ZonaId } from '../models/zona';
 import { Pedido } from '../models/pedido';
 import { codigoPedido } from '../models/pedido';
@@ -226,6 +226,34 @@ export class MockAdminApi extends AdminApi {
     if (!Number.isFinite(monto) || monto <= 0) return throwError(() => new Error('Ingresá un monto mayor a cero.'));
     this.db.moverSaldo(kioscoId, 'carga', Math.round(monto), referencia.trim() || 'Transferencia a FreeDeli');
     return of(this.kioscosAdmin().find((k) => k.id === kioscoId)!).pipe(delay(this.latencia));
+  }
+
+  /** Altas de ejemplo para ver la pantalla con datos simulados. */
+  private readonly altas = signal<AltaPendiente[]>([
+    {
+      id: 'alta-1',
+      email: 'kiosco.nuevo@example.com',
+      rol: 'KIOSCO',
+      creadaEn: new Date(Date.now() - 3 * 3_600_000),
+      kiosco: { nombre: 'Kiosco La Plaza', direccion: 'Italia 455', zona: 'muniz', aliasCobro: 'laplaza.kiosco' },
+    },
+    {
+      id: 'alta-2',
+      email: 'rider.nuevo@example.com',
+      rol: 'RIDER',
+      creadaEn: new Date(Date.now() - 40 * 60_000),
+      rider: { nombre: 'Julieta Sosa', telefono: '11 5555-0777', dni: '41222333', vehiculoModelo: 'Honda CG 150', patente: 'A321JKL' },
+    },
+  ]);
+  private readonly altas$ = toObservable(this.altas);
+
+  altasPendientes(): Observable<AltaPendiente[]> {
+    return this.altas$;
+  }
+
+  resolverAlta(id: string, _aprobada: boolean): Observable<void> {
+    this.altas.update((as) => as.filter((a) => a.id !== id));
+    return of(undefined).pipe(delay(this.latencia));
   }
 
   pausarKiosco(id: string, pausado: boolean): Observable<KioscoAdmin> {

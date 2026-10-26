@@ -282,12 +282,29 @@
                   "maximumError": "10kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "projects/dev-admin/src/environments/environment.ts",
+                  "with": "projects/dev-admin/src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "api": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "projects/dev-admin/src/environments/environment.ts",
+                  "with": "projects/dev-admin/src/environments/environment.api.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -300,6 +317,9 @@
             },
             "development": {
               "buildTarget": "dev-admin:build:development"
+            },
+            "api": {
+              "buildTarget": "dev-admin:build:api"
             }
           },
           "defaultConfiguration": "development"

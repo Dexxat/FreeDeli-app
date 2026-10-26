@@ -36,6 +36,7 @@ export class EventosController {
 
   private leCorresponde(e: Evento, rol: Rol, perfilId: string | null): boolean {
     if (rol === Rol.DEV) return true;
+    if (e.tipo === 'alta') return false;
     if (e.tipo === 'oferta') return rol === Rol.RIDER && e.riderId === perfilId;
     if (rol === Rol.USUARIO) return e.pedido.usuarioId === perfilId;
     if (rol === Rol.KIOSCO) return e.pedido.kioscoId === perfilId;

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { AdminApi, BarraEstado, PeriodoAdmin, PesosPipe, codigoPedido, nombreZona } from '@freedeli/shared';
+import { AdminApi, BarraEstado, PeriodoAdmin, PesosPipe, codigoPedido, codigoRider, nombreZona } from '@freedeli/shared';
 import { combineLatest, startWith, switchMap } from 'rxjs';
 import { SelectorPeriodo } from '../../ui/zonas';
 import { TEXTO_ESTADO } from '../main/main';
@@ -40,6 +40,7 @@ export default class Rider {
   });
   protected readonly codigo = (numero: number) => codigoPedido({ numero });
   protected readonly textoEstado = TEXTO_ESTADO;
+  protected readonly codigoRider = codigoRider;
 
   protected alternarPausa(): void {
     const r = this.rider();

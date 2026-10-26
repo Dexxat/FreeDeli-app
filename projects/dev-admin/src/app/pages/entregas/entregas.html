@@ -41,7 +41,7 @@
                 <h3 class="subtitulo">DINERO</h3>
                 <ul class="items">
                   <li><span>Pagó el cliente</span><span>{{ e.totalCliente | pesos }}</span></li>
-                  <li><span>Envío al rider ({{ e.riderId?.toUpperCase() }})</span><span>{{ e.envioRider | pesos }}</span></li>
+                  <li><span>Envío al rider ({{ e.riderId ? codigoRider(e.riderId) : '—' }})</span><span>{{ e.envioRider | pesos }}</span></li>
                   <li><span>Comisión FreeDeli</span><span class="amarillo">{{ e.comisionFreeDeli | pesos }}</span></li>
                   <li><span>Neto del kiosco</span><span>{{ e.netoKiosco | pesos }}</span></li>
                 </ul>

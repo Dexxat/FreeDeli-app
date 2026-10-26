@@ -10,7 +10,9 @@ export type EventoApi =
   | { tipo: 'pedido'; pedido: Pedido }
   | { tipo: 'oferta'; riderId: string; oferta: OfertaPedido | null }
   /** Se abrió (o reabrió) la conexión: conviene volver a pedir el estado. */
-  | { tipo: 'conexion' };
+  | { tipo: 'conexion' }
+  /** Alta nueva de kiosco o rider (solo Dev). */
+  | { tipo: 'alta'; cuentaId: string };
 
 /**
  * Eventos en tiempo real de la API (Server-Sent Events). Se reconecta solo si se corta,
@@ -63,6 +65,7 @@ export class EventosCliente {
       fuente.onopen = () => this.zona.run(() => sub.next({ tipo: 'conexion' }));
       fuente.addEventListener('pedido', recibir as EventListener);
       fuente.addEventListener('oferta', recibir as EventListener);
+      fuente.addEventListener('alta', recibir as EventListener);
       return () => fuente.close();
     });
   }

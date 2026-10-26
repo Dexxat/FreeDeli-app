@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { Conflicto, MovimientoSaldo, EntregaAdmin, EstadoConflicto, FilaMain, NuevoConflicto, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
+import { AltaPendiente, Conflicto, MovimientoSaldo, EntregaAdmin, EstadoConflicto, FilaMain, NuevoConflicto, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
 import { ZonaId } from '../models/zona';
 import { PeriodoHistorial } from '../models/rider';
 
@@ -33,6 +33,9 @@ export abstract class AdminApi {
   abstract movimientosSaldo(kioscoId: string): Observable<MovimientoSaldo[]>;
   /** Acredita una carga de saldo: el kiosco transfirió ese monto al alias de FreeDeli. */
   abstract acreditarSaldo(kioscoId: string, monto: number, referencia: string): Observable<KioscoAdmin>;
+  /** Kioscos y riders esperando aprobación. Emite en cada cambio. */
+  abstract altasPendientes(): Observable<AltaPendiente[]>;
+  abstract resolverAlta(id: string, aprobada: boolean): Observable<void>;
   /** Pausa o reactiva un kiosco. Pausado, no aparece en la app de usuarios. */
   abstract pausarKiosco(id: string, pausado: boolean): Observable<KioscoAdmin>;
 }

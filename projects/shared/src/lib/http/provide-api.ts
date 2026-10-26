@@ -1,6 +1,8 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
+import { AdminApi } from '../api/admin.api.js';
 import { KioscosApi } from '../api/kioscos.api.js';
+import { HttpAdminApi } from './http-admin.api';
 import { PedidosApi } from '../api/pedidos.api.js';
 import { HttpKioscosApi } from './http-kioscos.api';
 import { RidersApi } from '../api/riders.api.js';
@@ -20,5 +22,6 @@ export function provideFreeDeliApi(opciones: { url: string }): EnvironmentProvid
     { provide: RidersApi, useClass: HttpRidersApi },
     { provide: PedidosApi, useClass: HttpPedidosApi },
     { provide: KioscosApi, useClass: HttpKioscosApi },
+    { provide: AdminApi, useClass: HttpAdminApi },
   ]);
 }

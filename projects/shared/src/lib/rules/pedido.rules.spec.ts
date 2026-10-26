@@ -1,3 +1,4 @@
+import { codigoRider } from '../models/rider.js';
 import { PEDIDO_MINIMO, costoEnvio, distanciaKm, calcularComision, puedeRecibirPedidos, minutosParaLlegar, direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules.js';
 
 describe('PIN', () => {
@@ -98,5 +99,12 @@ describe('envío por distancia', () => {
     expect(costoEnvio(0, { base: 1000, porKm: 400 })).toBe(1000);
     expect(costoEnvio(2.3, { base: 1000, porKm: 400 })).toBe(2000);
     expect(costoEnvio(2.6, { base: 1000, porKm: 400 })).toBe(2100);
+  });
+});
+
+describe('codigoRider', () => {
+  it('acorta los ids largos', () => {
+    expect(codigoRider('31b3f597-f4c1-44eb-bb34-1f07cd39d26a')).toBe('R-31B3F5');
+    expect(codigoRider('r1')).toBe('R1');
   });
 });

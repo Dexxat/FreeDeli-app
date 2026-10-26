@@ -117,6 +117,14 @@ describe('FreeDeli Dev', () => {
     expect(el.textContent).toContain('Op. 555');
   });
 
+  it('MAIN muestra las altas pendientes y permite aprobarlas', async () => {
+    const el = await abrir('/main');
+    expect(el.querySelector('#titulo-altas')?.textContent).toContain('2');
+    boton(el, 'Aprobar').click();
+    await estable();
+    expect(el.querySelector('#titulo-altas')?.textContent).toContain('1');
+  });
+
   it('KIOSCOS permite pausar', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     const el = await abrir('/kioscos');

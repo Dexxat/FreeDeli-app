@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { AdminApi, PeriodoAdmin, PesosPipe, ZonaId, codigoPedido, nombreZona } from '@freedeli/shared';
+import { AdminApi, PeriodoAdmin, PesosPipe, ZonaId, codigoPedido, codigoRider, nombreZona } from '@freedeli/shared';
 import { combineLatest, startWith, switchMap } from 'rxjs';
 import { SelectorPeriodo, SelectorZonas, TODAS_LAS_ZONAS } from '../../ui/zonas';
 
@@ -38,6 +38,7 @@ export default class Entregas {
 
   protected readonly codigo = (numero: number) => codigoPedido({ numero });
   protected readonly zona = nombreZona;
+  protected readonly codigoRider = codigoRider;
   protected readonly fecha = (d?: Date) => (d ? `${FECHA.format(d)} ${HORA.format(d)}` : '—');
   protected readonly hora = (d?: Date) => (d ? HORA.format(d) : '—');
 }
