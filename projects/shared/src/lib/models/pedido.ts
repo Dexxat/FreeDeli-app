@@ -69,3 +69,20 @@ export function codigoPedido(p: Pick<Pedido, 'numero'>): string {
 export function cantidadProductos(p: Pick<Pedido, 'items'>): number {
   return p.items.reduce((acc, i) => acc + i.cantidad, 0);
 }
+
+/**
+ * Pedido ofrecido a un rider. Muestra lo justo para decidir:
+ * la dirección exacta y las notas aparecen recién al aceptar.
+ */
+export interface OfertaPedido {
+  pedidoId: string;
+  numero: number;
+  zona: ZonaId;
+  kioscoNombre: string;
+  kioscoDireccion: string;
+  /** Calle y altura redondeada, por ejemplo "Conesa al 1800". */
+  entregaAproximada: string;
+  cantidadProductos: number;
+  gananciaRider: number;
+  expiraEn: Date;
+}

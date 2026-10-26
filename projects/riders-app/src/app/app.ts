@@ -2,11 +2,12 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { RiderStore } from './core/rider.store';
 import { BottomNav } from './layout/bottom-nav';
+import { OfertaEntrante } from './layout/oferta-entrante';
 import { RiderHeader } from './layout/rider-header';
 
 @Component({
   selector: 'fd-root',
-  imports: [RouterOutlet, RiderHeader, BottomNav],
+  imports: [RouterOutlet, RiderHeader, BottomNav, OfertaEntrante],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="app">
@@ -16,6 +17,7 @@ import { RiderHeader } from './layout/rider-header';
       </main>
       @if (!store.sesionCerrada()) {
         <fd-bottom-nav />
+        <fd-oferta-entrante />
       }
     </div>
   `,

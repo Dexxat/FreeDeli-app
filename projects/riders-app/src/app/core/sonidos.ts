@@ -42,6 +42,15 @@ export class Sonidos {
     ]);
   }
 
+  /** Pedido nuevo: tres notas agudas, como un "item encontrado". */
+  pedidoNuevo(): void {
+    this.tocar([
+      { frecuencia: 988, duracion: 0.08 },
+      { frecuencia: 1319, duracion: 0.08 },
+      { frecuencia: 1976, duracion: 0.16 },
+    ]);
+  }
+
   click(): void {
     this.tocar([{ frecuencia: 880, duracion: 0.04 }]);
   }

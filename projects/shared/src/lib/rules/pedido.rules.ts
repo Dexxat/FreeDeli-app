@@ -1,4 +1,4 @@
-import { EstadoPedido, PASOS_ESTADO, PasoEstado } from '../models/pedido';
+import { EstadoPedido, OfertaPedido, PASOS_ESTADO, PasoEstado, Pedido, cantidadProductos } from '../models/pedido';
 
 /** Genera un PIN de entrega de 4 dígitos (0000–9999). */
 export function generarPin(random: () => number = Math.random): string {
@@ -44,4 +44,28 @@ export function estadosDeBarra(estado: EstadoPedido): Record<PasoEstado, EstadoP
     }
   });
   return resultado;
+}
+
+/** Segundos que tiene el rider para aceptar un pedido nuevo. */
+export const SEGUNDOS_PARA_ACEPTAR = 30;
+
+/** "Conesa 1890" → "Conesa al 1800". Si no hay altura, devuelve la calle. */
+export function direccionAproximada(direccion: string): string {
+  const m = direccion.trim().match(/^(.*?)\s+(\d+)\b/);
+  if (!m) return direccion.trim();
+  return `${m[1]} al ${Math.floor(Number(m[2]) / 100) * 100}`;
+}
+
+export function armarOferta(p: Pedido, ahora: Date, segundos = SEGUNDOS_PARA_ACEPTAR): OfertaPedido {
+  return {
+    pedidoId: p.id,
+    numero: p.numero,
+    zona: p.zona,
+    kioscoNombre: p.kioscoNombre,
+    kioscoDireccion: p.kioscoDireccion,
+    entregaAproximada: direccionAproximada(p.destino.direccion),
+    cantidadProductos: cantidadProductos(p),
+    gananciaRider: p.gananciaRider,
+    expiraEn: new Date(ahora.getTime() + segundos * 1000),
+  };
 }

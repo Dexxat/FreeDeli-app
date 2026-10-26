@@ -47,6 +47,21 @@ Zonas de operación: **San Miguel**, **Muñiz** y **Bella Vista**.
 4. **Ganancias:** se ven por jornada, por semana o del mes pasado. Muestra el total, la cantidad de pedidos, el promedio por pedido, las horas online, un gráfico de barras (por hora, por día o por semana) y el desglose (envíos + propinas = total).
 5. **Perfil y configuración:** datos personales (teléfono, email, DNI), vehículo (moto y patente), datos de cobro (alias/CBU), preferencias (notificaciones, sonidos 8 bit), contacto por WhatsApp con FreeDeli y cerrar sesión.
 
+### Pedido entrante
+
+- Solo le llegan pedidos al rider que está **ON**, no está pausado y no tiene un pedido en curso.
+- El aviso aparece encima de cualquier sección, con sonido 8 bit (si están activados) y vibración.
+- Tiene **30 segundos** para aceptar, con cuenta regresiva.
+- Antes de aceptar ve: kiosco y zona de retiro, la entrega aproximada (calle y altura redondeada, por ejemplo "Conesa al 1800"), la cantidad de productos y su ganancia. La dirección exacta y las notas aparecen al aceptar.
+- Si rechaza o deja vencer el aviso, el pedido pasa a otro rider **sin castigo**: sigue ON.
+- Al aceptar, el pedido pasa a **Aceptado** y se abre la pantalla Vivo.
+
+### Perfil: qué puede editar el rider
+
+- Puede editar teléfono, email, moto, patente y alias/CBU.
+- Nombre y DNI quedan fijos: se cambian escribiendo al WhatsApp de FreeDeli.
+- No puede cerrar sesión con un pedido en curso.
+
 Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 
 ---

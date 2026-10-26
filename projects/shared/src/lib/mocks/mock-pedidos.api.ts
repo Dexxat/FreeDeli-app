@@ -1,11 +1,14 @@
-import { Injectable, inject } from '@angular/core';
+import { DestroyRef, Injectable, InjectionToken, computed, inject } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { Observable, delay, distinctUntilChanged, map, of, throwError } from 'rxjs';
-import { PedidosApi, ResultadoEntrega } from '../api/pedidos.api';
-import { Pedido } from '../models/pedido';
-import { siguienteEstado } from '../rules/pedido.rules';
+import { EMPTY, Observable, delay, distinctUntilChanged, map, of, switchMap, throwError, timer } from 'rxjs';
+import { PedidosApi, ResultadoAceptar, ResultadoEntrega } from '../api/pedidos.api';
+import { OfertaPedido, Pedido } from '../models/pedido';
+import { armarOferta, siguienteEstado } from '../rules/pedido.rules';
 import { MockDb, RIDER_ACTUAL_ID } from './mock-db';
 import { LATENCIA_MOCK } from './mock-riders.api';
+
+/** Cuánto tarda en llegar un pedido nuevo cuando el rider queda libre y ON, en ms. */
+export const DEMORA_OFERTA_MOCK = new InjectionToken<number>('DEMORA_OFERTA_MOCK', { factory: () => 8000 });
 
 const EN_CURSO: Pedido['estado'][] = ['aceptado', 'retirado', 'en-camino'];
 
@@ -13,7 +16,60 @@ const EN_CURSO: Pedido['estado'][] = ['aceptado', 'retirado', 'en-camino'];
 export class MockPedidosApi extends PedidosApi {
   private readonly db = inject(MockDb);
   private readonly latencia = inject(LATENCIA_MOCK);
+  private readonly demoraOferta = inject(DEMORA_OFERTA_MOCK);
   private readonly pedidos$ = toObservable(this.db.pedidos);
+
+  private readonly oferta = computed(() => this.db.ofertas()[RIDER_ACTUAL_ID] ?? null);
+  private readonly oferta$ = toObservable(this.oferta);
+
+  /** El rider puede recibir un pedido: ON, sin pausa, sin pedido en curso ni oferta pendiente. */
+  private readonly libre = computed(() => {
+    const r = this.db.riders().find((x) => x.id === RIDER_ACTUAL_ID);
+    const ocupado = this.db.pedidos().some((p) => p.riderId === RIDER_ACTUAL_ID && EN_CURSO.includes(p.estado));
+    return !!r && r.disponible && !r.pausado && !ocupado && !this.oferta();
+  });
+
+  constructor() {
+    super();
+    const destroyRef = inject(DestroyRef);
+
+    // Despachador simulado: si el rider queda libre, le llega un pedido de sus zonas.
+    const despacho = toObservable(this.libre)
+      .pipe(
+        distinctUntilChanged(),
+        switchMap((libre) => (libre ? timer(this.demoraOferta) : EMPTY)),
+      )
+      .subscribe(() => this.ofrecer());
+
+    // Vencimiento: si no responde a tiempo, el pedido pasa a otro rider.
+    const vencimiento = this.oferta$
+      .pipe(switchMap((o) => (o ? timer(Math.max(0, o.expiraEn.getTime() - Date.now())).pipe(map(() => o)) : EMPTY)))
+      .subscribe((o) => this.pasarAOtroRider(o.pedidoId));
+
+    destroyRef.onDestroy(() => {
+      despacho.unsubscribe();
+      vencimiento.unsubscribe();
+    });
+  }
+
+  private ofrecer(): void {
+    const rider = this.db.riders().find((x) => x.id === RIDER_ACTUAL_ID)!;
+    const pedido = this.db.crearPedidoEsperando(rider.zonas);
+    if (!pedido) return;
+    this.db.ofertas.update((o) => ({ ...o, [RIDER_ACTUAL_ID]: armarOferta(pedido, new Date()) }));
+  }
+
+  private quitarOferta(): void {
+    this.db.ofertas.update(({ [RIDER_ACTUAL_ID]: _, ...resto }) => resto);
+  }
+
+  private pasarAOtroRider(pedidoId: string): void {
+    this.quitarOferta();
+    const p = this.buscar(pedidoId);
+    if (p && p.estado === 'esperando') {
+      this.guardar({ ...p, estado: 'aceptado', riderId: 'otro', aceptadoEn: new Date() });
+    }
+  }
 
   private buscar(id: string): Pedido | undefined {
     return this.db.pedidos().find((p) => p.id === id);
@@ -35,6 +91,34 @@ export class MockPedidosApi extends PedidosApi {
       map((ps) => ps.find((p) => p.riderId === RIDER_ACTUAL_ID && EN_CURSO.includes(p.estado)) ?? null),
       distinctUntilChanged(),
     );
+  }
+
+  ofertaParaRider(): Observable<OfertaPedido | null> {
+    return this.oferta$.pipe(distinctUntilChanged());
+  }
+
+  aceptarOferta(pedidoId: string): Observable<ResultadoAceptar> {
+    const oferta = this.oferta();
+    const pedido = this.buscar(pedidoId);
+    let resultado: ResultadoAceptar;
+    if (!pedido) {
+      resultado = { ok: false, motivo: 'no-encontrado' };
+    } else if (!oferta || oferta.pedidoId !== pedidoId || oferta.expiraEn.getTime() < Date.now()) {
+      resultado = { ok: false, motivo: 'vencida' };
+    } else if (pedido.estado !== 'esperando') {
+      resultado = { ok: false, motivo: 'ya-tomado' };
+    } else {
+      const aceptado: Pedido = { ...pedido, estado: 'aceptado', riderId: RIDER_ACTUAL_ID, aceptadoEn: new Date() };
+      this.quitarOferta();
+      this.guardar(aceptado);
+      resultado = { ok: true, pedido: aceptado };
+    }
+    return of(resultado).pipe(delay(this.latencia));
+  }
+
+  rechazarOferta(pedidoId: string): Observable<void> {
+    if (this.oferta()?.pedidoId === pedidoId) this.pasarAOtroRider(pedidoId);
+    return of(undefined).pipe(delay(this.latencia));
   }
 
   avanzarEstado(pedidoId: string): Observable<Pedido> {

@@ -69,3 +69,65 @@ describe('Coherencia Historial / Ganancias', () => {
     expect(ganancias.total).toBe(total);
   });
 });
+
+describe('Ofertas de pedidos (mock)', () => {
+  const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  let pedidos: PedidosApi;
+  let riders: RidersApi;
+  let db: MockDb;
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0, demoraOferta: 20 })] });
+    pedidos = TestBed.inject(PedidosApi);
+    riders = TestBed.inject(RidersApi);
+    db = TestBed.inject(MockDb);
+    // Liberar al rider del pedido en curso del seed.
+    db.pedidos.update((ps) => ps.map((p) => (p.riderId === RIDER_ACTUAL_ID && p.estado === 'retirado' ? { ...p, estado: 'entregado' } : p)));
+  });
+
+  async function recibirOferta() {
+    await firstValueFrom(riders.setDisponible(true));
+    TestBed.tick();
+    await esperar(60);
+    TestBed.tick();
+    return db.ofertas()[RIDER_ACTUAL_ID];
+  }
+
+  it('no ofrece pedidos si el rider está OFF', async () => {
+    TestBed.tick();
+    await esperar(60);
+    expect(db.ofertas()[RIDER_ACTUAL_ID]).toBeUndefined();
+  });
+
+  it('ofrece un pedido de sus zonas sin la dirección exacta', async () => {
+    const oferta = await recibirOferta();
+    expect(oferta).toBeDefined();
+    expect(oferta.zona).toBe('san-miguel');
+    expect(oferta.entregaAproximada).toMatch(/ al \d+00$/);
+    expect(oferta.expiraEn.getTime() - Date.now()).toBeGreaterThan(28_000);
+  });
+
+  it('al aceptar, el pedido pasa a ser el pedido en curso', async () => {
+    const oferta = await recibirOferta();
+    const r = await firstValueFrom(pedidos.aceptarOferta(oferta.pedidoId));
+    expect(r.ok).toBe(true);
+    TestBed.tick();
+    expect(await firstValueFrom(pedidos.enCursoDelRider())).toMatchObject({ id: oferta.pedidoId, estado: 'aceptado' });
+    expect(db.ofertas()[RIDER_ACTUAL_ID]).toBeUndefined();
+  });
+
+  it('al rechazar, el pedido pasa a otro rider y el rider sigue ON', async () => {
+    const oferta = await recibirOferta();
+    await firstValueFrom(pedidos.rechazarOferta(oferta.pedidoId));
+    const p = db.pedidos().find((x) => x.id === oferta.pedidoId)!;
+    expect(p.riderId).toBe('otro');
+    expect(db.riders()[0].disponible).toBe(true);
+  });
+
+  it('no se puede aceptar una oferta vencida', async () => {
+    const oferta = await recibirOferta();
+    db.ofertas.update((o) => ({ ...o, [RIDER_ACTUAL_ID]: { ...oferta, expiraEn: new Date(Date.now() - 1) } }));
+    const r = await firstValueFrom(pedidos.aceptarOferta(oferta.pedidoId));
+    expect(r).toEqual({ ok: false, motivo: 'vencida' });
+  });
+});

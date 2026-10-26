@@ -1,4 +1,4 @@
-import { estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules';
+import { direccionAproximada, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules';
 
 describe('PIN', () => {
   it('genera 4 dígitos con ceros a la izquierda', () => {
@@ -34,5 +34,16 @@ describe('estadosDeBarra', () => {
   });
   it('entregado: todo completo', () => {
     expect(estadosDeBarra('entregado')).toEqual({ aceptado: 'completado', retirado: 'completado', 'en-camino': 'completado', entregado: 'completado' });
+  });
+});
+
+describe('direccionAproximada', () => {
+  it('redondea la altura a la centena', () => {
+    expect(direccionAproximada('Conesa 1890')).toBe('Conesa al 1800');
+    expect(direccionAproximada('Av. Pres. Perón 45')).toBe('Av. Pres. Perón al 0');
+    expect(direccionAproximada('Belgrano 845, depto 2B')).toBe('Belgrano al 800');
+  });
+  it('sin altura devuelve la calle', () => {
+    expect(direccionAproximada('Plaza San Martín')).toBe('Plaza San Martín');
   });
 });

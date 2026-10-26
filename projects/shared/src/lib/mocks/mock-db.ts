@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { Kiosco } from '../models/kiosco';
-import { Pedido } from '../models/pedido';
+import { OfertaPedido, Pedido } from '../models/pedido';
 import { Rider } from '../models/rider';
 import { DemandaZona, ZONAS, ZonaId } from '../models/zona';
 import { generarPin } from '../rules/pedido.rules';
@@ -66,7 +66,8 @@ export class MockDb {
   /** Horas online del rider actual por período (simulado). */
   readonly horasOnline = { jornada: 3.5, semana: 26, 'mes-pasado': 112 } as const;
 
-  private siguienteNumero = 1000;
+  /** Oferta vigente por rider. */
+  readonly ofertas = signal<Record<string, OfertaPedido>>({});
 
   constructor() {
     this.pedidos.set(this.generarPedidos(new Date()));
@@ -83,45 +84,66 @@ export class MockDb {
     }));
   }
 
+  /**
+   * Crea un pedido nuevo, esperando rider, en un kiosco abierto de alguna de las zonas.
+   * Devuelve null si no hay kioscos abiertos en esas zonas.
+   */
+  crearPedidoEsperando(zonas: readonly ZonaId[], ahora = new Date()): Pedido | null {
+    const kioscos = this.kioscos().filter((k) => k.abierto && !k.pausado && zonas.includes(k.zona));
+    if (kioscos.length === 0) return null;
+    const numero = Math.max(999, ...this.pedidos().map((p) => p.numero)) + 1;
+    const pedido = { ...this.armarPedido(Math.random, kioscos, ahora, undefined, 'esperando'), numero, id: `ped-${numero}` };
+    this.pedidos.update((ps) => [...ps, pedido]);
+    return pedido;
+  }
+
+  private armarPedido(
+    random: () => number,
+    kioscos: readonly Kiosco[],
+    creadoEn: Date,
+    riderId: string | undefined,
+    estado: Pedido['estado'],
+  ): Pedido {
+    const pick = <T>(xs: readonly T[]) => xs[Math.floor(random() * xs.length)];
+    const kiosco = pick(kioscos);
+    const items = Array.from({ length: 1 + Math.floor(random() * 3) }, () => {
+      const prod = pick(PRODUCTOS);
+      return { productoId: prod.id, nombre: prod.nombre, cantidad: 1 + Math.floor(random() * 2), precioUnitario: prod.precio };
+    });
+    return {
+      id: '',
+      numero: 0,
+      zona: kiosco.zona,
+      kioscoId: kiosco.id,
+      kioscoNombre: kiosco.nombre,
+      kioscoDireccion: kiosco.direccion,
+      usuarioId: 'u1',
+      destino: {
+        nombre: pick(NOMBRES),
+        direccion: `${pick(CALLES)} ${100 + Math.floor(random() * 2900)}`,
+        notas: random() < 0.4 ? 'Timbre 2B, dejar en portería' : undefined,
+      },
+      items,
+      costoEnvio: kiosco.costoEnvio,
+      propina: random() < 0.35 ? pick([300, 500, 1000]) : 0,
+      gananciaRider: Math.round(kiosco.costoEnvio * 0.8),
+      cobro: random() < 0.7 ? 'pagado' : 'cobrar-en-destino',
+      pin: generarPin(random),
+      estado,
+      riderId,
+      creadoEn,
+      aceptadoEn: riderId ? new Date(creadoEn.getTime() + 2 * 60_000) : undefined,
+      entregadoEn: estado === 'entregado' ? new Date(creadoEn.getTime() + (20 + Math.floor(random() * 20)) * 60_000) : undefined,
+    };
+  }
+
   private generarPedidos(ahora: Date): Pedido[] {
     const random = crearRandom(42);
-    const pick = <T>(xs: readonly T[]) => xs[Math.floor(random() * xs.length)];
     const pedidos: Pedido[] = [];
     const abiertos = KIOSCOS.filter((k) => k.abierto);
 
-    const nuevo = (creadoEn: Date, riderId: string | undefined, estado: Pedido['estado']): Pedido => {
-      const kiosco = pick(abiertos);
-      const items = Array.from({ length: 1 + Math.floor(random() * 3) }, () => {
-        const prod = pick(PRODUCTOS);
-        return { productoId: prod.id, nombre: prod.nombre, cantidad: 1 + Math.floor(random() * 2), precioUnitario: prod.precio };
-      });
-      const aceptadoEn = riderId ? new Date(creadoEn.getTime() + 2 * 60_000) : undefined;
-      return {
-        id: `ped-${this.siguienteNumero}`,
-        numero: this.siguienteNumero++,
-        zona: kiosco.zona,
-        kioscoId: kiosco.id,
-        kioscoNombre: kiosco.nombre,
-        kioscoDireccion: kiosco.direccion,
-        usuarioId: 'u1',
-        destino: {
-          nombre: pick(NOMBRES),
-          direccion: `${pick(CALLES)} ${100 + Math.floor(random() * 2900)}`,
-          notas: random() < 0.4 ? 'Timbre 2B, dejar en portería' : undefined,
-        },
-        items,
-        costoEnvio: kiosco.costoEnvio,
-        propina: random() < 0.35 ? pick([300, 500, 1000]) : 0,
-        gananciaRider: Math.round(kiosco.costoEnvio * 0.8),
-        cobro: random() < 0.7 ? 'pagado' : 'cobrar-en-destino',
-        pin: generarPin(random),
-        estado,
-        riderId,
-        creadoEn,
-        aceptadoEn,
-        entregadoEn: estado === 'entregado' ? new Date(creadoEn.getTime() + (20 + Math.floor(random() * 20)) * 60_000) : undefined,
-      };
-    };
+    const nuevo = (creadoEn: Date, riderId: string | undefined, estado: Pedido['estado']) =>
+      this.armarPedido(random, abiertos, creadoEn, riderId, estado);
 
     // Historial del rider actual: unos 45 días hacia atrás, sin superar "ahora".
     for (let dia = 45; dia >= 0; dia--) {
