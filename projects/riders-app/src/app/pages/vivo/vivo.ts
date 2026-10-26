@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import {
@@ -42,6 +42,9 @@ export default class Vivo {
   /** El pedido recién entregado, para mostrar la pantalla de éxito. */
   protected readonly entregado = signal<Pedido | null>(null);
 
+  /** Si el kiosco rechazó al rider, el código del pedido para avisarle. */
+  protected readonly rechazado = signal<string | null>(null);
+
   protected readonly pin = signal('');
   protected readonly errorPin = signal<string | null>(null);
   protected readonly enviando = signal(false);
@@ -61,6 +64,17 @@ export default class Vivo {
     const dos = (n: number) => n.toString().padStart(2, '0');
     return h > 0 ? `${h}:${dos(m)}:${dos(s)}` : `${dos(m)}:${dos(s)}`;
   });
+
+  constructor() {
+    // Si el pedido en aprobación desaparece sin pasar a Aceptado, el kiosco eligió otro rider.
+    let anterior: Pedido | null | undefined;
+    effect(() => {
+      const actual = this.pedido();
+      if (anterior?.estado === 'esperando' && actual === null) this.rechazado.set(codigoPedido(anterior));
+      if (actual) this.rechazado.set(null);
+      anterior = actual;
+    });
+  }
 
   protected readonly codigo = codigoPedido;
   protected readonly zona = nombreZona;

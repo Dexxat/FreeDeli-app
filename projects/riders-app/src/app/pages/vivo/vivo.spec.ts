@@ -74,6 +74,29 @@ describe('Vivo (Riders)', () => {
     expect(db.pedidos().find((x) => x.id === p.id)!.estado).toBe('entregado');
   });
 
+  it('después de aceptar espera la aprobación del kiosco', async () => {
+    const p = enCurso();
+    db.guardarPedido({ ...p, estado: 'esperando', fase: 'aprobacion', aceptadoEn: undefined, retiro: undefined });
+    await estable();
+    expect(el.textContent).toContain('Esperando que el kiosco te confirme');
+    expect(boton('YA LO RETIRÉ')).toBeUndefined();
+  });
+
+  it('el retiro necesita la confirmación del rider y del kiosco', async () => {
+    const p = enCurso();
+    db.guardarPedido({ ...p, estado: 'aceptado', retiro: undefined });
+    await estable();
+    boton('YA LO RETIRÉ')!.click();
+    await estable();
+    expect(db.buscarPedido(p.id)!.estado).toBe('aceptado');
+    expect(el.textContent).toContain('Falta que el kiosco confirme el envío');
+
+    const actual = db.buscarPedido(p.id)!;
+    db.guardarPedido({ ...actual, retiro: { ...actual.retiro, kiosco: new Date() }, estado: 'retirado' });
+    await estable();
+    expect(boton('SALGO EN CAMINO')).toBeDefined();
+  });
+
   it('pide los 4 dígitos antes de enviar', async () => {
     boton('SALGO EN CAMINO')!.click();
     await estable();

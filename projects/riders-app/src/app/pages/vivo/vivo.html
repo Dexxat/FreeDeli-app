@@ -69,8 +69,18 @@
     </div>
 
     @switch (p.estado) {
+      @case ('esperando') {
+        <p class="espera" role="status">Esperando que el kiosco te confirme para este pedido…</p>
+      }
       @case ('aceptado') {
-        <button type="button" class="boton-primario" [disabled]="enviando()" (click)="avanzar(p)">YA LO RETIRÉ</button>
+        @if (p.retiro?.rider) {
+          <p class="espera" role="status">Confirmaste el retiro. Falta que el kiosco confirme el envío.</p>
+        } @else {
+          @if (p.retiro?.kiosco) {
+            <p class="listo" role="status">El kiosco ya confirmó el envío.</p>
+          }
+          <button type="button" class="boton-primario" [disabled]="enviando()" (click)="avanzar(p)">YA LO RETIRÉ</button>
+        }
       }
       @case ('retirado') {
         <button type="button" class="boton-primario" [disabled]="enviando()" (click)="avanzar(p)">SALGO EN CAMINO</button>
@@ -92,6 +102,9 @@
 } @else if (pedido() === null) {
   <section class="vacio">
     <h1 class="titulo">PEDIDO EN CURSO</h1>
+    @if (rechazado(); as codigoRechazado) {
+      <p class="espera" role="status">El kiosco eligió otro rider para el pedido {{ codigoRechazado }}.</p>
+    }
     <p class="vacio-texto">No tenés ningún pedido en curso.</p>
     @if (!store.disponible()) {
       <p class="sutil">Activate en Inicio para empezar a recibir pedidos.</p>
