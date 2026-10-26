@@ -1,7 +1,7 @@
 @use "sass:meta";
 
 // FreeDeli · tokens de marca
-// Uso en Angular: copiar a src/styles/ e importar con @use 'brand-tokens' as brand;
+// Uso en Angular: ya está en projects/shared/styles (includePaths). Importar con @use 'brand-tokens' as brand;
 // Las custom properties (:root) quedan disponibles en toda la app.
 
 // ---- Paleta ----

@@ -12,6 +12,7 @@ const EN_CURSO: Pedido['estado'][] = ['aceptado', 'retirado', 'en-camino'];
 @Injectable()
 export class MockPedidosApi extends PedidosApi {
   private readonly db = inject(MockDb);
+  private readonly latencia = inject(LATENCIA_MOCK);
   private readonly pedidos$ = toObservable(this.db.pedidos);
 
   private buscar(id: string): Pedido | undefined {
@@ -48,7 +49,7 @@ export class MockPedidosApi extends PedidosApi {
       aceptadoEn: siguiente === 'aceptado' ? new Date() : pedido.aceptadoEn,
     };
     this.guardar(actualizado);
-    return of(actualizado).pipe(delay(LATENCIA_MOCK));
+    return of(actualizado).pipe(delay(this.latencia));
   }
 
   confirmarEntrega(pedidoId: string, pin: string): Observable<ResultadoEntrega> {
@@ -65,6 +66,6 @@ export class MockPedidosApi extends PedidosApi {
       this.guardar(entregado);
       resultado = { ok: true, pedido: entregado };
     }
-    return of(resultado).pipe(delay(LATENCIA_MOCK));
+    return of(resultado).pipe(delay(this.latencia));
   }
 }

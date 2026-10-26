@@ -1,0 +1,18 @@
+// Bordes "pixel" de 4 px hechos con box-shadow, como en el diseño.
+// Necesitan margin: 4px en el elemento para que el borde no se corte.
+@mixin borde($color, $sombra: null) {
+  @if $sombra {
+    box-shadow: 4px 0 0 0 $color, -4px 0 0 0 $color, 0 4px 0 0 $color, 0 -4px 0 0 $color, 0 10px 0 0 $sombra;
+  } @else {
+    box-shadow: 4px 0 0 0 $color, -4px 0 0 0 $color, 0 4px 0 0 $color, 0 -4px 0 0 $color;
+  }
+}
+
+@mixin titulo-seccion {
+  margin: 0;
+  font-family: var(--fd-font-pixel);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--fd-blue-100);
+  letter-spacing: 1px;
+}

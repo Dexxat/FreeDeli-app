@@ -60,9 +60,13 @@
                 "output": "assets"
               }
             ],
-            "styles": ["projects/riders-app/src/styles.scss"],
+            "styles": [
+              "projects/riders-app/src/styles.scss"
+            ],
             "stylePreprocessorOptions": {
-              "includePaths": ["projects/shared/styles"]
+              "includePaths": [
+                "projects/shared/styles"
+              ]
             }
           },
           "configurations": {

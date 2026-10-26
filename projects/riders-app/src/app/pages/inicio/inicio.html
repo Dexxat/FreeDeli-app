@@ -1,0 +1,62 @@
+<section class="bloque" aria-labelledby="titulo-estado">
+  <h1 id="titulo-estado" class="titulo">ESTADO</h1>
+  <button
+    type="button"
+    class="interruptor"
+    [class.on]="store.disponible()"
+    [attr.aria-pressed]="store.disponible()"
+    [disabled]="!store.rider()"
+    (click)="alternarDisponible()"
+  >
+    <span class="textos">
+      <span class="etiqueta">{{ store.disponible() ? 'ON' : 'OFF' }}</span>
+      <span class="ayuda">
+        {{ store.disponible() ? 'En línea · buscando pedidos' : 'Tocá para conectarte (PRESS START)' }}
+      </span>
+    </span>
+    <span class="perilla" aria-hidden="true"><span></span></span>
+  </button>
+  @if (store.error(); as error) {
+    <p class="error" role="alert">{{ error }}</p>
+  }
+</section>
+
+<section class="bloque" aria-labelledby="titulo-zonas">
+  <div class="encabezado">
+    <h2 id="titulo-zonas" class="titulo">ZONAS</h2>
+    <span class="sutil">Elegí una o más</span>
+  </div>
+  <div class="leyenda" aria-hidden="true">
+    <span><span class="muestra pedidos"></span>Pedidos hoy</span>
+    <span><span class="muestra riders"></span>Riders activos</span>
+  </div>
+
+  @for (z of filas(); track z.id) {
+    <button
+      type="button"
+      class="zona"
+      [class.elegida]="z.elegida"
+      [attr.aria-pressed]="z.elegida"
+      [attr.aria-label]="z.nombre + ', ' + z.pedidos + ' pedidos hoy, ' + z.riders + ' riders activos' + (z.elegida ? ', ' + z.chance + ' por ciento de tus chances' : '')"
+      (click)="alternarZona(z.id)"
+    >
+      <span class="fila">
+        <span class="nombre">
+          <span class="check" aria-hidden="true"><span></span></span>
+          {{ z.nombre }}
+        </span>
+        <span class="chance">{{ z.elegida ? z.chance + '%' : '—' }}</span>
+      </span>
+      <span class="barras" aria-hidden="true">
+        <span class="barra"><span class="pista"><span class="relleno pedidos" [style.width]="z.anchoPedidos"></span></span><span class="valor">{{ z.pedidos }}</span></span>
+        <span class="barra"><span class="pista"><span class="relleno riders" [style.width]="z.anchoRiders"></span></span><span class="valor">{{ z.riders }}</span></span>
+      </span>
+      <span class="sutil">{{ z.relacion }}</span>
+    </button>
+  }
+
+  @if (aviso(); as aviso) {
+    <p class="error" role="alert">{{ aviso }}</p>
+  }
+  <p class="sutil nota">El 100% de tus chances se reparte entre las zonas que elijas. Datos de la jornada de hoy.</p>
+</section>
