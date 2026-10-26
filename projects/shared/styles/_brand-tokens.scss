@@ -1,3 +1,5 @@
+@use "sass:meta";
+
 // FreeDeli · tokens de marca
 // Uso en Angular: copiar a src/styles/ e importar con @use 'brand-tokens' as brand;
 // Las custom properties (:root) quedan disponibles en toda la app.
@@ -36,8 +38,8 @@ $pixel-shadow-dark: 6px 6px 0 $blue-500;  // sobre oscuro
   --fd-cloud: #{$cloud};
   --fd-yellow-400: #{$yellow-400};
   --fd-amber-400: #{$amber-400};
-  --fd-font-pixel: #{$font-pixel};
-  --fd-font-body: #{$font-body};
+  --fd-font-pixel: #{meta.inspect($font-pixel)}; // inspect conserva las comillas: "Press Start 2P" sin comillas es inválido
+  --fd-font-body: #{meta.inspect($font-body)};
 }
 
 @font-face {
