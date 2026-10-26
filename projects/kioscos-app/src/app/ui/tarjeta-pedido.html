@@ -1,0 +1,69 @@
+@let p = pedido();
+<article class="tarjeta" [class.accion]="accion()" [attr.aria-labelledby]="'t-' + p.id">
+  <header class="cabeza">
+    <h3 class="codigo" [id]="'t-' + p.id">{{ codigo() }}</h3>
+    <span class="paso">{{ paso() }}</span>
+  </header>
+  <p class="sutil">{{ hora() }} · {{ cantidad() }} productos · {{ total() | pesos }} · para {{ p.destino.nombre }}</p>
+
+  @if (p.estado === 'esperando' && p.fase === 'stock') {
+    <fieldset class="stock">
+      <legend>Marcá lo que no tenés</legend>
+      @for (i of p.items; track i.productoId) {
+        <label class="item">
+          <input type="checkbox" [checked]="faltantes().includes(i.productoId)" (change)="alternarFaltante(i.productoId, $any($event.target).checked)" />
+          <span class="item-nombre">{{ i.cantidad }} × {{ i.nombre }}</span>
+          @if (faltantes().includes(i.productoId)) { <span class="falta">FALTA</span> }
+        </label>
+      }
+    </fieldset>
+    <button type="button" class="primario" [disabled]="enviando()" (click)="confirmarStock()">
+      {{ faltantes().length ? 'CONFIRMAR SIN ' + faltantes().length + (faltantes().length === 1 ? ' PRODUCTO' : ' PRODUCTOS') : 'TENGO TODO' }}
+    </button>
+  } @else {
+    <ul class="items">
+      @for (i of p.items; track i.productoId) {
+        <li>{{ i.cantidad }} × {{ i.nombre }}</li>
+      }
+    </ul>
+    @if (p.itemsQuitados?.length) {
+      <p class="sutil">Quitados por falta de stock: {{ p.itemsQuitados!.length }}</p>
+    }
+  }
+
+  @if (p.estado === 'esperando' && p.fase === 'transferencia') {
+    <p class="dato">El cliente tiene que transferirte <strong>{{ total() | pesos }}</strong> a <strong>{{ p.aliasKiosco }}</strong>.</p>
+    <button type="button" class="primario" [disabled]="enviando()" (click)="confirmarTransferencia()">TRANSFERENCIA RECIBIDA</button>
+  }
+
+  @if (p.estado === 'esperando' && p.fase === 'ajuste') {
+    <p class="dato">Le avisamos al cliente lo que falta. Puede aceptar el pedido ajustado o cancelarlo.</p>
+  }
+
+  @if (rider(); as r) {
+    <div class="rider">
+      <span class="rider-nombre">{{ r.nombre }}</span>
+      <span class="sutil">{{ r.vehiculo }} · {{ r.patente }}</span>
+    </div>
+  }
+
+  @if (p.estado === 'esperando' && p.fase === 'aprobacion') {
+    <div class="botones">
+      <button type="button" class="secundario" [disabled]="enviando()" (click)="aprobar(false)">Rechazar</button>
+      <button type="button" class="primario" [disabled]="enviando()" (click)="aprobar(true)">APROBAR RIDER</button>
+    </div>
+  }
+
+  @if (p.estado === 'aceptado') {
+    @if (!p.retiro?.kiosco) {
+      @if (p.retiro?.rider) { <p class="dato">El rider ya confirmó que lo retiró.</p> }
+      <button type="button" class="primario" [disabled]="enviando()" (click)="confirmarEnvio()">CONFIRMAR ENVÍO</button>
+    } @else {
+      <p class="dato">Confirmaste el envío. Falta que el rider confirme el retiro.</p>
+    }
+  }
+
+  @if (error(); as e) {
+    <p class="error" role="alert">{{ e }}</p>
+  }
+</article>

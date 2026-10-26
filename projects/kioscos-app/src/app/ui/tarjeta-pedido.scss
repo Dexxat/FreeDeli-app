@@ -1,0 +1,45 @@
+@use 'pixel';
+
+.tarjeta {
+  padding: 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  background: #0f1f4a;
+  border-left: 4px solid var(--fd-blue-500);
+}
+.accion { background: var(--fd-navy-700); border-left-color: var(--fd-yellow-400); }
+.cabeza { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.codigo { margin: 0; font-family: var(--fd-font-pixel); font-size: 11px; }
+.paso { padding: 4px 8px; background: var(--fd-navy-900); color: var(--fd-blue-300); font-size: 12px; font-weight: 700; }
+.accion .paso { background: var(--fd-yellow-400); color: var(--fd-navy-900); }
+.sutil { margin: 0; font-size: 13px; color: var(--fd-blue-100); }
+.dato { margin: 0; font-size: 14px; line-height: 1.4; }
+
+.stock { margin: 0; padding: 0; border: none; display: flex; flex-direction: column; gap: 4px; }
+.stock legend { padding: 0 0 6px; font-size: 13px; color: var(--fd-blue-100); }
+.item {
+  min-height: 44px; padding: 0 10px;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--fd-navy-900); cursor: pointer; font-size: 15px;
+  input { width: 22px; height: 22px; accent-color: var(--fd-amber-400); }
+}
+.item-nombre { flex: 1 1 auto; }
+.falta { padding: 2px 6px; background: var(--fd-amber-400); color: var(--fd-navy-900); font-size: 11px; font-weight: 700; }
+
+.items { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+
+.rider { padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; background: var(--fd-navy-900); border-left: 4px solid var(--fd-blue-300); }
+.rider-nombre { font-weight: 700; }
+
+button { border: none; cursor: pointer; font: inherit; }
+button:disabled { opacity: 0.6; cursor: progress; }
+button:focus-visible, input:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.primario {
+  margin: 4px 4px 10px;
+  min-height: 52px;
+  background: var(--fd-yellow-400); color: var(--fd-navy-900);
+  font-family: var(--fd-font-pixel); font-size: 11px;
+  @include pixel.borde(var(--fd-amber-400), var(--fd-navy-900));
+}
+.secundario { min-height: 52px; margin: 4px 0 10px; background: var(--fd-navy-900); color: #fff; font-weight: 600; }
+.botones { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+.error { margin: 0; font-size: 13px; font-weight: 700; color: var(--fd-amber-400); }
