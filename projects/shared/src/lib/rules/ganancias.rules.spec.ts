@@ -42,7 +42,7 @@ describe('resumirGanancias', () => {
     expect(r.cantidadPedidos).toBe(2);
     expect(r.promedioPorPedido).toBe(1350);
     expect(r.barras).toHaveLength(24);
-    expect(r.barras[10].monto).toBe(1500);
+    expect(r.barras[10]).toEqual({ etiqueta: '10', monto: 1500 });
   });
 
   it('semana: una barra por día, terminando hoy', () => {
@@ -54,7 +54,7 @@ describe('resumirGanancias', () => {
 
   it('mes pasado: barras por semana', () => {
     const r = resumirGanancias(pedidos, 'mes-pasado', ahora, 100);
-    expect(r.barras.map((b) => b.etiqueta)).toEqual(['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5']);
+    expect(r.barras.map((b) => b.etiqueta)).toEqual(['S1', 'S2', 'S3', 'S4', 'S5']);
     expect(r.barras[0].monto).toBe(2300);
     expect(r.total).toBe(2300);
   });

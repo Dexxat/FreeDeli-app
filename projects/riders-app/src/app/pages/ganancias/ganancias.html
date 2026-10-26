@@ -1,0 +1,40 @@
+<h1 class="titulo">GANANCIAS</h1>
+
+<div class="filtros" role="group" aria-label="Período">
+  @for (p of periodos; track p.id) {
+    <button type="button" [attr.aria-pressed]="periodo() === p.id" (click)="periodo.set(p.id)">{{ p.etiqueta }}</button>
+  }
+</div>
+
+@if (resumen(); as r) {
+  <section class="total" aria-live="polite">
+    <span class="sutil">{{ info().leyenda }}</span>
+    <span class="total-monto">{{ r.total | pesos }}</span>
+  </section>
+
+  <section class="datos">
+    <div class="dato"><span class="dato-etiqueta">Pedidos</span><span class="dato-valor">{{ r.cantidadPedidos }}</span></div>
+    <div class="dato"><span class="dato-etiqueta">Promedio</span><span class="dato-valor chico">{{ r.promedioPorPedido | pesos }}</span></div>
+    <div class="dato"><span class="dato-etiqueta">Online</span><span class="dato-valor chico">{{ horas() }}</span></div>
+  </section>
+
+  <section class="grafico">
+    <h2 class="subtitulo">{{ info().grafico }}</h2>
+    <div class="barras" role="img" [attr.aria-label]="descripcionGrafico()">
+      @for (b of barras(); track $index) {
+        <div class="columna">
+          <span class="barra" [class.actual]="b.actual" [style.height]="b.alto"></span>
+          <span class="etiqueta">{{ b.etiqueta }}</span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="desglose">
+    <div class="renglon"><span>Envíos</span><strong>{{ r.envios | pesos }}</strong></div>
+    <div class="renglon"><span>Propinas</span><strong>{{ r.propinas | pesos }}</strong></div>
+    <div class="renglon final"><strong>Total</strong><strong class="amarillo">{{ r.total | pesos }}</strong></div>
+  </section>
+} @else {
+  <p class="sutil">Cargando…</p>
+}

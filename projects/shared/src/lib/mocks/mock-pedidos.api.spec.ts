@@ -57,3 +57,15 @@ describe('Mocks de FreeDeli', () => {
     }
   });
 });
+
+describe('Coherencia Historial / Ganancias', () => {
+  it('la jornada y el historial de hoy cuentan los mismos pedidos entregados', async () => {
+    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0 })] });
+    const riders = TestBed.inject(RidersApi);
+    const historial = await firstValueFrom(riders.historial('hoy'));
+    const ganancias = await firstValueFrom(riders.ganancias('jornada'));
+    expect(ganancias.cantidadPedidos).toBe(historial.filter((p) => p.estado === 'entregado').length);
+    const total = historial.reduce((a, p) => a + (p.estado === 'entregado' ? p.gananciaRider + p.propina : 0), 0);
+    expect(ganancias.total).toBe(total);
+  });
+});
