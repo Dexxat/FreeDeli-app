@@ -104,7 +104,17 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 - **Inicio en vivo:** acá llegan los pedidos y se ven los que están en proceso. El kiosco confirma el stock, acepta al rider y confirma el envío.
 - **Transferencia del cliente:** el kiosco la confirma a mano con un botón. Recién ahí se busca rider.
 - **Carga de saldo:** el kiosco transfiere al alias de FreeDeli y el dueño acredita la carga desde la ficha del kiosco en Dev.
-- _Pendiente de definir:_ qué pasa si falta stock, cómo acepta el kiosco al rider, quién marca el pedido como retirado y en qué orden van stock y transferencia.
+
+### Flujo del pedido (compartido por las tres apps)
+
+1. **Stock:** llega el pedido y el kiosco confirma el stock.
+2. **Ajuste:** si falta algo, el kiosco lo quita. El cliente ve el pedido ajustado y acepta o cancela.
+3. **Transferencia:** con el stock confirmado, el cliente ve el alias del kiosco y transfiere. El kiosco toca "Transferencia recibida".
+4. **Rider:** recién ahí se ofrece a los riders. Cuando uno acepta, el kiosco lo aprueba o lo rechaza; si lo rechaza, se busca otro.
+5. **Retiro:** con el rider aprobado, el pedido está Aceptado. Pasa a Retirado cuando confirman los dos: el kiosco ("Confirmar envío") y el rider ("Ya lo retiré").
+6. **Entrega:** el rider sale en camino y cierra con el PIN del cliente.
+
+Si al quitar productos el pedido queda por debajo del mínimo, se mantiene igual: el cliente decide si lo acepta. La comisión se recalcula con el mínimo de $1.500.
 
 ## FreeDeli (usuarios)
 

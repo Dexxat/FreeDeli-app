@@ -24,6 +24,16 @@ export const PASOS_ESTADO: readonly { id: PasoEstado; etiqueta: string }[] = [
  * - `transferido`: el cliente transfirió; el pago queda retenido hasta la entrega.
  * - `liberado`: el rider ingresó el PIN y se liberan los pagos.
  */
+/**
+ * En qué paso está un pedido antes de tener rider aprobado (estado `esperando`).
+ * - `stock`: el kiosco revisa el stock.
+ * - `ajuste`: faltaban productos; el cliente acepta el pedido ajustado o cancela.
+ * - `transferencia`: el cliente transfiere; el kiosco confirma que la recibió.
+ * - `rider`: se ofrece a los riders.
+ * - `aprobacion`: un rider aceptó; el kiosco lo aprueba o lo rechaza.
+ */
+export type FasePedido = 'stock' | 'ajuste' | 'transferencia' | 'rider' | 'aprobacion';
+
 export type EstadoPago = 'pendiente' | 'transferido' | 'liberado';
 
 export interface ItemPedido {
@@ -59,6 +69,14 @@ export interface Pedido {
   /** PIN de 4 dígitos. Solo lo ve el usuario. */
   pin: string;
   estado: EstadoPedido;
+  /** Solo mientras el estado es `esperando`. */
+  fase?: FasePedido;
+  /** Productos que el kiosco quitó por falta de stock. */
+  itemsQuitados?: ItemPedido[];
+  /** Riders que el kiosco rechazó para este pedido: no se les vuelve a ofrecer. */
+  ridersRechazados?: string[];
+  /** Confirmaciones de retiro: pasa a Retirado cuando están las dos. */
+  retiro?: { kiosco?: Date; rider?: Date };
   riderId?: string;
   creadoEn: Date;
   aceptadoEn?: Date;
