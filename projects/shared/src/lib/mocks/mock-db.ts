@@ -3,6 +3,7 @@ import { Kiosco, Producto } from '../models/kiosco';
 import { OfertaPedido, Pedido } from '../models/pedido';
 import { Rider } from '../models/rider';
 import { Usuario } from '../models/usuario';
+import { Conflicto } from '../models/admin';
 import { CENTRO_ZONA, DemandaZona, Ubicacion, ZONAS, ZonaId } from '../models/zona';
 import { PEDIDO_MINIMO, calcularComision, costoEnvio, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
 import { TARIFA_ENVIO_PROVISORIA } from '../config/freedeli.config';
@@ -117,6 +118,9 @@ export class MockDb {
   descontarComision(pedido: Pedido): void {
     this.kioscos.update((ks) => ks.map((k) => (k.id === pedido.kioscoId ? { ...k, saldo: k.saldo - pedido.comisionFreeDeli } : k)));
   }
+
+  /** Conflictos registrados desde FreeDeli Dev. */
+  readonly conflictos = signal<Conflicto[]>([]);
 
   /** Oferta vigente por rider. */
   readonly ofertas = signal<Record<string, OfertaPedido>>({});

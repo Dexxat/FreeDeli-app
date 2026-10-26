@@ -3,6 +3,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { AdminApi, PesosPipe, ZonaId, codigoPedido, nombreZona } from '@freedeli/shared';
 import { switchMap } from 'rxjs';
+import { DialogoConflicto, PanelConflictos } from '../../ui/conflictos';
 import { SelectorZonas, zonasDeUrl } from '../../ui/zonas';
 
 export const TEXTO_ESTADO: Record<string, string> = {
@@ -16,7 +17,7 @@ export const TEXTO_ESTADO: Record<string, string> = {
 
 @Component({
   selector: 'fd-main',
-  imports: [PesosPipe, RouterLink, SelectorZonas],
+  imports: [PesosPipe, RouterLink, SelectorZonas, PanelConflictos, DialogoConflicto],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './main.html',
   styleUrl: './main.scss',

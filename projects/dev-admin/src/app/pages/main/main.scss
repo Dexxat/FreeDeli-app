@@ -21,7 +21,9 @@
 .detalle { font-size: 13px; color: var(--fd-blue-100); }
 .monto { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .monto.pendiente { color: var(--fd-blue-100); }
-.centro { display: flex; justify-content: center; }
+.centro { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.reportar { background: none; border: none; cursor: pointer; color: var(--fd-blue-300); font: inherit; font-size: 12px; font-weight: 600; text-decoration: underline; }
+.reportar:focus-visible { outline: 3px solid var(--fd-yellow-400); }
 .estado { padding: 6px 10px; background: var(--fd-navy-900); color: var(--fd-blue-300); font-size: 12px; font-weight: 700; text-align: center; }
 
 .estado-esperando { border-left-color: var(--fd-amber-400); .estado { background: var(--fd-amber-400); color: var(--fd-navy-900); } }
@@ -32,5 +34,5 @@
 @media (max-width: 760px) {
   .cabecera-filas { display: none; }
   .filas li { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .centro { grid-column: 1 / -1; grid-row: 1; justify-content: flex-start; }
+  .centro { grid-column: 1 / -1; grid-row: 1; flex-direction: row; justify-content: space-between; }
 }

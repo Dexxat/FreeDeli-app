@@ -28,6 +28,12 @@ Zonas de operación: **San Miguel**, **Muñiz** y **Bella Vista**.
 2. **GANANCIAS:** lo cobrado por FreeDeli en los pedidos finalizados con éxito, por jornada, semana o mes.
 3. **ENTREGAS:** el detalle de las entregas finalizadas.
 
+Dentro de MAIN también están:
+
+- **Fichas:** tocar un kiosco abre su ficha con saldo, movimientos y pausa. Tocar el id de un rider abre la suya con el seguimiento del envío en curso, sus envíos y la pausa.
+- **Kioscos y saldos:** enlace a la lista de kioscos con su saldo prepago.
+- **Conflictos:** se reportan desde cada pedido o como nuevo conflicto. Tienen tipo, descripción, estado (abierto, en seguimiento, resuelto) y notas de seguimiento.
+
 ### Además
 - **Kioscos:** ver los activos, sus movimientos y el saldo que les queda para seguir operando.
 - **Riders:** ver los activos, sus movimientos y el seguimiento de cada envío.

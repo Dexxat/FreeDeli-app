@@ -83,6 +83,28 @@ describe('FreeDeli Dev', () => {
     expect(ficha.textContent).toContain('Pausado');
   });
 
+  it('MAIN registra un conflicto desde un pedido y lo resuelve', async () => {
+    const el = await abrir('/main');
+    // jsdom no implementa showModal: se simula.
+    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) { this.open = true; };
+    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) { this.open = false; this.dispatchEvent(new Event('close')); };
+    el.querySelector<HTMLButtonElement>('.reportar')!.click();
+    await estable();
+    const area = el.querySelector<HTMLTextAreaElement>('textarea')!;
+    area.value = 'El cliente dice que faltó un producto';
+    area.dispatchEvent(new Event('input'));
+    el.querySelector<HTMLFormElement>('dialog form')!.dispatchEvent(new Event('submit'));
+    await estable();
+    expect(el.querySelector('#titulo-conflictos')?.textContent).toContain('1 ACTIVOS');
+    expect(el.querySelector('.panel .desc')?.textContent).toContain('faltó un producto');
+
+    const select = el.querySelector<HTMLSelectElement>('.actualizar select')!;
+    select.value = 'resuelto';
+    el.querySelector<HTMLFormElement>('.actualizar')!.dispatchEvent(new Event('submit'));
+    await estable();
+    expect(el.querySelector('#titulo-conflictos')?.textContent).toContain('0 ACTIVOS');
+  });
+
   it('KIOSCOS permite pausar', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     const el = await abrir('/kioscos');

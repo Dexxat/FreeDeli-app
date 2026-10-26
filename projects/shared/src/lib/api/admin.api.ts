@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { EntregaAdmin, FilaMain, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
+import { Conflicto, EntregaAdmin, EstadoConflicto, FilaMain, NuevoConflicto, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
 import { ZonaId } from '../models/zona';
 import { PeriodoHistorial } from '../models/rider';
 
@@ -24,6 +24,11 @@ export abstract class AdminApi {
   abstract enviosRider(id: string, periodo: PeriodoAdmin): Observable<FilaMain[]>;
   /** Pausa o reactiva un rider. Pausado, pasa a OFF y no puede volver a conectarse. */
   abstract pausarRider(id: string, pausado: boolean): Observable<RiderAdmin>;
+  /** Conflictos, primero los no resueltos y del más nuevo al más viejo. Emite en cada cambio. */
+  abstract conflictos(): Observable<Conflicto[]>;
+  abstract registrarConflicto(nuevo: NuevoConflicto): Observable<Conflicto>;
+  /** Cambia el estado y/o agrega una nota de seguimiento. */
+  abstract actualizarConflicto(id: string, cambios: { estado?: EstadoConflicto; nota?: string }): Observable<Conflicto>;
   /** Pausa o reactiva un kiosco. Pausado, no aparece en la app de usuarios. */
   abstract pausarKiosco(id: string, pausado: boolean): Observable<KioscoAdmin>;
 }

@@ -78,4 +78,15 @@ describe('MockAdminApi', () => {
     await firstValueFrom(admin.pausarRider('r2', true));
     expect(db.riders().find((x) => x.id === 'r2')).toMatchObject({ pausado: true, disponible: false });
   });
+
+  it('registra conflictos, agrega notas y los resuelve', async () => {
+    const p = db.pedidos().at(-1)!;
+    const c = await firstValueFrom(admin.registrarConflicto({ pedidoId: p.id, tipo: 'producto', descripcion: 'Faltó una gaseosa' }));
+    expect(c).toMatchObject({ estado: 'abierto', numeroPedido: p.numero });
+    await firstValueFrom(admin.actualizarConflicto(c.id, { estado: 'en-seguimiento', nota: 'Hablé con el kiosco' }));
+    const r = await firstValueFrom(admin.actualizarConflicto(c.id, { estado: 'resuelto' }));
+    expect(r.notas.map((n) => n.texto)).toEqual(['Hablé con el kiosco']);
+    expect(r.resueltoEn).toBeInstanceOf(Date);
+    await expect(firstValueFrom(admin.registrarConflicto({ tipo: 'otro', descripcion: '  ' }))).rejects.toThrow('Describí');
+  });
 });
