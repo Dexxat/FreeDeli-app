@@ -1,15 +1,64 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { Pedido, PeriodoHistorial, PesosPipe, RidersApi, codigoPedido, nombreZona } from '@freedeli/shared';
+import { map, startWith, switchMap } from 'rxjs';
+
+const PERIODOS: { id: PeriodoHistorial; etiqueta: string }[] = [
+  { id: 'hoy', etiqueta: 'HOY' },
+  { id: 'semana', etiqueta: 'SEMANA' },
+  { id: 'mes', etiqueta: 'MES' },
+];
+
+const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const dos = (n: number) => n.toString().padStart(2, '0');
+/** "Lun 26/10" */
+const dia = (d: Date) => `${DIAS[d.getDay()]} ${dos(d.getDate())}/${dos(d.getMonth() + 1)}`;
+const HORA = new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+/** Lo que cobra el rider por un pedido: envío + propina, o nada si se canceló. */
+export function montoRider(p: Pedido): number {
+  return p.estado === 'entregado' ? p.gananciaRider + p.propina : 0;
+}
 
 @Component({
   selector: 'fd-historial',
+  imports: [PesosPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <h1 class="titulo">HISTORIAL DE PEDIDOS</h1>
-    <p class="pendiente">Pantalla en construcción.</p>
-  `,
-  styles: `
-    .titulo { margin: 0 0 12px; font-family: var(--fd-font-pixel); font-size: 11px; line-height: 1.4; color: var(--fd-blue-100); letter-spacing: 1px; }
-    .pendiente { margin: 0; font-size: 14px; color: var(--fd-blue-100); }
-  `,
+  templateUrl: './historial.html',
+  styleUrl: './historial.scss',
 })
-export default class Historial {}
+export default class Historial {
+  private readonly api = inject(RidersApi);
+
+  protected readonly periodos = PERIODOS;
+  protected readonly periodo = signal<PeriodoHistorial>('hoy');
+
+  /** undefined mientras carga. */
+  protected readonly pedidos = toSignal(
+    toObservable(this.periodo).pipe(
+      switchMap((p) => this.api.historial(p).pipe(startWith(undefined))),
+    ),
+  );
+
+  protected readonly resumen = computed(() => {
+    const lista = this.pedidos() ?? [];
+    return {
+      cantidad: lista.length,
+      cancelados: lista.filter((p) => p.estado === 'cancelado').length,
+      total: lista.reduce((a, p) => a + montoRider(p), 0),
+    };
+  });
+
+  protected readonly filas = computed(() =>
+    (this.pedidos() ?? []).map((p) => ({
+      id: p.id,
+      cuando: this.periodo() === 'hoy' ? HORA.format(p.creadoEn) : `${dia(p.creadoEn)} · ${HORA.format(p.creadoEn)}`,
+      codigo: codigoPedido(p),
+      desde: p.kioscoNombre,
+      hacia: p.destino.direccion,
+      zona: nombreZona(p.zona),
+      entregado: p.estado === 'entregado',
+      monto: montoRider(p),
+    })),
+  );
+}

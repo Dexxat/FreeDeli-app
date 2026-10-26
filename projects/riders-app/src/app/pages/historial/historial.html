@@ -1,0 +1,39 @@
+<h1 class="titulo">HISTORIAL DE PEDIDOS</h1>
+
+<div class="filtros" role="group" aria-label="Período">
+  @for (p of periodos; track p.id) {
+    <button type="button" [attr.aria-pressed]="periodo() === p.id" (click)="periodo.set(p.id)">{{ p.etiqueta }}</button>
+  }
+</div>
+
+<div class="resumen" aria-live="polite">
+  <span class="resumen-cantidad">
+    {{ resumen().cantidad }} {{ resumen().cantidad === 1 ? 'pedido' : 'pedidos' }}
+    @if (resumen().cancelados > 0) {
+      <span class="resumen-cancelados">· {{ resumen().cancelados }} {{ resumen().cancelados === 1 ? 'cancelado' : 'cancelados' }}</span>
+    }
+  </span>
+  <span class="resumen-total">{{ resumen().total | pesos }}</span>
+</div>
+
+@if (pedidos() === undefined) {
+  <p class="estado">Cargando…</p>
+} @else if (filas().length === 0) {
+  <p class="estado">No hay pedidos en este período.</p>
+} @else {
+  <ul class="lista">
+    @for (f of filas(); track f.id) {
+      <li [class.cancelado]="!f.entregado">
+        <div class="linea">
+          <span class="cuando">{{ f.cuando }} · {{ f.codigo }}</span>
+          <span class="chip">{{ f.entregado ? 'Entregado' : 'Cancelado' }}</span>
+        </div>
+        <span class="trayecto">{{ f.desde }} → {{ f.hacia }}</span>
+        <div class="linea">
+          <span class="zona">{{ f.zona }}</span>
+          <span class="monto">{{ f.monto | pesos }}</span>
+        </div>
+      </li>
+    }
+  </ul>
+}

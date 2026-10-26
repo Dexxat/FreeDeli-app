@@ -126,8 +126,11 @@ export class MockDb {
     for (let dia = 45; dia >= 0; dia--) {
       const cantidad = dia === 0 ? 5 : Math.floor(random() * 9);
       for (let i = 0; i < cantidad; i++) {
-        const creadoEn = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() - dia, 10 + Math.floor(random() * 14), Math.floor(random() * 60));
-        if (creadoEn.getTime() > ahora.getTime() - 60 * 60_000) continue;
+        const creadoEn =
+          dia === 0
+            ? // Hoy: entre 1 y 10 horas antes de ahora, sin pasar a ayer.
+              new Date(Math.max(ahora.getTime() - (1 + random() * 9) * 3_600_000, new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate()).getTime()))
+            : new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() - dia, 10 + Math.floor(random() * 14), Math.floor(random() * 60));
         pedidos.push(nuevo(creadoEn, RIDER_ACTUAL_ID, random() < 0.08 ? 'cancelado' : 'entregado'));
       }
     }
@@ -141,6 +144,9 @@ export class MockDb {
     // Pedido en curso del rider actual.
     pedidos.push(nuevo(new Date(ahora.getTime() - 12 * 60_000), RIDER_ACTUAL_ID, 'retirado'));
 
-    return pedidos.sort((a, b) => a.creadoEn.getTime() - b.creadoEn.getTime());
+    // Numerar por orden de creación, como lo haría el backend.
+    return pedidos
+      .sort((a, b) => a.creadoEn.getTime() - b.creadoEn.getTime())
+      .map((p, i) => ({ ...p, numero: 1000 + i, id: `ped-${1000 + i}` }));
   }
 }
