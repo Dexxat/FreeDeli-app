@@ -11,6 +11,7 @@ export interface Sesion {
 export const ROLES = 'roles';
 export const PUBLICO = 'publico';
 export const PERMITIR_PENDIENTE = 'permitirPendiente';
+export const PERMITIR_TOKEN = 'permitirToken';
 
 /** Solo estos roles. */
 export const Roles = (...roles: Rol[]) => SetMetadata(ROLES, roles);
@@ -20,3 +21,5 @@ export const Publico = () => SetMetadata(PUBLICO, true);
 export const PermitirPendiente = () => SetMetadata(PERMITIR_PENDIENTE, true);
 
 export const SesionActual = createParamDecorator((_: unknown, ctx: ExecutionContext): Sesion => ctx.switchToHttp().getRequest().sesion);
+/** Acepta el token en ?token= (para EventSource, que no manda encabezados). */
+export const PermitirToken = () => SetMetadata(PERMITIR_TOKEN, true);

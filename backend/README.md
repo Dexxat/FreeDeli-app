@@ -40,6 +40,31 @@ npm run test:e2e  # contra un Postgres embebido descartable
 | GET | `/api/cuentas/pendientes` | Dev |
 | POST | `/api/cuentas/:id/aprobar` · `/rechazar` | Dev |
 
+## Pedido
+
+Cada cambio de estado usa las mismas reglas que las apps (`projects/shared/src/lib/rules/flujo.rules.ts`) y se aplica con la fila del pedido bloqueada, así dos acciones simultáneas no se pisan.
+
+| Método | Ruta | Quién | Qué hace |
+|---|---|---|---|
+| GET | `/api/kioscos?zona=` | Usuario | Kioscos que reciben pedidos, con distancia y envío |
+| GET | `/api/kioscos/:id/productos` | Usuario | Catálogo disponible |
+| POST | `/api/pedidos` | Usuario | Crea el pedido (mínimo $15.000, uno a la vez) |
+| GET | `/api/pedidos/en-curso` · `/recientes` · `/:id` · `/:id/rider` | Usuario | Seguimiento |
+| POST | `/api/pedidos/:id/aceptar-ajuste` · `/cancelar` | Usuario | Respuesta al ajuste de stock |
+| GET | `/api/kiosco` · `/pedidos/en-vivo` | Kiosco | Perfil y tablero |
+| POST | `/api/kiosco/pedidos/:id/stock` · `/transferencia` · `/aprobar-rider` · `/envio` | Kiosco | Pasos del kiosco |
+| GET · POST · PATCH | `/api/kiosco/productos` | Kiosco | Catálogo |
+| PATCH | `/api/rider/estado` | Rider | ON/OFF y zonas |
+| GET | `/api/rider/oferta` · `/pedido` | Rider | Oferta vigente y pedido en curso |
+| POST | `/api/rider/ofertas/:pedidoId/aceptar` · `/rechazar` | Rider | Responder la oferta |
+| POST | `/api/rider/pedidos/:id/retiro` · `/en-camino` · `/entregar` | Rider | Pasos del rider; entregar pide el PIN |
+| POST | `/api/admin/kioscos/:id/saldo` | Dev | Acredita una carga de saldo |
+| GET | `/api/eventos?token=` | Todos | Tiempo real (Server-Sent Events): cada cuenta recibe solo lo suyo |
+
+Las ofertas se dan a un rider por vez, al que hace más tiempo que no recibe una, con 30 segundos para responder. Si vence o la rechaza, pasa al siguiente.
+
+Variables opcionales: `COMISION_PORCENTAJE` (10), `TARIFA_BASE` (1000), `TARIFA_POR_KM` (400), `ALIAS_FREEDELI`, `SEGUNDOS_OFERTA` (30), `DESPACHO_AUTOMATICO` (true).
+
 ## Producción
 
 `docker-compose.yml` levanta Postgres. Definir `DATABASE_URL`, `JWT_SECRET`, `DEV_EMAIL`, `DEV_CLAVE` y `CORS_ORIGENES` como variables de entorno.

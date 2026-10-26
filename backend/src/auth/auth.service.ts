@@ -29,8 +29,13 @@ export class AuthService implements OnApplicationBootstrap {
     const clave = this.config.get<string>('DEV_CLAVE');
     if (!email || !clave) return;
     if (await this.db.cuenta.findFirst({ where: { rol: Rol.DEV } })) return;
-    await this.db.cuenta.create({ data: { email: email.toLowerCase(), clave: await hashearClave(clave), rol: Rol.DEV, estado: EstadoCuenta.APROBADA } });
-    this.log.log(`Cuenta Dev creada: ${email}`);
+    try {
+      await this.db.cuenta.create({ data: { email: email.toLowerCase(), clave: await hashearClave(clave), rol: Rol.DEV, estado: EstadoCuenta.APROBADA } });
+      this.log.log(`Cuenta Dev creada: ${email}`);
+    } catch (e) {
+      // Otra instancia la creó al mismo tiempo (email único).
+      if ((e as { code?: string }).code !== 'P2002') throw e;
+    }
   }
 
   private async sesion(cuenta: { id: string; email: string; rol: Rol; estado: EstadoCuenta }): Promise<RespuestaSesion> {

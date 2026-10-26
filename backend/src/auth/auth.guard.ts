@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable, Unauthor
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import type { Rol } from '../generated/prisma/enums.js';
-import { PERMITIR_PENDIENTE, PUBLICO, ROLES, type Sesion } from './sesion.js';
+import { PERMITIR_PENDIENTE, PERMITIR_TOKEN, PUBLICO, ROLES, type Sesion } from './sesion.js';
 
 /**
  * Guard global: exige token salvo en rutas @Publico(), cuenta aprobada salvo @PermitirPendiente(),
@@ -20,7 +20,10 @@ export class AuthGuard implements CanActivate {
     if (this.reflector.getAllAndOverride<boolean>(PUBLICO, objetivos)) return true;
 
     const req = ctx.switchToHttp().getRequest();
-    const [tipo, token] = (req.headers.authorization ?? '').split(' ');
+    let [tipo, token] = (req.headers.authorization ?? '').split(' ');
+    if (!token && this.reflector.getAllAndOverride<boolean>(PERMITIR_TOKEN, objetivos) && typeof req.query?.token === 'string') {
+      [tipo, token] = ['Bearer', req.query.token];
+    }
     if (tipo !== 'Bearer' || !token) throw new UnauthorizedException('Iniciá sesión.');
     let sesion: Sesion;
     try {

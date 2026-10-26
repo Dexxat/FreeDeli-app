@@ -8,6 +8,8 @@ export async function crearApp(): Promise<INestApplication> {
   process.env.JWT_SECRET = 'secreto-de-test';
   process.env.DEV_EMAIL = 'dev@test.local';
   process.env.DEV_CLAVE = 'clave-dev-123';
+  // En los tests el despacho de ofertas se dispara a mano.
+  process.env.DESPACHO_AUTOMATICO = 'false';
   const { AppModule } = await import('../src/app.module.js');
   const { configurarApp } = await import('../src/configurar.js');
   const modulo = await Test.createTestingModule({ imports: [AppModule] }).compile();
