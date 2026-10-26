@@ -1,4 +1,4 @@
-import { calcularComision, direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules';
+import { calcularComision, minutosParaLlegar, direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules';
 
 describe('PIN', () => {
   it('genera 4 dígitos con ceros a la izquierda', () => {
@@ -62,5 +62,18 @@ describe('calcularComision', () => {
   });
   it('aplica el porcentaje cuando supera el mínimo', () => {
     expect(calcularComision(30000, 10)).toBe(3000);
+  });
+});
+
+describe('minutosParaLlegar', () => {
+  const aceptadoEn = new Date(2026, 9, 26, 20, 0);
+  it('sin rider no hay estimado', () => {
+    expect(minutosParaLlegar({ estado: 'esperando' }, 25, aceptadoEn)).toBeNull();
+  });
+  it('descuenta el tiempo transcurrido desde que se aceptó', () => {
+    expect(minutosParaLlegar({ estado: 'en-camino', aceptadoEn }, 25, new Date(2026, 9, 26, 20, 17))).toBe(8);
+  });
+  it('si se pasó del estimado muestra 1 minuto', () => {
+    expect(minutosParaLlegar({ estado: 'en-camino', aceptadoEn }, 25, new Date(2026, 9, 26, 21, 0))).toBe(1);
   });
 });

@@ -1,0 +1,92 @@
+@if (pedido(); as p) {
+  @if (p.estado === 'entregado') {
+    <section class="exito" aria-live="polite">
+      <svg aria-hidden="true" viewBox="0 0 16 16" width="96" height="96" shape-rendering="crispEdges">
+        <rect x="2" y="0" width="12" height="16" fill="#8FB4FF" /><rect x="0" y="2" width="16" height="12" fill="#8FB4FF" />
+        <rect x="1" y="1" width="14" height="14" fill="#8FB4FF" />
+        <rect x="3" y="8" width="2" height="2" fill="#0A1633" /><rect x="5" y="10" width="2" height="2" fill="#0A1633" />
+        <rect x="7" y="8" width="2" height="2" fill="#0A1633" /><rect x="9" y="6" width="2" height="2" fill="#0A1633" />
+        <rect x="11" y="4" width="2" height="2" fill="#0A1633" />
+      </svg>
+      <h1 class="exito-titulo">¡ENTREGADO!</h1>
+      <p class="texto">El rider confirmó la entrega con tu PIN. ¡Que lo disfrutes!</p>
+    </section>
+
+    <section class="tarjeta">
+      <div class="fila">
+        <span class="codigo">PEDIDO {{ codigo(p) }}</span>
+        <span class="sutil">{{ hora(p.entregadoEn) }}</span>
+      </div>
+      <fd-barra-estado [estado]="p.estado" />
+    </section>
+
+    <section class="resumen">
+      <div><span>Kiosco</span><strong>{{ p.kioscoNombre }}</strong></div>
+      @if (rider(); as r) {
+        <div><span>Rider</span><strong>{{ r.nombre }}</strong></div>
+      }
+      <div class="final"><strong>Total pagado</strong><strong class="amarillo">{{ total(p) | pesos }}</strong></div>
+    </section>
+
+    <a class="boton" routerLink="/inicio">VOLVER AL INICIO</a>
+  } @else {
+    <section class="tarjeta destacada">
+      <div class="fila">
+        <h1 class="codigo">{{ codigo(p) }}</h1>
+        @if (minutos(); as m) {
+          <span class="sutil">Llega en <span class="eta">~{{ m }} min</span></span>
+        } @else {
+          <span class="sutil">Buscando rider…</span>
+        }
+      </div>
+      <fd-barra-estado [estado]="p.estado" />
+    </section>
+
+    <section class="pin">
+      <span class="pin-textos">
+        <span class="pin-titulo">PIN DE ENTREGA</span>
+        <span class="pin-ayuda">Dáselo al rider al recibir</span>
+      </span>
+      <span class="pin-digitos" role="img" [attr.aria-label]="'PIN ' + digitos().join(' ')">
+        @for (d of digitos(); track $index) {
+          <span>{{ d }}</span>
+        }
+      </span>
+    </section>
+
+    @if (p.pago === 'pendiente') {
+      <section class="aviso">
+        Falta confirmar tu transferencia de <strong>{{ total(p) | pesos }}</strong> al alias <strong>{{ p.aliasKiosco }}</strong>.
+      </section>
+    }
+
+    <section class="bloque">
+      <h2 class="subtitulo">TU RIDER</h2>
+      @if (rider(); as r) {
+        <div class="rider">
+          <span class="rider-nombre">{{ r.nombre }}</span>
+          <span class="sutil">{{ r.vehiculo }} · {{ r.patente }}</span>
+        </div>
+      } @else {
+        <p class="sutil">Todavía ningún rider aceptó tu pedido.</p>
+      }
+    </section>
+
+    <section class="bloque">
+      <h2 class="subtitulo">DETALLE</h2>
+      <div class="resumen">
+        <div><span>Kiosco</span><strong>{{ p.kioscoNombre }}</strong></div>
+        <div><span>Entrega</span><strong>{{ p.destino.direccion }}</strong></div>
+        <div class="final"><strong>Total</strong><strong class="amarillo">{{ total(p) | pesos }}</strong></div>
+      </div>
+    </section>
+
+    <a class="whatsapp" [href]="whatsapp()" target="_blank" rel="noopener">WhatsApp FreeDeli</a>
+  }
+} @else if (pedido() === null) {
+  <section class="vacio">
+    <h1 class="codigo">MI PEDIDO</h1>
+    <p class="texto">No tenés ningún pedido en curso.</p>
+    <a class="boton" routerLink="/pedir">PEDIR</a>
+  </section>
+}

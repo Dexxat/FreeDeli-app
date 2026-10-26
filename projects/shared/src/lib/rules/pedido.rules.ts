@@ -85,3 +85,15 @@ export function rangoTiempo(minutos: number): string {
 
 /** Estados en los que el pedido sigue abierto para el usuario. */
 export const ESTADOS_ABIERTOS: readonly Pedido['estado'][] = ['esperando', 'aceptado', 'retirado', 'en-camino'];
+
+/**
+ * Minutos que faltan para que llegue el pedido: desde que un rider lo acepta,
+ * el tiempo estimado del kiosco. Nunca menos de 1 mientras no se entregue.
+ * null si todavía no hay rider.
+ */
+export function minutosParaLlegar(p: Pick<Pedido, 'estado' | 'aceptadoEn'>, tiempoEstimadoMin: number, ahora: Date): number | null {
+  if (p.estado === 'esperando' || !p.aceptadoEn) return null;
+  if (p.estado === 'entregado' || p.estado === 'cancelado') return 0;
+  const llegada = p.aceptadoEn.getTime() + tiempoEstimadoMin * 60_000;
+  return Math.max(1, Math.ceil((llegada - ahora.getTime()) / 60_000));
+}

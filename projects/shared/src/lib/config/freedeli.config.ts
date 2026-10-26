@@ -9,7 +9,7 @@ export interface FreeDeliConfig {
 
 /** Valores por defecto. Reemplazar el WhatsApp por el real con provideFreeDeliConfig(). */
 export const FREEDELI_CONFIG = new InjectionToken<FreeDeliConfig>('FREEDELI_CONFIG', {
-  factory: () => ({ whatsapp: '5491100000000', comisionPorcentaje: 0 }),
+  factory: () => ({ whatsapp: '5491100000000', comisionPorcentaje: 10 }),
 });
 
 export function provideFreeDeliConfig(config: FreeDeliConfig) {

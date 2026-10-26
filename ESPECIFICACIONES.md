@@ -75,7 +75,7 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 - **Quién retiene:** el cliente transfiere al alias del kiosco. El kiosco retiene el dinero hasta que el rider ingresa el PIN.
 - **Al ingresar el PIN:** el kiosco le transfiere el costo de envío al rider y la comisión a FreeDeli.
 - **Envío:** lo paga el cliente junto con los productos y es la ganancia del rider.
-- **Comisión:** un porcentaje del pedido, nunca menos de $1.500. _Pendiente: definir el porcentaje._ Mientras tanto rige el mínimo de $1.500.
+- **Comisión:** el 10 % del subtotal de productos, nunca menos de $1.500.
 
 ---
 
