@@ -19,7 +19,16 @@ Zonas de operación: **San Miguel**, **Muñiz** y **Bella Vista**.
 
 ## FreeDeli Dev (panel de administración)
 
-- **Acceso exclusivo:** existe una sola instancia y solo la usa el dueño. No hay otros usuarios ni roles de admin.
+- **Acceso exclusivo:** existe una sola instancia y solo la usa el dueño. No hay otros usuarios ni roles de admin. Por ahora sin login; se protege al conectar el backend.
+- **Pantalla:** pensado para compu, y usable en el celular.
+
+### Tres grandes sectores
+
+1. **MAIN:** selector de zonas (San Miguel, Muñiz, Bella Vista; una, dos o las tres a la vez). Muestra todos los pedidos de la jornada de las zonas elegidas. Cada fila: a un lado el id del pedido y el total para el kiosco; en el medio el estado del pedido; del otro lado el id del rider y lo que ganó.
+2. **GANANCIAS:** lo cobrado por FreeDeli en los pedidos finalizados con éxito, por jornada, semana o mes.
+3. **ENTREGAS:** el detalle de las entregas finalizadas.
+
+### Además
 - **Kioscos:** ver los activos, sus movimientos y el saldo que les queda para seguir operando.
 - **Riders:** ver los activos, sus movimientos y el seguimiento de cada envío.
 - **Ganancias:** monitorear las ganancias de la plataforma.
@@ -76,6 +85,9 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 - **Al ingresar el PIN:** el kiosco le transfiere el costo de envío al rider y la comisión a FreeDeli.
 - **Envío:** lo paga el cliente junto con los productos y es la ganancia del rider.
 - **Comisión:** el 10 % del subtotal de productos, nunca menos de $1.500.
+- **Pedido mínimo:** $15.000 en productos. Con el 10 % da justo la comisión mínima de $1.500.
+- **Saldo prepago del kiosco:** el kiosco carga crédito en FreeDeli. Al liberarse cada pago, la comisión se descuenta de ese saldo. Si no le alcanza para la comisión mínima, no recibe pedidos.
+- **Costo de envío:** depende de la distancia entre el kiosco y la entrega. _Pendiente: definir la tarifa._ Mientras tanto se usa un costo fijo por kiosco.
 
 ---
 

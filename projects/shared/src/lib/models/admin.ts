@@ -7,6 +7,8 @@ export interface KioscoAdmin extends Kiosco {
   /** Comisión de FreeDeli por los pedidos entregados hoy. */
   comisionHoy: number;
   saldoBajo: boolean;
+  /** Sin saldo para la comisión mínima: no recibe pedidos. */
+  sinSaldo: boolean;
 }
 
 /** Un pedido desde el punto de vista del dinero. */

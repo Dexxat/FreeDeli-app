@@ -4,7 +4,7 @@ import { OfertaPedido, Pedido } from '../models/pedido';
 import { Rider } from '../models/rider';
 import { Usuario } from '../models/usuario';
 import { DemandaZona, ZONAS, ZonaId } from '../models/zona';
-import { COMISION_MINIMA, generarPin } from '../rules/pedido.rules';
+import { PEDIDO_MINIMO, calcularComision, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
 
 /** Generador pseudoaleatorio con semilla, para que los datos simulados sean siempre los mismos. */
 function crearRandom(semilla: number): () => number {
@@ -100,6 +100,11 @@ export class MockDb {
   /** Horas online del rider actual por período (simulado). */
   readonly horasOnline = { jornada: 3.5, semana: 26, 'mes-pasado': 112 } as const;
 
+  /** Al liberarse el pago, la comisión se descuenta del saldo prepago del kiosco. */
+  descontarComision(pedido: Pedido): void {
+    this.kioscos.update((ks) => ks.map((k) => (k.id === pedido.kioscoId ? { ...k, saldo: k.saldo - pedido.comisionFreeDeli } : k)));
+  }
+
   /** Oferta vigente por rider. */
   readonly ofertas = signal<Record<string, OfertaPedido>>({});
 
@@ -123,7 +128,7 @@ export class MockDb {
    * Devuelve null si no hay kioscos abiertos en esas zonas.
    */
   crearPedidoEsperando(zonas: readonly ZonaId[], ahora = new Date()): Pedido | null {
-    const kioscos = this.kioscos().filter((k) => k.abierto && !k.pausado && zonas.includes(k.zona));
+    const kioscos = this.kioscos().filter((k) => puedeRecibirPedidos(k) && zonas.includes(k.zona));
     if (kioscos.length === 0) return null;
     const numero = Math.max(999, ...this.pedidos().map((p) => p.numero)) + 1;
     const pedido = { ...this.armarPedido(Math.random, kioscos, ahora, undefined, 'esperando'), numero, id: `ped-${numero}` };
@@ -140,10 +145,17 @@ export class MockDb {
   ): Pedido {
     const pick = <T>(xs: readonly T[]) => xs[Math.floor(random() * xs.length)];
     const kiosco = pick(kioscos);
-    const items = Array.from({ length: 1 + Math.floor(random() * 3) }, () => {
+    // Productos al azar hasta superar el pedido mínimo.
+    const items: Pedido['items'] = [];
+    let subtotal = 0;
+    while (subtotal < PEDIDO_MINIMO) {
       const prod = pick(PRODUCTOS);
-      return { productoId: `${kiosco.id}-${prod.id}`, nombre: prod.nombre, cantidad: 1 + Math.floor(random() * 2), precioUnitario: prod.precio };
-    });
+      const cantidad = 1 + Math.floor(random() * 3);
+      const existente = items.find((i) => i.productoId === `${kiosco.id}-${prod.id}`);
+      if (existente) existente.cantidad += cantidad;
+      else items.push({ productoId: `${kiosco.id}-${prod.id}`, nombre: prod.nombre, cantidad, precioUnitario: prod.precio });
+      subtotal += cantidad * prod.precio;
+    }
     return {
       id: '',
       numero: 0,
@@ -163,7 +175,7 @@ export class MockDb {
       gananciaRider: kiosco.costoEnvio,
       pago: estado === 'entregado' ? 'liberado' : 'transferido',
       aliasKiosco: kiosco.aliasCobro,
-      comisionFreeDeli: COMISION_MINIMA,
+      comisionFreeDeli: calcularComision(subtotal, 10),
       pin: generarPin(random),
       estado,
       riderId,

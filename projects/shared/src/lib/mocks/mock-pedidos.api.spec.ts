@@ -27,6 +27,7 @@ describe('Mocks de FreeDeli', () => {
 
   it('confirma la entrega solo con el PIN correcto y desde En camino', async () => {
     const p = enCurso();
+    const saldoAntes = db.kioscos().find((k) => k.id === p.kioscoId)!.saldo;
     expect(await firstValueFrom(pedidos.confirmarEntrega(p.id, p.pin))).toEqual({ ok: false, motivo: 'estado-invalido' });
 
     await firstValueFrom(pedidos.avanzarEstado(p.id));
@@ -36,6 +37,7 @@ describe('Mocks de FreeDeli', () => {
     const r = await firstValueFrom(pedidos.confirmarEntrega(p.id, p.pin));
     expect(r.ok).toBe(true);
     expect(db.pedidos().find((x) => x.id === p.id)).toMatchObject({ estado: 'entregado', pago: 'liberado' });
+    expect(db.kioscos().find((k) => k.id === p.kioscoId)!.saldo).toBe(saldoAntes - p.comisionFreeDeli);
   });
 
   it('no permite dejar al rider sin zonas', async () => {

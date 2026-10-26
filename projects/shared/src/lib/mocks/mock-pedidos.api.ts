@@ -149,6 +149,7 @@ export class MockPedidosApi extends PedidosApi {
       // El PIN correcto cierra el pedido y libera los pagos.
       const entregado: Pedido = { ...pedido, estado: 'entregado', entregadoEn: new Date(), pago: 'liberado' };
       this.guardar(entregado);
+      this.db.descontarComision(entregado);
       resultado = { ok: true, pedido: entregado };
     }
     return of(resultado).pipe(delay(this.latencia));

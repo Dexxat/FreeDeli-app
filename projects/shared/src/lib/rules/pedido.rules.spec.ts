@@ -1,4 +1,4 @@
-import { calcularComision, minutosParaLlegar, direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules';
+import { PEDIDO_MINIMO, calcularComision, puedeRecibirPedidos, minutosParaLlegar, direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules';
 
 describe('PIN', () => {
   it('genera 4 dígitos con ceros a la izquierda', () => {
@@ -75,5 +75,17 @@ describe('minutosParaLlegar', () => {
   });
   it('si se pasó del estimado muestra 1 minuto', () => {
     expect(minutosParaLlegar({ estado: 'en-camino', aceptadoEn }, 25, new Date(2026, 9, 26, 21, 0))).toBe(1);
+  });
+});
+
+describe('puedeRecibirPedidos', () => {
+  it('necesita estar abierto, sin pausa y con saldo para la comisión mínima', () => {
+    expect(puedeRecibirPedidos({ abierto: true, pausado: false, saldo: 1500 })).toBe(true);
+    expect(puedeRecibirPedidos({ abierto: true, pausado: false, saldo: 1499 })).toBe(false);
+    expect(puedeRecibirPedidos({ abierto: true, pausado: true, saldo: 50000 })).toBe(false);
+    expect(puedeRecibirPedidos({ abierto: false, pausado: false, saldo: 50000 })).toBe(false);
+  });
+  it('el pedido mínimo da justo la comisión mínima', () => {
+    expect(calcularComision(PEDIDO_MINIMO, 10)).toBe(1500);
   });
 });

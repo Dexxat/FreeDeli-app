@@ -32,13 +32,16 @@
       <span>{{ cantidad() }} {{ cantidad() === 1 ? 'producto' : 'productos' }} + envío {{ k.costoEnvio | pesos }}</span>
       <span class="total">{{ total() | pesos }}</span>
     </div>
+    @if (faltante() > 0) {
+      <p class="minimo">Pedido mínimo {{ minimo | pesos }} en productos. Te faltan {{ faltante() | pesos }}.</p>
+    }
     @if (error(); as e) {
       <p class="error" role="alert">{{ e }}</p>
     }
     @if (store.pedidoEnCurso(); as enCurso) {
       <a class="boton" [routerLink]="['/pedido', enCurso.id]">VER MI PEDIDO EN CURSO</a>
     } @else {
-      <button type="button" class="boton" [disabled]="enviando() || cantidad() === 0 || !k.abierto || k.pausado" (click)="hacerPedido()">
+      <button type="button" class="boton" [disabled]="enviando() || faltante() > 0 || !k.abierto || k.pausado" (click)="hacerPedido()">
         HACER PEDIDO
       </button>
     }

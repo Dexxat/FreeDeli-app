@@ -17,7 +17,7 @@ describe('Realizado (Usuarios)', () => {
     });
     const db = TestBed.inject(MockDb);
     db.pedidos.update((ps) => ps.map((p) => (p.usuarioId === USUARIO_ACTUAL_ID && p.estado === 'retirado' ? { ...p, estado: 'entregado' } : p)));
-    const r = await firstValueFrom(TestBed.inject(UsuariosApi).crearPedido({ kioscoId: 'k3', items: [{ productoId: 'k3-p4', cantidad: 2 }] }));
+    const r = await firstValueFrom(TestBed.inject(UsuariosApi).crearPedido({ kioscoId: 'k3', items: [{ productoId: 'k3-p4', cantidad: 17 }] }));
     if (!r.ok) throw new Error('no se creó');
 
     const h = await RouterTestingHarness.create();
@@ -29,7 +29,7 @@ describe('Realizado (Usuarios)', () => {
     const el = h.routeNativeElement!;
     expect(el.textContent).toContain(`PEDIDO #A-${r.pedido.numero}`);
     expect(el.querySelector('.alias-valor')?.textContent).toBe('laestacion.muniz');
-    expect(el.textContent).toContain('Transferí $3.600');
+    expect(el.textContent).toContain('Transferí $17.100');
     expect(el.textContent).toContain('Buscando rider');
     expect(el.querySelectorAll('fd-barra-estado li.pendiente')).toHaveLength(4);
     expect(el.querySelector('a[href$="' + r.pedido.id + '"]')?.textContent).toContain('VER SEGUIMIENTO');

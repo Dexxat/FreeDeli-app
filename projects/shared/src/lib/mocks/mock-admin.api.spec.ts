@@ -18,7 +18,7 @@ describe('MockAdminApi', () => {
   it('resume el día con comisiones de pedidos entregados', async () => {
     const r = await firstValueFrom(admin.resumen());
     expect(r.pedidosHoy).toBeGreaterThan(0);
-    expect(r.comisionesHoy).toBe(r.entregadosHoy * 1500);
+    expect(r.comisionesHoy).toBeGreaterThanOrEqual(r.entregadosHoy * 1500);
     expect(r.kioscosAbiertos).toBe(4);
   });
 

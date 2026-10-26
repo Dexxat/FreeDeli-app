@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
-import { PesosPipe, Producto, UsuariosApi, nombreZona, rangoTiempo } from '@freedeli/shared';
+import { PEDIDO_MINIMO, PesosPipe, Producto, UsuariosApi, nombreZona, rangoTiempo } from '@freedeli/shared';
 import { combineLatest, distinctUntilChanged, filter, map, shareReplay, switchMap, take, tap } from 'rxjs';
 import { UsuarioStore } from '../../core/usuario.store';
 
@@ -9,6 +9,7 @@ const MOTIVOS = {
   'kiosco-cerrado': 'El kiosco cerró recién. Elegí otro.',
   'sin-productos': 'Agregá al menos un producto.',
   'producto-inexistente': 'Algún producto ya no está disponible. Revisá el pedido.',
+  'pedido-minimo': 'El pedido mínimo es de $15.000 en productos.',
   'pedido-en-curso': 'Ya tenés un pedido en curso.',
 } as const;
 
@@ -46,6 +47,9 @@ export default class Kiosco {
     this.productos().reduce((a, p) => a + (this.cantidades()[p.id] ?? 0) * p.precio, 0),
   );
   protected readonly total = computed(() => this.subtotal() + (this.kiosco()?.costoEnvio ?? 0));
+  /** Cuánto falta en productos para llegar al pedido mínimo. */
+  protected readonly faltante = computed(() => Math.max(0, PEDIDO_MINIMO - this.subtotal()));
+  protected readonly minimo = PEDIDO_MINIMO;
 
   protected readonly zona = nombreZona;
   protected readonly tiempo = rangoTiempo;
@@ -83,6 +87,10 @@ export default class Kiosco {
   protected hacerPedido(): void {
     if (this.cantidad() === 0) {
       this.error.set(MOTIVOS['sin-productos']);
+      return;
+    }
+    if (this.faltante() > 0) {
+      this.error.set(MOTIVOS['pedido-minimo']);
       return;
     }
     this.enviando.set(true);

@@ -6,7 +6,7 @@ import { Kiosco, Producto } from '../models/kiosco';
 import { Pedido, cantidadProductos, totalPedido } from '../models/pedido';
 import { DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } from '../models/usuario';
 import { ZonaId } from '../models/zona';
-import { ESTADOS_ABIERTOS, calcularComision, generarPin } from '../rules/pedido.rules';
+import { ESTADOS_ABIERTOS, PEDIDO_MINIMO, calcularComision, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
 import { FREEDELI_CONFIG } from '../config/freedeli.config';
 import { MockDb, OTRO_RIDER_ID, USUARIO_ACTUAL_ID } from './mock-db';
 import { LATENCIA_MOCK } from './mock-riders.api';
@@ -64,6 +64,8 @@ export class MockUsuariosApi extends UsuariosApi {
 
   private avanzar(id: string, estado: Pedido['estado']): void {
     const ahora = new Date();
+    const pedido = this.db.pedidos().find((p) => p.id === id);
+    if (pedido && estado === 'entregado') this.db.descontarComision(pedido);
     this.db.pedidos.update((ps) =>
       ps.map((p) =>
         p.id !== id
@@ -99,7 +101,7 @@ export class MockUsuariosApi extends UsuariosApi {
   }
 
   kioscosAbiertos(zona?: ZonaId): Observable<Kiosco[]> {
-    return this.responder(this.db.kioscos().filter((k) => k.abierto && !k.pausado && (!zona || k.zona === zona)));
+    return this.responder(this.db.kioscos().filter((k) => puedeRecibirPedidos(k) && (!zona || k.zona === zona)));
   }
 
   kiosco(id: string): Observable<Kiosco | null> {
@@ -116,17 +118,19 @@ export class MockUsuariosApi extends UsuariosApi {
     const lineas = nuevo.items.filter((i) => Number.isInteger(i.cantidad) && i.cantidad > 0);
 
     let resultado: ResultadoCrearPedido;
-    if (!kiosco || !kiosco.abierto || kiosco.pausado) {
+    const subtotal = lineas.reduce((a, i) => a + i.cantidad * (catalogo.find((p) => p.id === i.productoId)?.precio ?? 0), 0);
+    if (!kiosco || !puedeRecibirPedidos(kiosco)) {
       resultado = { ok: false, motivo: 'kiosco-cerrado' };
     } else if (lineas.length === 0) {
       resultado = { ok: false, motivo: 'sin-productos' };
     } else if (lineas.some((i) => !catalogo.some((p) => p.id === i.productoId))) {
       resultado = { ok: false, motivo: 'producto-inexistente' };
+    } else if (subtotal < PEDIDO_MINIMO) {
+      resultado = { ok: false, motivo: 'pedido-minimo' };
     } else if (this.abierto()) {
       resultado = { ok: false, motivo: 'pedido-en-curso' };
     } else {
       const u = this.usuario();
-      const subtotal = lineas.reduce((a, i) => a + i.cantidad * catalogo.find((p) => p.id === i.productoId)!.precio, 0);
       const numero = Math.max(999, ...this.db.pedidos().map((p) => p.numero)) + 1;
       const pedido: Pedido = {
         id: `ped-${numero}`,

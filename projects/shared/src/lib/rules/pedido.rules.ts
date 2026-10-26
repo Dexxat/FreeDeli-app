@@ -1,3 +1,4 @@
+import { Kiosco } from '../models/kiosco';
 import { EstadoPedido, OfertaPedido, PASOS_ESTADO, PasoEstado, Pedido, cantidadProductos } from '../models/pedido';
 
 /** Genera un PIN de entrega de 4 dígitos (0000–9999). */
@@ -44,6 +45,17 @@ export function estadosDeBarra(estado: EstadoPedido): Record<PasoEstado, EstadoP
     }
   });
   return resultado;
+}
+
+/** Monto mínimo de productos por pedido, en pesos. Con el 10 % da la comisión mínima. */
+export const PEDIDO_MINIMO = 15_000;
+
+/**
+ * Un kiosco recibe pedidos si está abierto, no está pausado y tiene saldo prepago
+ * para pagar al menos la comisión mínima.
+ */
+export function puedeRecibirPedidos(k: Pick<Kiosco, 'abierto' | 'pausado' | 'saldo'>): boolean {
+  return k.abierto && !k.pausado && k.saldo >= COMISION_MINIMA;
 }
 
 /** Comisión mínima de FreeDeli por pedido, en pesos. */

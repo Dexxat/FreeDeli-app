@@ -6,7 +6,7 @@ import { AlertaAdmin, KioscoAdmin, MovimientoKiosco, ResumenAdmin } from '../mod
 import { codigoPedido } from '../models/pedido';
 import { PeriodoHistorial } from '../models/rider';
 import { MINUTOS_DEMORA, SALDO_BAJO, movimientoDePedido } from '../rules/admin.rules';
-import { ESTADOS_ABIERTOS } from '../rules/pedido.rules';
+import { COMISION_MINIMA, ESTADOS_ABIERTOS, puedeRecibirPedidos } from '../rules/pedido.rules';
 import { enRango, inicioDelDia, rangoPeriodo } from '../rules/periodos.rules';
 import { MockDb } from './mock-db';
 import { LATENCIA_MOCK } from './mock-riders.api';
@@ -26,6 +26,7 @@ export class MockAdminApi extends AdminApi {
         pedidosHoy: propios.length,
         comisionHoy: propios.filter((p) => p.estado === 'entregado').reduce((a, p) => a + p.comisionFreeDeli, 0),
         saldoBajo: k.saldo < SALDO_BAJO,
+        sinSaldo: k.saldo < COMISION_MINIMA,
       };
     });
   });
@@ -49,7 +50,7 @@ export class MockAdminApi extends AdminApi {
       entregadosHoy: deHoy.filter((p) => p.estado === 'entregado').length,
       enCurso: this.db.pedidos().filter((p) => ESTADOS_ABIERTOS.includes(p.estado)).length,
       comisionesHoy: deHoy.filter((p) => p.estado === 'entregado').reduce((a, p) => a + p.comisionFreeDeli, 0),
-      kioscosAbiertos: this.db.kioscos().filter((k) => k.abierto && !k.pausado).length,
+      kioscosAbiertos: this.db.kioscos().filter((k) => puedeRecibirPedidos(k)).length,
       ridersActivos: this.db.riders().filter((r) => r.disponible && !r.pausado).length,
       alertas,
     };
