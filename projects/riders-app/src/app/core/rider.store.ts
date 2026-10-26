@@ -1,5 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Rider, RidersApi, ZonaId, alternarZona } from '@freedeli/shared';
+import { CambiosPerfilRider, Rider, RidersApi, ZonaId, alternarZona } from '@freedeli/shared';
 
 /** Estado del rider con sesión iniciada, compartido por el header y las pantallas. */
 @Injectable({ providedIn: 'root' })
@@ -17,28 +17,46 @@ export class RiderStore {
   }
 
   /** Actualización optimista: se ve al instante y se revierte si la API falla. */
-  private aplicar(cambio: Partial<Rider>, llamada: () => ReturnType<RidersApi['perfil']>): void {
+  private aplicar(cambio: Partial<Rider>, llamada: () => ReturnType<RidersApi['perfil']>): Promise<boolean> {
     const anterior = this.rider();
-    if (!anterior) return;
+    if (!anterior) return Promise.resolve(false);
     this.error.set(null);
     this.rider.set({ ...anterior, ...cambio });
     this.guardando.set(true);
-    llamada().subscribe({
-      next: (r) => {
-        this.rider.set(r);
-        this.guardando.set(false);
-      },
-      error: (e: Error) => {
-        this.rider.set(anterior);
-        this.error.set(e.message);
-        this.guardando.set(false);
-      },
-    });
+    return new Promise((resolver) =>
+      llamada().subscribe({
+        next: (r) => {
+          this.rider.set(r);
+          this.guardando.set(false);
+          resolver(true);
+        },
+        error: (e: Error) => {
+          this.rider.set(anterior);
+          this.error.set(e.message);
+          this.guardando.set(false);
+          resolver(false);
+        },
+      }),
+    );
   }
 
   alternarDisponible(): void {
     const disponible = !this.disponible();
-    this.aplicar({ disponible }, () => this.api.setDisponible(disponible));
+    void this.aplicar({ disponible }, () => this.api.setDisponible(disponible));
+  }
+
+  actualizarPerfil(cambios: CambiosPerfilRider): Promise<boolean> {
+    return this.aplicar(cambios, () => this.api.actualizarPerfil(cambios));
+  }
+
+  /** Sin autenticación real todavía: se desconecta y queda marcado como sesión cerrada. */
+  readonly sesionCerrada = signal(false);
+
+  async cerrarSesion(): Promise<void> {
+    if (this.disponible()) {
+      await this.aplicar({ disponible: false }, () => this.api.setDisponible(false));
+    }
+    this.sesionCerrada.set(true);
   }
 
   /** Devuelve false si no se pudo porque era la última zona elegida. */
@@ -46,7 +64,7 @@ export class RiderStore {
     const actuales = this.zonas();
     const nuevas = alternarZona(actuales, zona);
     if (nuevas.length === actuales.length && nuevas.every((z, i) => z === actuales[i])) return false;
-    this.aplicar({ zonas: nuevas }, () => this.api.setZonas(nuevas));
+    void this.aplicar({ zonas: nuevas }, () => this.api.setZonas(nuevas));
     return true;
   }
 }

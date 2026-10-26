@@ -14,7 +14,9 @@ import { RiderHeader } from './layout/rider-header';
       <main class="contenido">
         <router-outlet />
       </main>
-      <fd-bottom-nav />
+      @if (!store.sesionCerrada()) {
+        <fd-bottom-nav />
+      }
     </div>
   `,
   styles: `

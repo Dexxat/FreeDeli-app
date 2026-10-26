@@ -57,6 +57,7 @@ export class MockDb {
       disponible: false,
       zonas: ['san-miguel'],
       pausado: false,
+      riderDesde: new Date(2026, 2, 3),
     },
   ]);
   readonly pedidos = signal<Pedido[]>([]);

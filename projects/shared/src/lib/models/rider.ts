@@ -15,6 +15,8 @@ export interface Rider {
   zonas: ZonaId[];
   /** Pausado desde FreeDeli Dev. */
   pausado: boolean;
+  /** Fecha de alta en FreeDeli. */
+  riderDesde: Date;
 }
 
 export type PeriodoHistorial = 'hoy' | 'semana' | 'mes';

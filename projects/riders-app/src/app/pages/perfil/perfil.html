@@ -1,0 +1,124 @@
+@if (store.rider(); as r) {
+  <section class="cabecera">
+    <span class="avatar"><img src="brand/casco-header.svg" width="58" height="42" alt="" class="fd-pixel" /></span>
+    <div class="quien">
+      <h1 class="nombre">{{ r.nombre }}</h1>
+      <span class="sutil">{{ riderDesde() }}</span>
+    </div>
+  </section>
+
+  <!-- Datos personales -->
+  <section class="bloque">
+    <div class="encabezado">
+      <h2 class="subtitulo">DATOS PERSONALES</h2>
+      @if (editando() !== 'datos') {
+        <button type="button" class="enlace" (click)="editar('datos')" aria-label="Editar datos personales">Editar</button>
+      }
+    </div>
+    @if (editando() === 'datos') {
+      <form class="formulario" [formGroup]="formDatos" (ngSubmit)="guardarDatos()" novalidate>
+        <label class="campo">
+          <span>Teléfono</span>
+          <input type="tel" formControlName="telefono" autocomplete="tel" [attr.aria-invalid]="invalido(formDatos.controls.telefono)" />
+          @if (invalido(formDatos.controls.telefono)) { <span class="error">Ingresá un teléfono con código de área.</span> }
+        </label>
+        <label class="campo">
+          <span>Email</span>
+          <input type="email" formControlName="email" autocomplete="email" [attr.aria-invalid]="invalido(formDatos.controls.email)" />
+          @if (invalido(formDatos.controls.email)) { <span class="error">Ingresá un email válido.</span> }
+        </label>
+        <div class="fila-fija"><span>DNI</span><span>{{ r.dni }}</span></div>
+        <p class="sutil">Para cambiar tu nombre o DNI, escribinos por WhatsApp.</p>
+        <div class="botones">
+          <button type="button" class="secundario" (click)="cancelar()">Cancelar</button>
+          <button type="submit" class="primario" [disabled]="store.guardando()">GUARDAR</button>
+        </div>
+      </form>
+    } @else {
+      <dl class="lista">
+        <div><dt>Teléfono</dt><dd>{{ r.telefono }}</dd></div>
+        <div><dt>Email</dt><dd>{{ r.email }}</dd></div>
+        <div><dt>DNI</dt><dd>{{ r.dni }}</dd></div>
+      </dl>
+    }
+  </section>
+
+  <!-- Vehículo y cobros -->
+  <section class="bloque">
+    <div class="encabezado">
+      <h2 class="subtitulo">VEHÍCULO Y COBROS</h2>
+      @if (editando() !== 'vehiculo') {
+        <button type="button" class="enlace" (click)="editar('vehiculo')" aria-label="Editar vehículo y cobros">Editar</button>
+      }
+    </div>
+    @if (editando() === 'vehiculo') {
+      <form class="formulario" [formGroup]="formVehiculo" (ngSubmit)="guardarVehiculo()" novalidate>
+        <label class="campo">
+          <span>Moto</span>
+          <input type="text" formControlName="modelo" [attr.aria-invalid]="invalido(formVehiculo.controls.modelo)" />
+          @if (invalido(formVehiculo.controls.modelo)) { <span class="error">Ingresá la marca y el modelo.</span> }
+        </label>
+        <label class="campo">
+          <span>Patente</span>
+          <input type="text" formControlName="patente" autocapitalize="characters" [attr.aria-invalid]="invalido(formVehiculo.controls.patente)" />
+          @if (invalido(formVehiculo.controls.patente)) { <span class="error">Usá el formato A123BCD o 123ABC.</span> }
+        </label>
+        <label class="campo">
+          <span>Alias / CBU</span>
+          <input type="text" formControlName="aliasCbu" autocapitalize="none" [attr.aria-invalid]="invalido(formVehiculo.controls.aliasCbu)" />
+          @if (invalido(formVehiculo.controls.aliasCbu)) { <span class="error">Alias de 6 a 20 caracteres o CBU de 22 dígitos.</span> }
+        </label>
+        <div class="botones">
+          <button type="button" class="secundario" (click)="cancelar()">Cancelar</button>
+          <button type="submit" class="primario" [disabled]="store.guardando()">GUARDAR</button>
+        </div>
+      </form>
+    } @else {
+      <dl class="lista">
+        <div><dt>Moto</dt><dd>{{ r.vehiculo.modelo }}</dd></div>
+        <div><dt>Patente</dt><dd>{{ r.vehiculo.patente }}</dd></div>
+        <div><dt>Alias / CBU</dt><dd>{{ r.cobro.aliasCbu }}</dd></div>
+      </dl>
+    }
+  </section>
+
+  @if (store.error(); as error) {
+    <p class="aviso" role="alert">{{ error }}</p>
+  }
+
+  <!-- Preferencias -->
+  <section class="bloque">
+    <h2 class="subtitulo">PREFERENCIAS</h2>
+    <div class="preferencias">
+      <label>
+        Notificaciones de pedidos
+        <input type="checkbox" [checked]="r.preferencias.notificaciones" (change)="cambiarPreferencia('notificaciones', $any($event.target).checked)" />
+      </label>
+      <label>
+        Sonidos 8 bit
+        <input type="checkbox" [checked]="r.preferencias.sonidos8bit" (change)="cambiarPreferencia('sonidos8bit', $any($event.target).checked)" />
+      </label>
+    </div>
+  </section>
+
+  <!-- Contacto y salida -->
+  <section class="bloque">
+    <a class="whatsapp" [href]="whatsapp()" target="_blank" rel="noopener">Hablar con FreeDeli por WhatsApp</a>
+    @if (!confirmarSalida()) {
+      <button type="button" class="salir" (click)="pedirSalida()">Cerrar sesión</button>
+    } @else if (!puedeSalir()) {
+      <p class="aviso" role="alert">Terminá el pedido en curso antes de cerrar sesión.</p>
+      <button type="button" class="salir" (click)="confirmarSalida.set(false)">Entendido</button>
+    } @else {
+      <div class="confirmar" role="alertdialog" aria-labelledby="texto-salir">
+        <p id="texto-salir">¿Cerrar sesión? Vas a dejar de recibir pedidos.</p>
+        <div class="botones">
+          <button type="button" class="secundario" (click)="confirmarSalida.set(false)">Cancelar</button>
+          <button type="button" class="primario" (click)="cerrarSesion()">SÍ, SALIR</button>
+        </div>
+      </div>
+    }
+  </section>
+} @else {
+  <p class="sutil">Cargando…</p>
+}

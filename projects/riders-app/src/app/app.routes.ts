@@ -7,5 +7,6 @@ export const routes: Routes = [
   { path: 'historial', title: 'FreeDeli Riders · Historial', loadComponent: () => import('./pages/historial/historial') },
   { path: 'ganancias', title: 'FreeDeli Riders · Ganancias', loadComponent: () => import('./pages/ganancias/ganancias') },
   { path: 'perfil', title: 'FreeDeli Riders · Perfil', loadComponent: () => import('./pages/perfil/perfil') },
+  { path: 'sesion-cerrada', title: 'FreeDeli Riders', loadComponent: () => import('./pages/sesion-cerrada/sesion-cerrada') },
   { path: '**', redirectTo: 'inicio' },
 ];
