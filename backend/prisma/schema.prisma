@@ -1,0 +1,252 @@
+// FreeDeli · modelo de datos. Refleja los modelos de projects/shared/src/lib/models.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Rol {
+  USUARIO
+  KIOSCO
+  RIDER
+  DEV
+}
+
+/// Usuarios quedan aprobados al registrarse; kioscos y riders esperan la aprobación de Dev.
+enum EstadoCuenta {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+enum Zona {
+  SAN_MIGUEL
+  MUNIZ
+  BELLA_VISTA
+}
+
+enum EstadoPedido {
+  ESPERANDO
+  ACEPTADO
+  RETIRADO
+  EN_CAMINO
+  ENTREGADO
+  CANCELADO
+}
+
+enum FasePedido {
+  STOCK
+  AJUSTE
+  TRANSFERENCIA
+  RIDER
+  APROBACION
+}
+
+enum EstadoPago {
+  PENDIENTE
+  TRANSFERIDO
+  LIBERADO
+}
+
+enum TipoMovimientoSaldo {
+  CARGA
+  COMISION
+}
+
+enum TipoConflicto {
+  DEMORA
+  PRODUCTO
+  PAGO
+  RIDER
+  KIOSCO
+  CLIENTE
+  OTRO
+}
+
+enum EstadoConflicto {
+  ABIERTO
+  EN_SEGUIMIENTO
+  RESUELTO
+}
+
+model Cuenta {
+  id        String       @id @default(uuid())
+  email     String       @unique
+  /// scrypt: "sal:hash" en hexadecimal.
+  clave     String
+  rol       Rol
+  estado    EstadoCuenta
+  creadaEn  DateTime     @default(now())
+  usuario   Usuario?
+  kiosco    Kiosco?
+  rider     Rider?
+}
+
+model Usuario {
+  id          String   @id @default(uuid())
+  cuentaId    String   @unique
+  cuenta      Cuenta   @relation(fields: [cuentaId], references: [id])
+  nombre      String
+  nombreCorto String
+  telefono    String
+  direccion   String
+  notas       String?
+  zona        Zona
+  lat         Float
+  lng         Float
+  pedidos     Pedido[]
+}
+
+model Kiosco {
+  id                String            @id @default(uuid())
+  cuentaId          String?           @unique
+  cuenta            Cuenta?           @relation(fields: [cuentaId], references: [id])
+  nombre            String
+  zona              Zona
+  direccion         String
+  lat               Float
+  lng               Float
+  abierto           Boolean           @default(true)
+  pausado           Boolean           @default(false)
+  /// Saldo prepago en pesos. De acá se descuentan las comisiones.
+  saldo             Int               @default(0)
+  tiempoEstimadoMin Int               @default(25)
+  aliasCobro        String
+  productos         Producto[]
+  pedidos           Pedido[]
+  movimientosSaldo  MovimientoSaldo[]
+}
+
+model Producto {
+  id         String  @id @default(uuid())
+  kioscoId   String
+  kiosco     Kiosco  @relation(fields: [kioscoId], references: [id])
+  nombre     String
+  precio     Int
+  disponible Boolean @default(true)
+
+  @@index([kioscoId])
+}
+
+model Rider {
+  id             String   @id @default(uuid())
+  cuentaId       String   @unique
+  cuenta         Cuenta   @relation(fields: [cuentaId], references: [id])
+  nombre         String
+  telefono       String
+  dni            String
+  vehiculoModelo String
+  patente        String
+  aliasCbu       String
+  notificaciones Boolean  @default(true)
+  sonidos8bit    Boolean  @default(true)
+  disponible     Boolean  @default(false)
+  zonas          Zona[]
+  pausado        Boolean  @default(false)
+  riderDesde     DateTime @default(now())
+  pedidos        Pedido[]
+  ofertas        Oferta[]
+}
+
+model Pedido {
+  id               String        @id @default(uuid())
+  numero           Int           @unique @default(autoincrement())
+  zona             Zona
+  kioscoId         String
+  kiosco           Kiosco        @relation(fields: [kioscoId], references: [id])
+  usuarioId        String
+  usuario          Usuario       @relation(fields: [usuarioId], references: [id])
+  destinoNombre    String
+  destinoDireccion String
+  destinoNotas     String?
+  distanciaKm      Float
+  costoEnvio       Int
+  propina          Int           @default(0)
+  gananciaRider    Int
+  pago             EstadoPago    @default(PENDIENTE)
+  aliasKiosco      String
+  comisionFreeDeli Int
+  pin              String
+  estado           EstadoPedido  @default(ESPERANDO)
+  fase             FasePedido?   @default(STOCK)
+  ridersRechazados String[]      @default([])
+  retiroKiosco     DateTime?
+  retiroRider      DateTime?
+  riderId          String?
+  rider            Rider?        @relation(fields: [riderId], references: [id])
+  creadoEn         DateTime      @default(now())
+  aceptadoEn       DateTime?
+  entregadoEn      DateTime?
+  items            ItemPedido[]
+  ofertas          Oferta[]
+  conflictos       Conflicto[]
+
+  @@index([kioscoId, estado])
+  @@index([usuarioId, estado])
+  @@index([riderId, estado])
+  @@index([creadoEn])
+}
+
+model ItemPedido {
+  id             String  @id @default(uuid())
+  pedidoId       String
+  pedido         Pedido  @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  productoId     String
+  nombre         String
+  cantidad       Int
+  precioUnitario Int
+  /// Quitado por el kiosco por falta de stock.
+  quitado        Boolean @default(false)
+
+  @@index([pedidoId])
+}
+
+/// Pedido ofrecido a un rider, con vencimiento.
+model Oferta {
+  id       String   @id @default(uuid())
+  pedidoId String
+  pedido   Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  riderId  String
+  rider    Rider    @relation(fields: [riderId], references: [id])
+  expiraEn DateTime
+  creadaEn DateTime @default(now())
+
+  @@unique([pedidoId, riderId])
+}
+
+model MovimientoSaldo {
+  id              String              @id @default(uuid())
+  kioscoId        String
+  kiosco          Kiosco              @relation(fields: [kioscoId], references: [id])
+  fecha           DateTime            @default(now())
+  tipo            TipoMovimientoSaldo
+  monto           Int
+  referencia      String
+  saldoResultante Int
+
+  @@index([kioscoId, fecha])
+}
+
+model Conflicto {
+  id          String           @id @default(uuid())
+  pedidoId    String?
+  pedido      Pedido?          @relation(fields: [pedidoId], references: [id])
+  tipo        TipoConflicto
+  descripcion String
+  estado      EstadoConflicto  @default(ABIERTO)
+  creadoEn    DateTime         @default(now())
+  resueltoEn  DateTime?
+  notas       NotaConflicto[]
+}
+
+model NotaConflicto {
+  id          String    @id @default(uuid())
+  conflictoId String
+  conflicto   Conflicto @relation(fields: [conflictoId], references: [id], onDelete: Cascade)
+  fecha       DateTime  @default(now())
+  texto       String
+}

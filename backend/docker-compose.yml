@@ -1,0 +1,15 @@
+# Postgres para producción o para quien tenga Docker. En desarrollo alcanza con `npm run db`.
+services:
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: freedeli
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-freedeli}
+      POSTGRES_DB: freedeli
+    ports:
+      - "5433:5432"
+    volumes:
+      - datos:/var/lib/postgresql/data
+volumes:
+  datos:

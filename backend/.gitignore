@@ -1,0 +1,10 @@
+# Dependencias y compilados
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Local
+.env
+.pgdata/
+src/generated/
