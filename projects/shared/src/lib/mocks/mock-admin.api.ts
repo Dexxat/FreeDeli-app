@@ -1,13 +1,17 @@
-import { Injectable, computed, inject } from '@angular/core';
+import { Injectable, Injector, computed, inject } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Observable, delay, distinctUntilChanged, map, of, throwError } from 'rxjs';
 import { AdminApi } from '../api/admin.api';
-import { AlertaAdmin, KioscoAdmin, MovimientoKiosco, ResumenAdmin } from '../models/admin';
+import { AlertaAdmin, EntregaAdmin, FilaMain, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
+import { ZONAS, ZonaId } from '../models/zona';
+import { Pedido } from '../models/pedido';
 import { codigoPedido } from '../models/pedido';
 import { PeriodoHistorial } from '../models/rider';
 import { MINUTOS_DEMORA, SALDO_BAJO, movimientoDePedido } from '../rules/admin.rules';
+
+const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 import { COMISION_MINIMA, ESTADOS_ABIERTOS, puedeRecibirPedidos } from '../rules/pedido.rules';
-import { enRango, inicioDelDia, rangoPeriodo } from '../rules/periodos.rules';
+import { enRango, inicioDelDia, rangoPeriodo, sumarDias } from '../rules/periodos.rules';
 import { MockDb } from './mock-db';
 import { LATENCIA_MOCK } from './mock-riders.api';
 
@@ -15,6 +19,7 @@ import { LATENCIA_MOCK } from './mock-riders.api';
 export class MockAdminApi extends AdminApi {
   private readonly db = inject(MockDb);
   private readonly latencia = inject(LATENCIA_MOCK);
+  private readonly injector = inject(Injector);
 
   private readonly kioscosAdmin = computed<KioscoAdmin[]>(() => {
     const hoy = inicioDelDia(new Date());
@@ -81,6 +86,89 @@ export class MockAdminApi extends AdminApi {
       .filter((p) => p.kioscoId === id && enRango(p.creadoEn, rango))
       .sort((a, b) => b.creadoEn.getTime() - a.creadoEn.getTime())
       .map(movimientoDePedido);
+    return of(lista).pipe(delay(this.latencia));
+  }
+
+  private nombreRider(id?: string): string | undefined {
+    return id ? this.db.riders().find((r) => r.id === id)?.nombre : undefined;
+  }
+
+  pedidosJornada(zonas: ZonaId[]): Observable<FilaMain[]> {
+    return toObservable(this.db.pedidos, { injector: this.injector }).pipe(
+      map((ps) => {
+        const hoy = inicioDelDia(new Date());
+        return ps
+          .filter((p) => p.creadoEn >= hoy && zonas.includes(p.zona))
+          .sort((a, b) => b.creadoEn.getTime() - a.creadoEn.getTime())
+          .map((p) => ({
+            pedidoId: p.id,
+            numero: p.numero,
+            zona: p.zona,
+            kioscoNombre: p.kioscoNombre,
+            totalKiosco: movimientoDePedido(p).netoKiosco,
+            estado: p.estado,
+            riderId: p.riderId,
+            riderNombre: this.nombreRider(p.riderId),
+            gananciaRider: p.estado === 'cancelado' ? 0 : p.gananciaRider + p.propina,
+          }));
+      }),
+    );
+  }
+
+  private entregados(periodo: PeriodoAdmin, zonas?: ZonaId[]): Pedido[] {
+    const rango = rangoPeriodo(periodo, new Date());
+    return this.db
+      .pedidos()
+      .filter((p) => p.estado === 'entregado' && enRango(p.creadoEn, rango) && (!zonas || zonas.includes(p.zona)))
+      .sort((a, b) => b.creadoEn.getTime() - a.creadoEn.getTime());
+  }
+
+  ganancias(periodo: PeriodoAdmin): Observable<GananciasAdmin> {
+    const ahora = new Date();
+    const lista = this.entregados(periodo);
+    const total = lista.reduce((a, p) => a + p.comisionFreeDeli, 0);
+    const barras: GananciasAdmin['barras'] = [];
+    if (periodo === 'jornada') {
+      for (let h = 0; h <= ahora.getHours(); h++) {
+        const monto = lista.filter((p) => p.creadoEn.getHours() === h).reduce((a, p) => a + p.comisionFreeDeli, 0);
+        barras.push({ etiqueta: h.toString().padStart(2, '0'), monto });
+      }
+    } else {
+      const { desde, hasta } = rangoPeriodo(periodo, ahora);
+      for (let d = desde; d < hasta; d = sumarDias(d, 1)) {
+        const dia = d.getTime();
+        const monto = lista.filter((p) => inicioDelDia(p.creadoEn).getTime() === dia).reduce((a, p) => a + p.comisionFreeDeli, 0);
+        barras.push({ etiqueta: periodo === 'semana' ? DIAS[d.getDay()] : String(d.getDate()), monto });
+      }
+    }
+    return of({
+      periodo,
+      total,
+      pedidos: lista.length,
+      promedioPorPedido: lista.length ? Math.round(total / lista.length) : 0,
+      facturado: lista.reduce((a, p) => a + movimientoDePedido(p).totalCliente, 0),
+      porZona: ZONAS.map(({ id }) => {
+        const deZona = lista.filter((p) => p.zona === id);
+        return { zona: id, total: deZona.reduce((a, p) => a + p.comisionFreeDeli, 0), pedidos: deZona.length };
+      }),
+      barras,
+    }).pipe(delay(this.latencia));
+  }
+
+  entregas(periodo: PeriodoAdmin, zonas: ZonaId[]): Observable<EntregaAdmin[]> {
+    const lista = this.entregados(periodo, zonas).map((p) => ({
+      ...movimientoDePedido(p),
+      zona: p.zona,
+      kioscoNombre: p.kioscoNombre,
+      riderId: p.riderId,
+      riderNombre: this.nombreRider(p.riderId),
+      destino: p.destino.direccion,
+      items: p.items,
+      aceptadoEn: p.aceptadoEn,
+      entregadoEn: p.entregadoEn,
+      duracionMin:
+        p.aceptadoEn && p.entregadoEn ? Math.round((p.entregadoEn.getTime() - p.aceptadoEn.getTime()) / 60_000) : null,
+    }));
     return of(lista).pipe(delay(this.latencia));
   }
 

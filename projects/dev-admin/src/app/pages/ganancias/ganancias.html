@@ -1,0 +1,46 @@
+<div class="encabezado">
+  <h1 class="titulo">GANANCIAS</h1>
+  <fd-selector-periodo [valor]="periodo()" (cambio)="periodo.set($event)" />
+</div>
+
+@if (datos(); as g) {
+  <section class="total" aria-live="polite">
+    <span class="sutil">{{ leyenda() }}</span>
+    <span class="total-monto">{{ g.total | pesos }}</span>
+    <span class="sutil">Solo pedidos entregados con éxito.</span>
+  </section>
+
+  <section class="tarjetas">
+    <div class="tarjeta"><span class="sutil">Pedidos entregados</span><span class="valor">{{ g.pedidos }}</span></div>
+    <div class="tarjeta"><span class="sutil">Promedio por pedido</span><span class="valor">{{ g.promedioPorPedido | pesos }}</span></div>
+    <div class="tarjeta"><span class="sutil">Pagado por clientes</span><span class="valor">{{ g.facturado | pesos }}</span></div>
+  </section>
+
+  <section class="bloque">
+    <h2 class="subtitulo">{{ periodo() === 'jornada' ? 'POR HORA' : 'POR DÍA' }}</h2>
+    <div class="grafico" role="img" [attr.aria-label]="'Comisiones ' + descripcion()">
+      @for (b of barras(); track $index) {
+        <div class="columna" [title]="b.etiqueta + ': ' + (b.monto | pesos)">
+          <span class="barra" [class.vacia]="b.monto === 0" [style.height]="b.alto"></span>
+          <span class="etiqueta">{{ b.etiqueta }}</span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="bloque">
+    <h2 class="subtitulo">POR ZONA</h2>
+    <div class="tabla-caja">
+      <table>
+        <thead><tr><th scope="col">Zona</th><th scope="col" class="num">Pedidos</th><th scope="col" class="num">Comisiones</th></tr></thead>
+        <tbody>
+          @for (z of g.porZona; track z.zona) {
+            <tr><td>{{ zona(z.zona) }}</td><td class="num">{{ z.pedidos }}</td><td class="num">{{ z.total | pesos }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+} @else {
+  <p class="sutil">Cargando…</p>
+}

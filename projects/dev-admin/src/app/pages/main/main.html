@@ -1,0 +1,53 @@
+<div class="encabezado">
+  <h1 class="titulo">MAIN · JORNADA</h1>
+  <fd-selector-zonas [elegidas]="elegidas()" (cambio)="cambiarZonas($event)" />
+</div>
+
+@if (resumen(); as r) {
+  @if (r.alertas.length > 0) {
+    <ul class="alertas" aria-label="Alertas">
+      @for (a of r.alertas; track a.texto) {
+        <li><span class="chip alerta">{{ a.tipo === 'saldo-bajo' ? 'SALDO' : 'DEMORA' }}</span> {{ a.texto }} <a class="enlace" [routerLink]="a.ruta">Ver</a></li>
+      }
+    </ul>
+  }
+}
+
+<p class="sutil" aria-live="polite">
+  {{ totales().pedidos }} pedidos · {{ totales().entregados }} entregados · {{ totales().enCurso }} en curso
+</p>
+
+@if (filas(); as fs) {
+  @if (fs.length === 0) {
+    <p class="sutil">Sin pedidos hoy en estas zonas.</p>
+  } @else {
+    <div class="cabecera-filas" aria-hidden="true">
+      <span>PEDIDO · PARA EL KIOSCO</span><span>ESTADO</span><span>RIDER · GANÓ</span>
+    </div>
+    <ul class="filas">
+      @for (f of fs; track f.pedidoId) {
+        <li [class]="'estado-' + f.estado">
+          <div class="lado">
+            <span class="id">{{ codigo(f.numero) }}</span>
+            <span class="detalle">{{ f.kioscoNombre }} · {{ zona(f.zona) }}</span>
+            <span class="monto">{{ f.totalKiosco | pesos }} <span class="sutil">para el kiosco</span></span>
+          </div>
+          <div class="centro"><span class="estado">{{ textoEstado[f.estado] }}</span></div>
+          <div class="lado derecha">
+            @if (f.riderId) {
+              <span class="id">{{ f.riderId.toUpperCase() }}</span>
+              <span class="detalle">{{ f.riderNombre }}</span>
+              <span class="monto" [class.pendiente]="f.estado !== 'entregado'">
+                {{ f.gananciaRider | pesos }} <span class="sutil">{{ f.estado === 'entregado' ? 'ganó' : 'a cobrar' }}</span>
+              </span>
+            } @else {
+              <span class="detalle">{{ f.estado === 'cancelado' ? '—' : 'Sin rider todavía' }}</span>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+} @else {
+  <p class="sutil">Cargando…</p>
+}

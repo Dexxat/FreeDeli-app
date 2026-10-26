@@ -3,11 +3,10 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ICONOS, ItemNav } from '@freedeli/shared';
 
 const SECCIONES: readonly ItemNav[] = [
-  { ruta: '/resumen', etiqueta: 'RESUMEN', icono: ICONOS.inicio },
-  { ruta: '/kioscos', etiqueta: 'KIOSCOS', icono: ICONOS.bolsa },
-  { ruta: '/riders', etiqueta: 'RIDERS', icono: ICONOS.vivo },
+  { ruta: '/main', etiqueta: 'MAIN', icono: ICONOS.vivo },
   { ruta: '/ganancias', etiqueta: 'GANANCIAS', icono: ICONOS.pesos },
-  { ruta: '/conflictos', etiqueta: 'CONFLICTOS', icono: ICONOS.lista },
+  { ruta: '/entregas', etiqueta: 'ENTREGAS', icono: ICONOS.lista },
+  { ruta: '/kioscos', etiqueta: 'KIOSCOS', icono: ICONOS.bolsa },
 ];
 
 @Component({
@@ -17,7 +16,7 @@ const SECCIONES: readonly ItemNav[] = [
   template: `
     <div class="app">
       <aside class="lateral">
-        <a class="marca" routerLink="/resumen" aria-label="FreeDeli Dev, ir al resumen">
+        <a class="marca" routerLink="/main" aria-label="FreeDeli Dev, ir a MAIN">
           <span class="logo"><img src="brand/freedeli-piramide.svg" width="44" height="30" alt="" class="fd-pixel" /></span>
           <span class="nombre">Free<span class="deli">Deli</span><span class="dev">DEV</span></span>
         </a>

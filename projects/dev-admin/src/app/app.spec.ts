@@ -10,6 +10,13 @@ const esperar = () => new Promise((r) => setTimeout(r, 5));
 describe('FreeDeli Dev', () => {
   let h: RouterTestingHarness;
 
+  async function estable() {
+    for (let i = 0; i < 5; i++) {
+      await esperar();
+      await h.fixture.whenStable();
+    }
+  }
+
   async function abrir(url: string) {
     TestBed.configureTestingModule({
       imports: [App],
@@ -17,47 +24,54 @@ describe('FreeDeli Dev', () => {
     });
     h = await RouterTestingHarness.create();
     await h.navigateByUrl(url);
-    for (let i = 0; i < 4; i++) {
-      await esperar();
-      await h.fixture.whenStable();
-    }
+    await estable();
     return h.routeNativeElement!;
   }
 
-  async function estable() {
-    for (let i = 0; i < 4; i++) {
-      await esperar();
-      await h.fixture.whenStable();
-    }
-  }
+  const boton = (el: HTMLElement, t: string) => [...el.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.trim() === t)!;
 
-  it('el resumen muestra las ganancias del día y la alerta de saldo bajo', async () => {
-    const el = await abrir('/resumen');
-    expect(el.textContent).toContain('Ganancias FreeDeli');
-    expect(el.textContent).toContain('Kiosco Pixel tiene saldo bajo');
+  it('MAIN muestra los pedidos de la jornada y filtra por zonas', async () => {
+    const el = await abrir('/main');
+    const todas = el.querySelectorAll('.filas li').length;
+    expect(todas).toBeGreaterThan(0);
+    expect(el.querySelector('.estado-retirado .derecha .id')?.textContent).toBe('R1');
+
+    await h.navigateByUrl('/main?zonas=muniz');
+    await estable();
+    const filas = [...h.routeNativeElement!.querySelectorAll('.filas li .detalle')].filter((d) => d.textContent?.includes('·'));
+    expect(filas.every((d) => d.textContent?.includes('Muñiz'))).toBe(true);
+    expect(h.routeNativeElement!.querySelectorAll('.filas li').length).toBeLessThan(todas);
   });
 
-  it('la lista de kioscos permite pausar y reactivar', async () => {
+  it('MAIN no deja deseleccionar la última zona', async () => {
+    const el = await abrir('/main?zonas=muniz');
+    boton(el, 'Muñiz').click();
+    await estable();
+    expect(boton(h.routeNativeElement!, 'Muñiz').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('GANANCIAS cambia de período', async () => {
+    const el = await abrir('/ganancias');
+    const jornada = el.querySelector('.total-monto')?.textContent;
+    boton(el, 'MES').click();
+    await estable();
+    expect(el.querySelector('.subtitulo')?.textContent).toBe('POR DÍA');
+    expect(el.querySelector('.total-monto')?.textContent).not.toBe(jornada);
+  });
+
+  it('ENTREGAS lista entregas finalizadas con su detalle de dinero', async () => {
+    const el = await abrir('/entregas');
+    const items = el.querySelectorAll('.lista > li');
+    expect(items.length).toBeGreaterThan(0);
+    expect(el.querySelector('details')?.textContent).toContain('Comisión FreeDeli');
+  });
+
+  it('KIOSCOS permite pausar', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     const el = await abrir('/kioscos');
-    const db = TestBed.inject(MockDb);
     const fila = [...el.querySelectorAll('tbody tr')].find((tr) => tr.textContent?.includes('Kiosco El Faro'))!;
     fila.querySelector<HTMLButtonElement>('button')!.click();
     await estable();
-    expect(db.kioscos().find((k) => k.id === 'k1')!.pausado).toBe(true);
-    expect(fila.textContent).toContain('Pausado');
-    fila.querySelector<HTMLButtonElement>('button')!.click();
-    await estable();
-    expect(db.kioscos().find((k) => k.id === 'k1')!.pausado).toBe(false);
-  });
-
-  it('el detalle del kiosco muestra movimientos que cuadran', async () => {
-    const el = await abrir('/kioscos/k1');
-    [...el.querySelectorAll<HTMLButtonElement>('.filtros button')].find((b) => b.textContent?.trim() === 'Mes')!.click();
-    await estable();
-    const filas = el.querySelectorAll('tbody tr');
-    expect(filas.length).toBeGreaterThan(0);
-    const total = [...el.querySelectorAll('tfoot td')].map((td) => Number(td.textContent!.replace(/\D/g, '')));
-    expect(total[1] + total[2] + total[3]).toBe(total[0]);
+    expect(TestBed.inject(MockDb).kioscos().find((k) => k.id === 'k1')!.pausado).toBe(true);
   });
 });

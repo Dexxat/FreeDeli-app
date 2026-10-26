@@ -1,0 +1,65 @@
+<div class="encabezado">
+  <h1 class="titulo">ENTREGAS</h1>
+  <div class="filtros">
+    <fd-selector-zonas [elegidas]="zonas()" (cambio)="zonas.set($event)" />
+    <fd-selector-periodo [valor]="periodo()" (cambio)="periodo.set($event)" />
+  </div>
+</div>
+
+<p class="sutil" aria-live="polite">
+  {{ totales().cantidad }} entregas · {{ totales().cliente | pesos }} pagado por clientes · {{ totales().comision | pesos }} de comisión
+  @if (totales().duracion !== null) { · {{ totales().duracion }} min promedio }
+</p>
+
+@if (entregas(); as es) {
+  @if (es.length === 0) {
+    <p class="sutil">Sin entregas en este período.</p>
+  } @else {
+    <ul class="lista">
+      @for (e of es; track e.pedidoId) {
+        <li>
+          <details>
+            <summary>
+              <span class="id">{{ codigo(e.numero) }}</span>
+              <span>{{ fecha(e.entregadoEn) }}</span>
+              <span class="trayecto">{{ e.kioscoNombre }} → {{ e.destino }}</span>
+              <span>{{ zona(e.zona) }}</span>
+              <span>{{ e.riderNombre ?? '—' }}</span>
+              <span class="num">{{ e.duracionMin !== null ? e.duracionMin + ' min' : '—' }}</span>
+              <span class="num fuerte">{{ e.totalCliente | pesos }}</span>
+            </summary>
+            <div class="detalle">
+              <div>
+                <h3 class="subtitulo">PRODUCTOS</h3>
+                <ul class="items">
+                  @for (i of e.items; track i.productoId) {
+                    <li><span>{{ i.cantidad }} × {{ i.nombre }}</span><span>{{ i.cantidad * i.precioUnitario | pesos }}</span></li>
+                  }
+                </ul>
+              </div>
+              <div>
+                <h3 class="subtitulo">DINERO</h3>
+                <ul class="items">
+                  <li><span>Pagó el cliente</span><span>{{ e.totalCliente | pesos }}</span></li>
+                  <li><span>Envío al rider ({{ e.riderId?.toUpperCase() }})</span><span>{{ e.envioRider | pesos }}</span></li>
+                  <li><span>Comisión FreeDeli</span><span class="amarillo">{{ e.comisionFreeDeli | pesos }}</span></li>
+                  <li><span>Neto del kiosco</span><span>{{ e.netoKiosco | pesos }}</span></li>
+                </ul>
+              </div>
+              <div>
+                <h3 class="subtitulo">TIEMPOS</h3>
+                <ul class="items">
+                  <li><span>Pedido</span><span>{{ hora(e.fecha) }}</span></li>
+                  <li><span>Aceptado</span><span>{{ hora(e.aceptadoEn) }}</span></li>
+                  <li><span>Entregado</span><span>{{ hora(e.entregadoEn) }}</span></li>
+                </ul>
+              </div>
+            </div>
+          </details>
+        </li>
+      }
+    </ul>
+  }
+} @else {
+  <p class="sutil">Cargando…</p>
+}

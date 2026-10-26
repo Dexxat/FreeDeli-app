@@ -1,0 +1,16 @@
+@use 'panel';
+@use 'pixel';
+
+:host { display: flex; flex-direction: column; gap: 20px; }
+.encabezado { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
+.total { margin: 4px; padding: 20px; display: flex; flex-direction: column; gap: 10px; background: var(--fd-navy-700); @include pixel.borde(var(--fd-blue-500)); }
+.total-monto { font-family: var(--fd-font-pixel); font-size: 32px; line-height: 1; color: var(--fd-yellow-400); }
+.tarjetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.tarjeta { padding: 16px; display: flex; flex-direction: column; gap: 10px; background: #0f1f4a; }
+.valor { font-family: var(--fd-font-pixel); font-size: 16px; line-height: 1; }
+.bloque { display: flex; flex-direction: column; gap: 10px; }
+.grafico { height: 200px; padding: 12px 10px 0; display: flex; align-items: flex-end; gap: 4px; background: #0f1f4a; overflow-x: auto; }
+.columna { flex: 1 0 18px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; }
+.barra { width: 100%; background: var(--fd-yellow-400); }
+.barra.vacia { background: var(--fd-navy-700); }
+.etiqueta { padding-bottom: 8px; font-size: 10px; color: var(--fd-blue-100); }

@@ -20,7 +20,7 @@ function sumarDias(d: Date, dias: number): Date {
  * - mes: desde el día 1 del mes actual.
  * - mes-pasado: el mes calendario anterior completo.
  */
-export function rangoPeriodo(periodo: PeriodoHistorial | PeriodoGanancias, ahora: Date): Rango {
+export function rangoPeriodo(periodo: PeriodoHistorial | PeriodoGanancias | 'jornada', ahora: Date): Rango {
   const hoy = inicioDelDia(ahora);
   const manana = sumarDias(hoy, 1);
   switch (periodo) {
