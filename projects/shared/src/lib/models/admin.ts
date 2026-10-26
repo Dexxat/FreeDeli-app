@@ -145,3 +145,21 @@ export interface MovimientoSaldo {
   referencia: string;
   saldoResultante: number;
 }
+
+/** Ganancias del kiosco en un período: lo cobrado menos envíos y comisiones. */
+export interface GananciasKiosco {
+  periodo: PeriodoAdmin;
+  pedidos: number;
+  /** Lo que transfirieron los clientes. */
+  cobrado: number;
+  /** Lo que el kiosco pasó a los riders. */
+  envios: number;
+  /** Lo que se descontó del saldo por comisiones. */
+  comisiones: number;
+  /** Lo que le queda al kiosco. */
+  neto: number;
+  /** Neto por hora (jornada) o por día (semana y mes). */
+  barras: { etiqueta: string; monto: number }[];
+}
+
+export type DatosKiosco = Pick<Kiosco, 'nombre' | 'direccion' | 'aliasCobro' | 'tiempoEstimadoMin'>;

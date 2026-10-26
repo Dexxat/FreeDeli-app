@@ -302,7 +302,8 @@
             ],
             "stylePreprocessorOptions": {
               "includePaths": [
-                "projects/shared/styles"
+                "projects/shared/styles",
+                "projects/kioscos-app/src/app/ui"
               ]
             }
           },

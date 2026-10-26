@@ -3,7 +3,12 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { Observable, delay, distinctUntilChanged, filter, of, throwError } from 'rxjs';
 import { KioscosApi } from '../api/kioscos.api';
 import { FREEDELI_CONFIG } from '../config/freedeli.config';
-import { Kiosco } from '../models/kiosco';
+import { DatosKiosco, GananciasKiosco, MovimientoKiosco, MovimientoSaldo, PeriodoAdmin } from '../models/admin';
+import { Kiosco, Producto } from '../models/kiosco';
+import { PeriodoHistorial } from '../models/rider';
+import { movimientoDePedido } from '../rules/admin.rules';
+import { enRango, inicioDelDia, rangoPeriodo, sumarDias } from '../rules/periodos.rules';
+import { aliasCbuValido } from '../rules/validaciones.rules';
 import { Pedido } from '../models/pedido';
 import { RiderPublico } from '../models/usuario';
 import { Resultado, aprobarRider, confirmarRetiro, confirmarStock, confirmarTransferencia } from '../rules/flujo.rules';
@@ -25,6 +30,18 @@ export class MockKioscosApi extends KioscosApi {
         .filter((p) => p.kioscoId === KIOSCO_ACTUAL_ID && ESTADOS_ABIERTOS.includes(p.estado))
         .sort((a, b) => a.creadoEn.getTime() - b.creadoEn.getTime()),
     ),
+  );
+
+  private readonly saldo$ = toObservable(
+    computed(() =>
+      this.db
+        .movimientosSaldo()
+        .filter((m) => m.kioscoId === KIOSCO_ACTUAL_ID)
+        .sort((a, b) => b.fecha.getTime() - a.fecha.getTime() || b.id.localeCompare(a.id)),
+    ),
+  );
+  private readonly catalogo$ = toObservable(
+    computed(() => this.db.productos().filter((p) => p.kioscoId === KIOSCO_ACTUAL_ID).sort((a, b) => a.nombre.localeCompare(b.nombre))),
   );
 
   private transicion(pedidoId: string, paso: (p: Pedido) => Resultado): Observable<Pedido> {
@@ -66,6 +83,87 @@ export class MockKioscosApi extends KioscosApi {
 
   confirmarEnvio(pedidoId: string): Observable<Pedido> {
     return this.transicion(pedidoId, (p) => confirmarRetiro(p, 'kiosco', new Date()));
+  }
+
+  private propios(): Pedido[] {
+    return this.db.pedidos().filter((p) => p.kioscoId === KIOSCO_ACTUAL_ID);
+  }
+
+  historial(periodo: PeriodoHistorial): Observable<Pedido[]> {
+    const rango = rangoPeriodo(periodo, new Date());
+    const lista = this.propios()
+      .filter((p) => (p.estado === 'entregado' || p.estado === 'cancelado') && enRango(p.creadoEn, rango))
+      .sort((a, b) => b.creadoEn.getTime() - a.creadoEn.getTime());
+    return of(lista).pipe(delay(this.latencia));
+  }
+
+  ganancias(periodo: PeriodoAdmin): Observable<GananciasKiosco> {
+    const ahora = new Date();
+    const rango = rangoPeriodo(periodo, ahora);
+    const entregados = this.propios().filter((p) => p.estado === 'entregado' && enRango(p.creadoEn, rango));
+    const movs = entregados.map((p) => ({ p, m: movimientoDePedido(p) }));
+    const suma = (f: (m: MovimientoKiosco) => number) => movs.reduce((a, x) => a + f(x.m), 0);
+    const barras: GananciasKiosco['barras'] = [];
+    if (periodo === 'jornada') {
+      for (let h = 0; h <= ahora.getHours(); h++) {
+        barras.push({ etiqueta: String(h).padStart(2, '0'), monto: movs.filter((x) => x.p.creadoEn.getHours() === h).reduce((a, x) => a + x.m.netoKiosco, 0) });
+      }
+    } else {
+      const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      for (let d = rango.desde; d < rango.hasta; d = sumarDias(d, 1)) {
+        const dia = d.getTime();
+        barras.push({
+          etiqueta: periodo === 'semana' ? dias[d.getDay()] : String(d.getDate()),
+          monto: movs.filter((x) => inicioDelDia(x.p.creadoEn).getTime() === dia).reduce((a, x) => a + x.m.netoKiosco, 0),
+        });
+      }
+    }
+    return of({
+      periodo,
+      pedidos: entregados.length,
+      cobrado: suma((m) => m.totalCliente),
+      envios: suma((m) => m.envioRider),
+      comisiones: suma((m) => m.comisionFreeDeli),
+      neto: suma((m) => m.netoKiosco),
+      barras,
+    }).pipe(delay(this.latencia));
+  }
+
+  actualizarDatos(datos: DatosKiosco): Observable<Kiosco> {
+    const nombre = datos.nombre.trim();
+    const direccion = datos.direccion.trim();
+    if (nombre.length < 3) return throwError(() => new Error('Ingresá el nombre del kiosco.'));
+    if (!/\d/.test(direccion)) return throwError(() => new Error('Ingresá la calle y la altura.'));
+    if (!aliasCbuValido(datos.aliasCobro)) return throwError(() => new Error('Alias de 6 a 20 caracteres o CBU de 22 dígitos.'));
+    if (!Number.isInteger(datos.tiempoEstimadoMin) || datos.tiempoEstimadoMin < 5 || datos.tiempoEstimadoMin > 120) {
+      return throwError(() => new Error('El tiempo estimado va de 5 a 120 minutos.'));
+    }
+    const actual = this.db.kioscos().find((k) => k.id === KIOSCO_ACTUAL_ID)!;
+    const ubicacion = direccion === actual.direccion ? actual.ubicacion : this.db.geolocalizar(direccion, actual.zona);
+    const actualizado: Kiosco = { ...actual, nombre, direccion, ubicacion, aliasCobro: datos.aliasCobro.trim(), tiempoEstimadoMin: datos.tiempoEstimadoMin };
+    this.db.kioscos.update((ks) => ks.map((k) => (k.id === KIOSCO_ACTUAL_ID ? actualizado : k)));
+    return of(actualizado).pipe(delay(this.latencia));
+  }
+
+  movimientosSaldo(): Observable<MovimientoSaldo[]> {
+    return this.saldo$;
+  }
+
+  catalogo(): Observable<Producto[]> {
+    return this.catalogo$;
+  }
+
+  guardarProducto(producto: Omit<Producto, 'id' | 'kioscoId'> & { id?: string }): Observable<Producto> {
+    const nombre = producto.nombre.trim();
+    if (nombre.length < 2) return throwError(() => new Error('Ingresá el nombre del producto.'));
+    if (!Number.isInteger(producto.precio) || producto.precio <= 0) return throwError(() => new Error('El precio tiene que ser mayor a cero.'));
+    const existente = producto.id ? this.db.productos().find((p) => p.id === producto.id && p.kioscoId === KIOSCO_ACTUAL_ID) : undefined;
+    if (producto.id && !existente) return throwError(() => new Error('No encontramos el producto.'));
+    const guardado: Producto = existente
+      ? { ...existente, nombre, precio: producto.precio, disponible: producto.disponible }
+      : { id: `${KIOSCO_ACTUAL_ID}-n${Date.now()}`, kioscoId: KIOSCO_ACTUAL_ID, nombre, precio: producto.precio, disponible: producto.disponible };
+    this.db.productos.update((ps) => (existente ? ps.map((p) => (p.id === guardado.id ? guardado : p)) : [...ps, guardado]));
+    return of(guardado).pipe(delay(this.latencia));
   }
 }
 

@@ -45,7 +45,7 @@ const PRODUCTOS = [
 ];
 
 /** Catálogo: cada kiosco abierto vende todos los productos. */
-const CATALOGO: Producto[] = KIOSCOS.flatMap((k) => PRODUCTOS.map((p) => ({ ...p, id: `${k.id}-${p.id}`, kioscoId: k.id })));
+const CATALOGO: Producto[] = KIOSCOS.flatMap((k) => PRODUCTOS.map((p) => ({ ...p, id: `${k.id}-${p.id}`, kioscoId: k.id, disponible: true })));
 
 const NOMBRES = ['Martina R.', 'Joaquín P.', 'Sofía G.', 'Tomás L.', 'Valentina M.', 'Nicolás F.'];
 

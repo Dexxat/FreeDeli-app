@@ -1,0 +1,34 @@
+// Estilos comunes de las secciones de la app de Kioscos.
+.titulo { margin: 0; font-family: var(--fd-font-pixel); font-size: 14px; line-height: 1.4; }
+.subtitulo { margin: 0; font-family: var(--fd-font-pixel); font-size: 10px; color: var(--fd-blue-100); }
+.sutil { margin: 0; font-size: 13px; color: var(--fd-blue-100); }
+.encabezado { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
+
+.periodos { display: flex; gap: 6px; }
+.periodos button {
+  min-height: 44px; padding: 0 14px;
+  border: none; cursor: pointer;
+  background: var(--fd-navy-700); color: var(--fd-blue-100);
+  font-family: var(--fd-font-pixel); font-size: 9px;
+  &[aria-pressed='true'] { background: var(--fd-yellow-400); color: var(--fd-navy-900); }
+}
+
+.tabla-caja { overflow-x: auto; background: #0f1f4a; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { padding: 12px 14px; text-align: left; white-space: nowrap; font-family: var(--fd-font-pixel); font-size: 8px; font-weight: 400; color: var(--fd-blue-100); background: var(--fd-navy-900); }
+td { padding: 12px 14px; border-top: 2px solid var(--fd-navy-800); }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.campo { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--fd-blue-100); }
+.campo input, .campo select {
+  min-height: 44px; padding: 0 12px;
+  border: none; border-radius: 0;
+  background: var(--fd-blue-50); color: var(--fd-navy-900);
+  font: inherit; font-size: 15px;
+}
+.boton { min-height: 44px; padding: 0 14px; border: none; cursor: pointer; background: var(--fd-navy-700); color: #fff; font: inherit; font-size: 14px; font-weight: 600; }
+.primario { background: var(--fd-yellow-400); color: var(--fd-navy-900); font-family: var(--fd-font-pixel); font-size: 10px; }
+.error { margin: 0; font-size: 13px; font-weight: 700; color: var(--fd-amber-400); }
+.ok { margin: 0; font-size: 13px; font-weight: 700; color: var(--fd-blue-300); }
+button:disabled { opacity: 0.6; cursor: progress; }
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--fd-yellow-400); outline-offset: 2px; }

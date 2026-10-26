@@ -1,0 +1,93 @@
+<h1 class="titulo">AJUSTES</h1>
+
+<nav class="indice" aria-label="Secciones de ajustes">
+  <a href="#datos">Datos del kiosco</a>
+  <a href="#saldo">Cargar saldo</a>
+  <a href="#catalogo">Catálogo y precios</a>
+</nav>
+
+<section id="datos" class="seccion" aria-labelledby="titulo-datos">
+  <h2 id="titulo-datos" class="subtitulo">DATOS DEL KIOSCO</h2>
+  <form class="formulario" (ngSubmit)="guardarDatos()" novalidate>
+    <label class="campo">Nombre<input name="nombre" [(ngModel)]="datos.nombre" /></label>
+    <label class="campo">Dirección<input name="direccion" [(ngModel)]="datos.direccion" autocomplete="street-address" /></label>
+    <label class="campo">Alias de cobro (al que te transfieren los clientes)<input name="alias" [(ngModel)]="datos.aliasCobro" autocapitalize="none" /></label>
+    <label class="campo">Tiempo estimado de entrega (minutos)<input name="tiempo" type="number" min="5" max="120" [(ngModel)]="datos.tiempoEstimadoMin" /></label>
+    <div class="acciones">
+      <button type="submit" class="boton primario">GUARDAR</button>
+      @if (datosMensaje(); as m) {
+        <p [class]="m.ok ? 'ok' : 'error'" [attr.role]="m.ok ? 'status' : 'alert'">{{ m.texto }}</p>
+      }
+    </div>
+  </form>
+</section>
+
+<section id="saldo" class="seccion" aria-labelledby="titulo-saldo">
+  <h2 id="titulo-saldo" class="subtitulo">SALDO PREPAGO</h2>
+  @if (kiosco(); as k) {
+    <div class="saldo-actual">
+      <span class="sutil">Saldo actual</span>
+      <span class="saldo-valor">{{ k.saldo | pesos }}</span>
+    </div>
+  }
+  <p class="texto">Para cargar saldo, transferí al alias de FreeDeli. Cuando FreeDeli confirme la transferencia, se acredita acá. De este saldo se descuentan las comisiones de cada pedido entregado.</p>
+  <div class="alias">
+    <span class="alias-valor">{{ aliasFreeDeli }}</span>
+    <button type="button" class="boton" (click)="copiarAlias()">{{ copiado() ? 'COPIADO' : 'COPIAR' }}</button>
+  </div>
+  @if (saldo().length > 0) {
+    <div class="tabla-caja">
+      <table>
+        <thead><tr><th scope="col">Fecha</th><th scope="col">Movimiento</th><th scope="col">Referencia</th><th scope="col" class="num">Monto</th><th scope="col" class="num">Saldo</th></tr></thead>
+        <tbody>
+          @for (m of saldo(); track m.id) {
+            <tr>
+              <td>{{ fecha(m.fecha) }}</td>
+              <td>{{ m.tipo === 'carga' ? 'Carga' : 'Comisión' }}</td>
+              <td>{{ m.referencia }}</td>
+              <td class="num">{{ m.monto | pesos }}</td>
+              <td class="num">{{ m.saldoResultante | pesos }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="sutil">Todavía no hay movimientos en esta sesión.</p>
+  }
+</section>
+
+<section id="catalogo" class="seccion" aria-labelledby="titulo-catalogo">
+  <h2 id="titulo-catalogo" class="subtitulo">CATÁLOGO Y PRECIOS</h2>
+  <p class="sutil">Los productos sin stock no aparecen en la app de los clientes.</p>
+  @if (catalogoError(); as e) { <p class="error" role="alert">{{ e }}</p> }
+  <div class="tabla-caja">
+    <table>
+      <thead><tr><th scope="col">Producto</th><th scope="col" class="num">Precio</th><th scope="col">Stock</th></tr></thead>
+      <tbody>
+        @for (p of catalogo(); track p.id) {
+          <tr [class.sin-stock]="!p.disponible">
+            <td>{{ p.nombre }}</td>
+            <td class="num">
+              <label class="precio">
+                <span class="sr">Precio de {{ p.nombre }}</span>$
+                <input inputmode="numeric" [value]="p.precio" (change)="cambiarPrecio(p, $any($event.target).value)" />
+              </label>
+            </td>
+            <td>
+              <label class="stock">
+                <input type="checkbox" [checked]="p.disponible" (change)="guardarProducto(p, { disponible: $any($event.target).checked })" />
+                {{ p.disponible ? 'Hay' : 'Sin stock' }}
+              </label>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <form class="nuevo" (ngSubmit)="agregarProducto()" novalidate>
+    <label class="campo">Nuevo producto<input name="nuevoNombre" [(ngModel)]="nuevo.nombre" /></label>
+    <label class="campo">Precio<input name="nuevoPrecio" type="number" min="1" [(ngModel)]="nuevo.precio" /></label>
+    <button type="submit" class="boton primario">AGREGAR</button>
+  </form>
+</section>

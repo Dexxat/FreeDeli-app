@@ -1,0 +1,20 @@
+@use 'kiosco';
+
+:host { display: flex; flex-direction: column; gap: 24px; max-width: 900px; }
+.indice { display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; }
+.indice a { color: var(--fd-blue-300); font-weight: 600; }
+.seccion { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: #0f1f4a; scroll-margin-top: 16px; }
+.formulario { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.acciones { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; }
+.texto { margin: 0; font-size: 14px; line-height: 1.5; }
+.saldo-actual { display: flex; align-items: baseline; gap: 12px; }
+.saldo-valor { font-family: var(--fd-font-pixel); font-size: 18px; color: var(--fd-yellow-400); }
+.alias { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 8px 8px 12px; background: var(--fd-blue-50); color: var(--fd-navy-900); max-width: 420px; }
+.alias-valor { font-size: 16px; font-weight: 700; }
+.precio { display: inline-flex; align-items: center; gap: 4px; }
+.precio input { width: 96px; min-height: 36px; padding: 0 8px; border: none; border-radius: 0; background: var(--fd-blue-50); color: var(--fd-navy-900); font: inherit; text-align: right; }
+.stock { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.stock input { width: 20px; height: 20px; accent-color: var(--fd-yellow-400); }
+.sin-stock td { color: var(--fd-blue-100); }
+.nuevo { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }

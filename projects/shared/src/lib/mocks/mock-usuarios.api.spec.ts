@@ -12,7 +12,7 @@ describe('MockUsuariosApi', () => {
   let db: MockDb;
 
   function configurar(simular?: { cliente?: boolean; kiosco?: boolean; rider?: boolean }) {
-    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0, simular, demoras: { paso: 10 } })] });
+    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0, simular, demoras: { paso: 40 } })] });
     api = TestBed.inject(UsuariosApi);
     db = TestBed.inject(MockDb);
   }
@@ -108,9 +108,9 @@ describe('MockUsuariosApi', () => {
     if (!r.ok) throw new Error('no se creó');
     expect(r.pedido).toMatchObject({ estado: 'esperando', fase: 'stock' });
     const vistos: string[] = [];
-    for (let i = 0; i < 60 && vistos.at(-1) !== 'entregado'; i++) {
+    for (let i = 0; i < 200 && vistos.at(-1) !== 'entregado'; i++) {
       TestBed.tick();
-      await esperar(15);
+      await esperar(8);
       const p = db.pedidos().find((x) => x.id === r.pedido.id)!;
       const paso = p.fase ?? p.estado;
       if (vistos.at(-1) !== paso) vistos.push(paso);

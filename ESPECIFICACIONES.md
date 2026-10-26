@@ -104,6 +104,10 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 - **Inicio en vivo:** acá llegan los pedidos y se ven los que están en proceso. El kiosco confirma el stock, acepta al rider y confirma el envío.
 - **Transferencia del cliente:** el kiosco la confirma a mano con un botón. Recién ahí se busca rider.
 - **Carga de saldo:** el kiosco transfiere al alias de FreeDeli y el dueño acredita la carga desde la ficha del kiosco en Dev.
+- **Ganancias:** neto por jornada, semana o mes: lo cobrado a clientes, menos los envíos pagados a riders y las comisiones descontadas del saldo. Con gráfico por hora o por día.
+- **Pedidos:** historial de entregados y cancelados por Hoy / Semana / Mes, con lo cobrado y el neto.
+- **Ajustes:** datos del kiosco (nombre, dirección, alias de cobro, tiempo estimado); carga de saldo (alias de FreeDeli, saldo actual e historial de cargas y comisiones); catálogo y precios (cambiar precios, marcar sin stock, agregar productos). Los productos sin stock no aparecen para los clientes.
+- _Pendiente:_ el alias real de FreeDeli para las cargas. Por ahora es `freedeli.pagos`.
 
 ### Flujo del pedido (compartido por las tres apps)
 

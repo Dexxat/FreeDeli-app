@@ -81,13 +81,13 @@ export class MockUsuariosApi extends UsuariosApi {
   }
 
   productos(kioscoId: string): Observable<Producto[]> {
-    return this.responder(this.db.productos().filter((p) => p.kioscoId === kioscoId));
+    return this.responder(this.db.productos().filter((p) => p.kioscoId === kioscoId && p.disponible));
   }
 
   crearPedido(nuevo: NuevoPedido): Observable<ResultadoCrearPedido> {
     const encontrado = this.db.kioscos().find((k) => k.id === nuevo.kioscoId);
     const kiosco = encontrado ? this.paraUsuario(encontrado) : undefined;
-    const catalogo = this.db.productos().filter((p) => p.kioscoId === nuevo.kioscoId);
+    const catalogo = this.db.productos().filter((p) => p.kioscoId === nuevo.kioscoId && p.disponible);
     const lineas = nuevo.items.filter((i) => Number.isInteger(i.cantidad) && i.cantidad > 0);
 
     let resultado: ResultadoCrearPedido;

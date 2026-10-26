@@ -29,4 +29,6 @@ export interface Producto {
   kioscoId: string;
   nombre: string;
   precio: number;
+  /** El kiosco lo marca sin stock: no aparece en la app de usuarios. */
+  disponible: boolean;
 }
