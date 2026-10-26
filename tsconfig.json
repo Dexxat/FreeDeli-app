@@ -41,6 +41,12 @@
     },
     {
       "path": "./projects/usuarios-app/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/dev-admin/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/dev-admin/tsconfig.spec.json"
     }
   ]
 }

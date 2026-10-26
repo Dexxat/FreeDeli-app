@@ -1,0 +1,30 @@
+// Estilos comunes de las secciones del panel.
+.titulo { margin: 0; font-family: var(--fd-font-pixel); font-size: 14px; line-height: 1.4; }
+.subtitulo { margin: 0; font-family: var(--fd-font-pixel); font-size: 10px; color: var(--fd-blue-100); }
+.sutil { margin: 0; font-size: 13px; color: var(--fd-blue-100); }
+
+.tabla-caja { overflow-x: auto; background: #0f1f4a; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th {
+  padding: 12px 14px; text-align: left; white-space: nowrap;
+  font-family: var(--fd-font-pixel); font-size: 8px; font-weight: 400; color: var(--fd-blue-100);
+  background: var(--fd-navy-900);
+}
+td { padding: 12px 14px; border-top: 2px solid var(--fd-navy-800); white-space: nowrap; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.chip { display: inline-block; padding: 4px 6px; font-size: 11px; font-weight: 700; background: var(--fd-navy-900); color: var(--fd-blue-300); }
+.chip.ok { background: var(--fd-blue-300); color: var(--fd-navy-900); }
+.chip.alerta { background: var(--fd-amber-400); color: var(--fd-navy-900); }
+.alerta-texto { color: var(--fd-amber-400); font-weight: 700; }
+
+.boton {
+  min-height: 40px; padding: 0 12px;
+  border: none; cursor: pointer;
+  background: var(--fd-navy-700); color: #fff;
+  font: inherit; font-size: 13px; font-weight: 600;
+  &.peligro { background: var(--fd-amber-400); color: var(--fd-navy-900); }
+  &:disabled { opacity: 0.6; cursor: progress; }
+}
+.enlace { color: var(--fd-blue-300); font-weight: 600; }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--fd-yellow-400); outline-offset: 2px; }

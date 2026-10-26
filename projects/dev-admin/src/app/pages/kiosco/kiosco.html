@@ -1,0 +1,88 @@
+<a class="enlace volver" routerLink="/kioscos">&lt; Kioscos</a>
+
+@if (kiosco(); as k) {
+  <section class="cabecera">
+    <div class="datos">
+      <h1 class="titulo">{{ k.nombre }}</h1>
+      <p class="sutil">{{ zona(k.zona) }} · {{ k.direccion }} · alias {{ k.aliasCobro }}</p>
+    </div>
+    <div class="acciones">
+      <span class="chip" [class.ok]="estado(k) === 'Abierto'" [class.alerta]="estado(k) === 'Pausado'">{{ estado(k) }}</span>
+      <button type="button" class="boton" [class.peligro]="!k.pausado" [disabled]="enviando()" (click)="alternarPausa()">
+        {{ k.pausado ? 'Reactivar' : 'Pausar' }}
+      </button>
+    </div>
+  </section>
+
+  <section class="tarjetas">
+    <div class="tarjeta" [class.en-alerta]="k.saldoBajo">
+      <span class="sutil">Saldo para operar</span>
+      <span class="valor">{{ k.saldo | pesos }}</span>
+      @if (k.saldoBajo) { <span class="alerta-texto">Saldo bajo</span> }
+    </div>
+    <div class="tarjeta"><span class="sutil">Pedidos hoy</span><span class="valor">{{ k.pedidosHoy }}</span></div>
+    <div class="tarjeta"><span class="sutil">Comisión hoy</span><span class="valor">{{ k.comisionHoy | pesos }}</span></div>
+  </section>
+
+  <section class="bloque">
+    <div class="fila">
+      <h2 class="subtitulo">MOVIMIENTOS</h2>
+      <div class="filtros" role="group" aria-label="Período">
+        @for (p of periodos; track p.id) {
+          <button type="button" [attr.aria-pressed]="periodo() === p.id" (click)="periodo.set(p.id)">{{ p.etiqueta }}</button>
+        }
+      </div>
+    </div>
+
+    @if (movimientos(); as ms) {
+      @if (ms.length === 0) {
+        <p class="sutil">Sin pedidos en este período.</p>
+      } @else {
+        <div class="tabla-caja">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Pedido</th><th scope="col">Fecha</th><th scope="col">Estado</th><th scope="col">Pago</th>
+                <th scope="col" class="num">Cliente</th><th scope="col" class="num">Rider</th>
+                <th scope="col" class="num">FreeDeli</th><th scope="col" class="num">Kiosco</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of ms; track m.pedidoId) {
+                <tr>
+                  <td>{{ codigo(m.numero) }}</td>
+                  <td>{{ fecha(m.fecha) }}</td>
+                  <td>{{ textoEstado[m.estado] }}</td>
+                  <td>
+                    @if (m.estado === 'cancelado') {
+                      <span aria-label="Sin pago">—</span>
+                    } @else {
+                      <span class="chip" [class.ok]="m.pago === 'liberado'" [class.alerta]="m.pago === 'pendiente'">{{ textoPago[m.pago] }}</span>
+                    }
+                  </td>
+                  <td class="num">{{ m.totalCliente | pesos }}</td>
+                  <td class="num">{{ m.envioRider | pesos }}</td>
+                  <td class="num">{{ m.comisionFreeDeli | pesos }}</td>
+                  <td class="num" [class.negativo]="m.netoKiosco < 0">{{ m.netoKiosco | pesos }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row" colspan="4">TOTAL</th>
+                <td class="num">{{ totales().cliente | pesos }}</td>
+                <td class="num">{{ totales().rider | pesos }}</td>
+                <td class="num amarillo">{{ totales().comision | pesos }}</td>
+                <td class="num">{{ totales().neto | pesos }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      }
+    } @else {
+      <p class="sutil">Cargando…</p>
+    }
+  </section>
+} @else if (kiosco() === null) {
+  <p class="sutil">No existe ese kiosco.</p>
+}

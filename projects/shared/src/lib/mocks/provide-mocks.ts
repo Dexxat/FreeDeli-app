@@ -1,5 +1,7 @@
 import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
+import { AdminApi } from '../api/admin.api';
 import { PedidosApi } from '../api/pedidos.api';
+import { MockAdminApi } from './mock-admin.api';
 import { RidersApi } from '../api/riders.api';
 import { UsuariosApi } from '../api/usuarios.api';
 import { MockUsuariosApi, SIMULACION_RIDER_MOCK, SimulacionRider } from './mock-usuarios.api';
@@ -14,6 +16,7 @@ export function provideFreeDeliMocks(opciones: { latencia?: number; demoraOferta
     { provide: RidersApi, useClass: MockRidersApi },
     { provide: PedidosApi, useClass: MockPedidosApi },
     { provide: UsuariosApi, useClass: MockUsuariosApi },
+    { provide: AdminApi, useClass: MockAdminApi },
     ...(opciones.simulacionRider !== undefined ? [{ provide: SIMULACION_RIDER_MOCK, useValue: opciones.simulacionRider }] : []),
   ]);
 }
