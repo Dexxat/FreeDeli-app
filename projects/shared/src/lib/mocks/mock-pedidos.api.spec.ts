@@ -35,7 +35,7 @@ describe('Mocks de FreeDeli', () => {
 
     const r = await firstValueFrom(pedidos.confirmarEntrega(p.id, p.pin));
     expect(r.ok).toBe(true);
-    expect(db.pedidos().find((x) => x.id === p.id)!.estado).toBe('entregado');
+    expect(db.pedidos().find((x) => x.id === p.id)).toMatchObject({ estado: 'entregado', pago: 'liberado' });
   });
 
   it('no permite dejar al rider sin zonas', async () => {

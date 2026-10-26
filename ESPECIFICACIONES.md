@@ -66,6 +66,16 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 
 ---
 
+## Pagos
+
+- **Sin efectivo ni tarjetas.** Todo se paga por transferencia, de alias a alias.
+- **Recorrido del dinero:** el cliente le paga al kiosco y el kiosco le paga al rider.
+- **Liberación:** el pago del kiosco se libera cuando el rider ingresa el PIN del cliente. Así se completa el pedido.
+- **Comisión de FreeDeli:** de lo que cobra el kiosco, como mínimo **$1.500** por pedido van al alias de la empresa. Se descuentan directamente del pago del cliente.
+- _Pendiente de definir:_ quién retiene el dinero hasta la entrega, si la comisión es fija o un porcentaje con mínimo de $1.500, y si el envío del rider sale del pago del cliente.
+
+---
+
 ## FreeDeli Kioscos
 
 _Pendiente de definir._
@@ -93,6 +103,10 @@ La acción principal es **PEDIR**: es el botón más grande de la pantalla de in
 - El usuario se lo da al rider recién cuando tiene el pedido en la mano.
 - En la pantalla "Vivo", el rider ingresa el PIN y toca **CONFIRMAR ENTREGA**. Si el PIN es correcto, el pedido pasa a **Entregado** en las dos apps.
 
-Navegación inferior: Inicio · Pedir · Mi pedido. _Pendiente: pantalla de perfil del usuario._
+### Un pedido a la vez
+
+El usuario puede tener un solo pedido abierto. Mientras tenga uno en curso, PEDIR lo lleva al seguimiento.
+
+Navegación inferior: Inicio · Pedir · Mi pedido · Ajustes. _Pendiente: definir la pantalla de Ajustes (el diseño ya la incluye)._
 
 Diseño de referencia: canvas, página "App Usuario".

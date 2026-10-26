@@ -13,7 +13,6 @@ import {
   linkWhatsApp,
   nombreZona,
   pinValido,
-  subtotalProductos,
 } from '@freedeli/shared';
 import { interval } from 'rxjs';
 import { RiderStore } from '../../core/rider.store';
@@ -66,7 +65,8 @@ export default class Vivo {
   protected readonly codigo = codigoPedido;
   protected readonly zona = nombreZona;
   protected readonly cantidad = cantidadProductos;
-  protected readonly subtotal = subtotalProductos;
+  /** El rider no cobra nada en mano: todo es por transferencia. */
+  protected readonly textoPago = { pendiente: 'PENDIENTE', transferido: 'TRANSFERIDO', liberado: 'LIBERADO' } as const;
 
   /** Antes de retirar se va al kiosco; después, a la dirección del cliente. */
   protected readonly linkMapa = computed(() => {

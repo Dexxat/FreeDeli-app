@@ -72,6 +72,7 @@ export class MockUsuariosApi extends UsuariosApi {
               riderId: p.riderId ?? OTRO_RIDER_ID,
               aceptadoEn: estado === 'aceptado' ? ahora : p.aceptadoEn,
               entregadoEn: estado === 'entregado' ? ahora : p.entregadoEn,
+              pago: estado === 'entregado' ? 'liberado' : p.pago,
             },
       ),
     );
@@ -139,7 +140,8 @@ export class MockUsuariosApi extends UsuariosApi {
         costoEnvio: kiosco.costoEnvio,
         propina: 0,
         gananciaRider: Math.round(kiosco.costoEnvio * 0.8),
-        cobro: 'pagado',
+        // Por ahora el pago se da por transferido; el paso de transferencia está pendiente de definir.
+        pago: 'transferido',
         pin: generarPin(),
         estado: 'esperando',
         creadoEn: new Date(),

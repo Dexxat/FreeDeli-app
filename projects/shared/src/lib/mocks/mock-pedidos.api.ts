@@ -146,7 +146,8 @@ export class MockPedidosApi extends PedidosApi {
     } else if (pedido.pin !== pin) {
       resultado = { ok: false, motivo: 'pin-incorrecto' };
     } else {
-      const entregado: Pedido = { ...pedido, estado: 'entregado', entregadoEn: new Date() };
+      // El PIN correcto cierra el pedido y libera los pagos.
+      const entregado: Pedido = { ...pedido, estado: 'entregado', entregadoEn: new Date(), pago: 'liberado' };
       this.guardar(entregado);
       resultado = { ok: true, pedido: entregado };
     }

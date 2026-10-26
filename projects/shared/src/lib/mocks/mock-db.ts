@@ -161,7 +161,7 @@ export class MockDb {
       costoEnvio: kiosco.costoEnvio,
       propina: random() < 0.35 ? pick([300, 500, 1000]) : 0,
       gananciaRider: Math.round(kiosco.costoEnvio * 0.8),
-      cobro: random() < 0.7 ? 'pagado' : 'cobrar-en-destino',
+      pago: estado === 'entregado' ? 'liberado' : 'transferido',
       pin: generarPin(random),
       estado,
       riderId,

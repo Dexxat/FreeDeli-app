@@ -18,7 +18,13 @@ export const PASOS_ESTADO: readonly { id: PasoEstado; etiqueta: string }[] = [
   { id: 'entregado', etiqueta: 'Entregado' },
 ];
 
-export type EstadoCobro = 'pagado' | 'cobrar-en-destino';
+/**
+ * Pago por transferencia de alias a alias. No hay efectivo ni tarjetas.
+ * - `pendiente`: el cliente todavía no transfirió.
+ * - `transferido`: el cliente transfirió; el pago queda retenido hasta la entrega.
+ * - `liberado`: el rider ingresó el PIN y se liberan los pagos.
+ */
+export type EstadoPago = 'pendiente' | 'transferido' | 'liberado';
 
 export interface ItemPedido {
   productoId: string;
@@ -43,7 +49,7 @@ export interface Pedido {
   propina: number;
   /** Lo que gana el rider por el envío (sin propina). */
   gananciaRider: number;
-  cobro: EstadoCobro;
+  pago: EstadoPago;
   /** PIN de 4 dígitos. Solo lo ve el usuario. */
   pin: string;
   estado: EstadoPedido;

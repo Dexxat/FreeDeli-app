@@ -44,12 +44,8 @@
       <span class="dato-valor">{{ cantidad(p) }}</span>
     </div>
     <div class="dato">
-      <span class="dato-etiqueta">Cobro</span>
-      @if (p.cobro === 'pagado') {
-        <span class="dato-valor chico">PAGADO</span>
-      } @else {
-        <span class="dato-valor chico cobrar">COBRAR {{ subtotal(p) + p.costoEnvio | pesos }}</span>
-      }
+      <span class="dato-etiqueta">Pago</span>
+      <span class="dato-valor chico" [class.pendiente]="p.pago === 'pendiente'">{{ textoPago[p.pago] }}</span>
     </div>
     <div class="dato">
       <span class="dato-etiqueta">Tu ganancia</span>
