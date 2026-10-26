@@ -2,7 +2,7 @@ import { Injectable, Injector, computed, inject } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Observable, delay, distinctUntilChanged, map, of, throwError } from 'rxjs';
 import { AdminApi } from '../api/admin.api';
-import { AlertaAdmin, Conflicto, EntregaAdmin, EstadoConflicto, FilaMain, NuevoConflicto, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
+import { AlertaAdmin, Conflicto, MovimientoSaldo, EntregaAdmin, EstadoConflicto, FilaMain, NuevoConflicto, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
 import { ZONAS, ZonaId } from '../models/zona';
 import { Pedido } from '../models/pedido';
 import { codigoPedido } from '../models/pedido';
@@ -264,6 +264,19 @@ export class MockAdminApi extends AdminApi {
     };
     this.db.conflictos.update((cs) => cs.map((c) => (c.id === id ? actualizado : c)));
     return of(actualizado).pipe(delay(this.latencia));
+  }
+
+  movimientosSaldo(kioscoId: string): Observable<MovimientoSaldo[]> {
+    return toObservable(this.db.movimientosSaldo, { injector: this.injector }).pipe(
+      map((ms) => ms.filter((m) => m.kioscoId === kioscoId).sort((a, b) => b.fecha.getTime() - a.fecha.getTime() || b.id.localeCompare(a.id))),
+    );
+  }
+
+  acreditarSaldo(kioscoId: string, monto: number, referencia: string): Observable<KioscoAdmin> {
+    if (!this.db.kioscos().some((k) => k.id === kioscoId)) return throwError(() => new Error('Kiosco inexistente.'));
+    if (!Number.isFinite(monto) || monto <= 0) return throwError(() => new Error('Ingresá un monto mayor a cero.'));
+    this.db.moverSaldo(kioscoId, 'carga', Math.round(monto), referencia.trim() || 'Transferencia a FreeDeli');
+    return of(this.kioscosAdmin().find((k) => k.id === kioscoId)!).pipe(delay(this.latencia));
   }
 
   pausarKiosco(id: string, pausado: boolean): Observable<KioscoAdmin> {

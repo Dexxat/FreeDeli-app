@@ -24,4 +24,8 @@
 tfoot th, tfoot td { background: var(--fd-navy-900); font-weight: 700; }
 tfoot th { font-size: 9px; }
 .amarillo { color: var(--fd-yellow-400); }
+.carga { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.carga label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--fd-blue-100); }
+.carga input { min-height: 40px; padding: 0 10px; border: none; border-radius: 0; background: var(--fd-blue-50); color: var(--fd-navy-900); font: inherit; font-size: 15px; }
+.primario { background: var(--fd-yellow-400); color: var(--fd-navy-900); }
 .negativo { color: var(--fd-amber-400); font-weight: 700; }

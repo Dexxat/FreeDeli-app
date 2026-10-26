@@ -35,6 +35,9 @@ export default class Kiosco {
 
   private readonly id$ = toObservable(this.kioscoId);
   protected readonly kiosco = toSignal(this.id$.pipe(switchMap((id) => this.api.kiosco(id))));
+  protected readonly saldo = toSignal(this.id$.pipe(switchMap((id) => this.api.movimientosSaldo(id))), { initialValue: [] });
+  protected readonly errorCarga = signal<string | null>(null);
+  protected readonly cargaOk = signal<string | null>(null);
   protected readonly movimientos = toSignal(
     combineLatest([this.id$, toObservable(this.periodo), toObservable(this.kiosco)]).pipe(
       switchMap(([id, p]) => this.api.movimientosKiosco(id, p).pipe(startWith(undefined))),
@@ -58,6 +61,21 @@ export default class Kiosco {
   protected readonly fecha = (d: Date) => FECHA.format(d);
   protected readonly textoEstado = ESTADOS;
   protected readonly textoPago = PAGOS;
+
+  protected acreditar(montoTexto: string, referencia: string, form: HTMLFormElement): void {
+    const k = this.kiosco();
+    if (!k) return;
+    const monto = Number(montoTexto.replace(/\D/g, ''));
+    this.errorCarga.set(null);
+    this.cargaOk.set(null);
+    this.api.acreditarSaldo(k.id, monto, referencia).subscribe({
+      next: () => {
+        this.cargaOk.set(`Se acreditaron $${monto.toLocaleString('es-AR')}.`);
+        form.reset();
+      },
+      error: (e: Error) => this.errorCarga.set(e.message),
+    });
+  }
 
   protected alternarPausa(): void {
     const k = this.kiosco();

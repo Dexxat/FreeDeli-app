@@ -47,6 +47,12 @@
     },
     {
       "path": "./projects/dev-admin/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/kioscos-app/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/kioscos-app/tsconfig.spec.json"
     }
   ]
 }

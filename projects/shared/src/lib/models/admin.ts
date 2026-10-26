@@ -131,3 +131,17 @@ export interface NuevoConflicto {
   tipo: TipoConflicto;
   descripcion: string;
 }
+
+/** Movimiento del saldo prepago de un kiosco. */
+export interface MovimientoSaldo {
+  id: string;
+  kioscoId: string;
+  fecha: Date;
+  /** Carga: el kiosco transfirió a FreeDeli. Comisión: se descontó al liberarse un pago. */
+  tipo: 'carga' | 'comision';
+  /** Positivo en cargas, negativo en comisiones. */
+  monto: number;
+  /** Referencia de la transferencia o código del pedido. */
+  referencia: string;
+  saldoResultante: number;
+}

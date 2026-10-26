@@ -25,6 +25,37 @@
   </section>
 
   <section class="bloque">
+    <h2 class="subtitulo">SALDO PREPAGO</h2>
+    <form class="carga" (submit)="$event.preventDefault(); acreditar(monto.value, ref.value, $any($event.target))">
+      <label>Monto transferido a FreeDeli <input #monto name="monto" inputmode="numeric" placeholder="20000" required /></label>
+      <label>Referencia <input #ref name="referencia" placeholder="N.º de operación" /></label>
+      <button type="submit" class="boton primario">Acreditar carga</button>
+    </form>
+    @if (errorCarga(); as e) { <p class="alerta-texto" role="alert">{{ e }}</p> }
+    @if (cargaOk(); as ok) { <p class="sutil" role="status">{{ ok }}</p> }
+    @if (saldo().length > 0) {
+      <div class="tabla-caja">
+        <table>
+          <thead><tr><th scope="col">Fecha</th><th scope="col">Tipo</th><th scope="col">Referencia</th><th scope="col" class="num">Monto</th><th scope="col" class="num">Saldo</th></tr></thead>
+          <tbody>
+            @for (m of saldo(); track m.id) {
+              <tr>
+                <td>{{ fecha(m.fecha) }}</td>
+                <td>{{ m.tipo === 'carga' ? 'Carga' : 'Comisión' }}</td>
+                <td>{{ m.referencia }}</td>
+                <td class="num" [class.negativo]="m.monto < 0">{{ m.monto | pesos }}</td>
+                <td class="num">{{ m.saldoResultante | pesos }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="sutil">Sin movimientos de saldo registrados en esta sesión.</p>
+    }
+  </section>
+
+  <section class="bloque">
     <div class="fila">
       <h2 class="subtitulo">MOVIMIENTOS</h2>
       <div class="filtros" role="group" aria-label="Período">

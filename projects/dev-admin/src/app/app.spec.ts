@@ -105,6 +105,18 @@ describe('FreeDeli Dev', () => {
     expect(el.querySelector('#titulo-conflictos')?.textContent).toContain('0 ACTIVOS');
   });
 
+  it('la ficha del kiosco acredita una carga de saldo', async () => {
+    const el = await abrir('/kioscos/k5');
+    const db = TestBed.inject(MockDb);
+    const antes = db.kioscos().find((k) => k.id === 'k5')!.saldo;
+    el.querySelector<HTMLInputElement>('input[name=monto]')!.value = '20.000';
+    el.querySelector<HTMLInputElement>('input[name=referencia]')!.value = 'Op. 555';
+    el.querySelector<HTMLFormElement>('form.carga')!.dispatchEvent(new Event('submit'));
+    await estable();
+    expect(db.kioscos().find((k) => k.id === 'k5')!.saldo).toBe(antes + 20000);
+    expect(el.textContent).toContain('Op. 555');
+  });
+
   it('KIOSCOS permite pausar', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     const el = await abrir('/kioscos');

@@ -3,7 +3,8 @@ import { Kiosco, Producto } from '../models/kiosco';
 import { OfertaPedido, Pedido } from '../models/pedido';
 import { Rider } from '../models/rider';
 import { Usuario } from '../models/usuario';
-import { Conflicto } from '../models/admin';
+import { Conflicto, MovimientoSaldo } from '../models/admin';
+import { codigoPedido } from '../models/pedido';
 import { CENTRO_ZONA, DemandaZona, Ubicacion, ZONAS, ZonaId } from '../models/zona';
 import { PEDIDO_MINIMO, calcularComision, costoEnvio, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
 import { TARIFA_ENVIO_PROVISORIA } from '../config/freedeli.config';
@@ -114,9 +115,23 @@ export class MockDb {
     return { lat: centro.lat + desvio(h) * 0.02, lng: centro.lng + desvio(h >> 10) * 0.02 };
   }
 
+  readonly movimientosSaldo = signal<MovimientoSaldo[]>([]);
+
+  /** Suma o resta al saldo prepago y lo registra. */
+  moverSaldo(kioscoId: string, tipo: MovimientoSaldo['tipo'], monto: number, referencia: string): void {
+    const k = this.kioscos().find((x) => x.id === kioscoId);
+    if (!k) return;
+    const saldoResultante = k.saldo + monto;
+    this.kioscos.update((ks) => ks.map((x) => (x.id === kioscoId ? { ...x, saldo: saldoResultante } : x)));
+    this.movimientosSaldo.update((ms) => [
+      ...ms,
+      { id: `ms-${ms.length + 1}`, kioscoId, fecha: new Date(), tipo, monto, referencia, saldoResultante },
+    ]);
+  }
+
   /** Al liberarse el pago, la comisión se descuenta del saldo prepago del kiosco. */
   descontarComision(pedido: Pedido): void {
-    this.kioscos.update((ks) => ks.map((k) => (k.id === pedido.kioscoId ? { ...k, saldo: k.saldo - pedido.comisionFreeDeli } : k)));
+    this.moverSaldo(pedido.kioscoId, 'comision', -pedido.comisionFreeDeli, codigoPedido(pedido));
   }
 
   /** Conflictos registrados desde FreeDeli Dev. */

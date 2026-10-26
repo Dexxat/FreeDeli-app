@@ -89,4 +89,13 @@ describe('MockAdminApi', () => {
     expect(r.resueltoEn).toBeInstanceOf(Date);
     await expect(firstValueFrom(admin.registrarConflicto({ tipo: 'otro', descripcion: '  ' }))).rejects.toThrow('Describí');
   });
+
+  it('acredita cargas de saldo y registra las comisiones descontadas', async () => {
+    const antes = db.kioscos().find((k) => k.id === 'k5')!.saldo;
+    await firstValueFrom(admin.acreditarSaldo('k5', 20000, 'Transf. 123'));
+    expect(db.kioscos().find((k) => k.id === 'k5')!.saldo).toBe(antes + 20000);
+    const ms = await firstValueFrom(admin.movimientosSaldo('k5'));
+    expect(ms[0]).toMatchObject({ tipo: 'carga', monto: 20000, referencia: 'Transf. 123', saldoResultante: antes + 20000 });
+    await expect(firstValueFrom(admin.acreditarSaldo('k5', 0, ''))).rejects.toThrow('mayor a cero');
+  });
 });

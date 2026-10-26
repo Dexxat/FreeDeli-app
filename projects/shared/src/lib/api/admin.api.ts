@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { Conflicto, EntregaAdmin, EstadoConflicto, FilaMain, NuevoConflicto, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
+import { Conflicto, MovimientoSaldo, EntregaAdmin, EstadoConflicto, FilaMain, NuevoConflicto, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
 import { ZonaId } from '../models/zona';
 import { PeriodoHistorial } from '../models/rider';
 
@@ -29,6 +29,10 @@ export abstract class AdminApi {
   abstract registrarConflicto(nuevo: NuevoConflicto): Observable<Conflicto>;
   /** Cambia el estado y/o agrega una nota de seguimiento. */
   abstract actualizarConflicto(id: string, cambios: { estado?: EstadoConflicto; nota?: string }): Observable<Conflicto>;
+  /** Movimientos del saldo prepago del kiosco, del más nuevo al más viejo. Emite en cada cambio. */
+  abstract movimientosSaldo(kioscoId: string): Observable<MovimientoSaldo[]>;
+  /** Acredita una carga de saldo: el kiosco transfirió ese monto al alias de FreeDeli. */
+  abstract acreditarSaldo(kioscoId: string, monto: number, referencia: string): Observable<KioscoAdmin>;
   /** Pausa o reactiva un kiosco. Pausado, no aparece en la app de usuarios. */
   abstract pausarKiosco(id: string, pausado: boolean): Observable<KioscoAdmin>;
 }

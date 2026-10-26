@@ -99,7 +99,12 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 
 ## FreeDeli Kioscos
 
-_Pendiente de definir._
+- **Dispositivo:** tablet o compu en el mostrador. Menú lateral; en el celular, menú inferior.
+- **Secciones:** Inicio (en vivo), Ganancias, Pedidos (historial) y Ajustes.
+- **Inicio en vivo:** acá llegan los pedidos y se ven los que están en proceso. El kiosco confirma el stock, acepta al rider y confirma el envío.
+- **Transferencia del cliente:** el kiosco la confirma a mano con un botón. Recién ahí se busca rider.
+- **Carga de saldo:** el kiosco transfiere al alias de FreeDeli y el dueño acredita la carga desde la ficha del kiosco en Dev.
+- _Pendiente de definir:_ qué pasa si falta stock, cómo acepta el kiosco al rider, quién marca el pedido como retirado y en qué orden van stock y transferencia.
 
 ## FreeDeli (usuarios)
 
