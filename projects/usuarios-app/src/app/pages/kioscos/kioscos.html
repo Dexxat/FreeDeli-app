@@ -1,0 +1,31 @@
+<h1 class="titulo">KIOSCOS ABIERTOS</h1>
+
+<div class="filtros" role="group" aria-label="Zona">
+  @for (f of filtros; track f.etiqueta) {
+    <button type="button" [attr.aria-pressed]="filtroActual() === f.id" (click)="filtrar(f.id)">{{ f.etiqueta }}</button>
+  }
+</div>
+
+@if (kioscos(); as lista) {
+  @if (lista.length === 0) {
+    <p class="vacio">No hay kioscos abiertos en esta zona ahora. Probá con otra.</p>
+  } @else {
+    <ul class="lista">
+      @for (k of lista; track k.id) {
+        <li>
+          <a [routerLink]="['/pedir', k.id]">
+            <span class="inicial" aria-hidden="true">{{ inicial(k.nombre) }}</span>
+            <span class="datos">
+              <span class="nombre">{{ k.nombre }}</span>
+              <span class="detalle">{{ nombreZona(k.zona) }} · {{ tiempo(k.tiempoEstimadoMin) }}</span>
+              <span class="envio">Envío {{ k.costoEnvio | pesos }}</span>
+            </span>
+            <span class="flecha" aria-hidden="true">&gt;</span>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+} @else {
+  <p class="vacio">Buscando kioscos…</p>
+}

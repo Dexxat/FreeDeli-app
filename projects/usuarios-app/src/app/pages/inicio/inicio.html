@@ -1,0 +1,82 @@
+@if (store.usuario(); as u) {
+  <section class="bloque">
+    <h1 class="saludo">Hola, {{ u.nombre }}</h1>
+    @if (!editando()) {
+      <div class="direccion">
+        <span class="direccion-texto">
+          <span class="sutil">Entregar en</span>
+          <span class="fuerte">{{ u.direccion.direccion }}{{ u.direccion.notas ? ', ' + u.direccion.notas : '' }} · {{ zona(u.direccion.zona) }}</span>
+        </span>
+        <button type="button" class="enlace" (click)="editarDireccion()">Cambiar</button>
+      </div>
+    } @else {
+      <form class="form-direccion" (ngSubmit)="guardarDireccion()" novalidate>
+        <label class="campo">
+          <span>Calle y altura</span>
+          <input name="direccion" [(ngModel)]="direccion" autocomplete="street-address" [attr.aria-invalid]="errorDireccion()" />
+          @if (errorDireccion()) { <span class="error">Ingresá la calle y la altura.</span> }
+        </label>
+        <label class="campo">
+          <span>Depto, timbre u otras indicaciones</span>
+          <input name="notas" [(ngModel)]="notas" />
+        </label>
+        <label class="campo">
+          <span>Zona</span>
+          <select name="zona" [(ngModel)]="zonaElegida">
+            @for (z of zonas; track z.id) {
+              <option [value]="z.id">{{ z.nombre }}</option>
+            }
+          </select>
+        </label>
+        <div class="botones">
+          <button type="button" class="secundario" (click)="editando.set(false)">Cancelar</button>
+          <button type="submit" class="primario-chico" [disabled]="store.guardando()">GUARDAR</button>
+        </div>
+      </form>
+    }
+  </section>
+}
+
+<a class="pedir" [routerLink]="destinoPedir()">
+  <span class="pedir-textos">
+    <span class="pedir-etiqueta">PEDIR</span>
+    <span class="pedir-ayuda">{{ textoPedir() }}</span>
+  </span>
+  <svg aria-hidden="true" viewBox="0 0 20 20" width="40" height="40" fill="currentColor" shape-rendering="crispEdges">
+    <rect x="2" y="8" width="12" height="4" /><rect x="10" y="4" width="4" height="4" /><rect x="14" y="8" width="4" height="4" /><rect x="10" y="12" width="4" height="4" />
+  </svg>
+</a>
+
+@if (store.pedidoEnCurso(); as p) {
+  <section class="bloque">
+    <div class="encabezado">
+      <h2 class="subtitulo">PEDIDO EN CURSO</h2>
+      <a class="enlace" [routerLink]="['/pedido', p.id]">Ver seguimiento</a>
+    </div>
+    <div class="tarjeta">
+      <div class="fila">
+        <span class="codigo">{{ codigo(p) }}</span>
+        <span class="sutil">{{ p.kioscoNombre }}</span>
+      </div>
+      <fd-barra-estado [estado]="p.estado" />
+      @if (p.estado === 'esperando') {
+        <span class="sutil">Buscando rider…</span>
+      }
+    </div>
+  </section>
+}
+
+@if (recientes().length > 0) {
+  <section class="bloque">
+    <h2 class="subtitulo">PEDÍ DE NUEVO</h2>
+    @for (r of recientes(); track r.kiosco.id) {
+      <a class="reciente" [routerLink]="['/pedir', r.kiosco.id]" [queryParams]="{ repetir: r.pedidoId }">
+        <span class="reciente-textos">
+          <span class="reciente-nombre">{{ r.kiosco.nombre }}</span>
+          <span class="sutil">{{ fecha(r.fecha) }} · {{ r.cantidadProductos }} {{ r.cantidadProductos === 1 ? 'producto' : 'productos' }} · {{ r.total | pesos }}</span>
+        </span>
+        <span class="flecha" aria-hidden="true">&gt;</span>
+      </a>
+    }
+  </section>
+}
