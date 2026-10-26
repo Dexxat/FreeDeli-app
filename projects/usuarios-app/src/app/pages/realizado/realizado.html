@@ -8,22 +8,10 @@
       <rect x="11" y="4" width="2" height="2" fill="#0A1633" />
     </svg>
     <h1 class="titulo">PEDIDO REALIZADO</h1>
-    <p class="texto">Le avisamos a los riders de la zona. Apenas uno lo acepte, vas a poder seguirlo en vivo.</p>
+    <p class="texto">Le avisamos al kiosco. Seguí los pasos acá abajo.</p>
   </section>
 
-  <section class="pago" aria-labelledby="titulo-pago">
-    <h2 id="titulo-pago" class="subtitulo">PAGO POR TRANSFERENCIA</h2>
-    @if (p.pago === 'pendiente') {
-      <p class="pago-texto">Transferí <strong>{{ total(p) | pesos }}</strong> al alias del kiosco:</p>
-      <div class="alias">
-        <span class="alias-valor">{{ p.aliasKiosco }}</span>
-        <button type="button" (click)="copiarAlias(p.aliasKiosco)">{{ copiado() ? 'COPIADO' : 'COPIAR' }}</button>
-      </div>
-      <p class="sutil">El kiosco retiene el pago hasta que le des tu PIN al rider.</p>
-    } @else {
-      <p class="pago-texto ok" role="status">Transferencia confirmada por el kiosco.</p>
-    }
-  </section>
+  <fd-paso-actual [pedido]="p" />
 
   <section class="tarjeta">
     <div class="fila">
@@ -31,7 +19,6 @@
       <span class="chip">{{ zona(p.zona).toUpperCase() }}</span>
     </div>
     <fd-barra-estado [estado]="p.estado" />
-    <span class="sutil" aria-live="polite">{{ textoEstado() }}</span>
   </section>
 
   <section class="resumen">

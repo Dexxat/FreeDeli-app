@@ -29,14 +29,18 @@
     </section>
 
     <a class="boton" routerLink="/inicio">VOLVER AL INICIO</a>
+  } @else if (p.estado === 'cancelado') {
+    <section class="vacio">
+      <h1 class="codigo">PEDIDO {{ codigo(p) }} CANCELADO</h1>
+      <p class="texto">No se cobró nada. Podés pedir en otro kiosco.</p>
+      <a class="boton" routerLink="/pedir">PEDIR</a>
+    </section>
   } @else {
     <section class="tarjeta destacada">
       <div class="fila">
         <h1 class="codigo">{{ codigo(p) }}</h1>
         @if (minutos(); as m) {
           <span class="sutil">Llega en <span class="eta">~{{ m }} min</span></span>
-        } @else {
-          <span class="sutil">Buscando rider…</span>
         }
       </div>
       <fd-barra-estado [estado]="p.estado" />
@@ -54,11 +58,7 @@
       </span>
     </section>
 
-    @if (p.pago === 'pendiente') {
-      <section class="aviso">
-        Falta confirmar tu transferencia de <strong>{{ total(p) | pesos }}</strong> al alias <strong>{{ p.aliasKiosco }}</strong>.
-      </section>
-    }
+    <fd-paso-actual [pedido]="p" />
 
     <section class="bloque">
       <h2 class="subtitulo">TU RIDER</h2>

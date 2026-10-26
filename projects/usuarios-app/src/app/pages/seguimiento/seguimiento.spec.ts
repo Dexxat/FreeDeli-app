@@ -68,6 +68,24 @@ describe('Seguimiento (Usuarios)', () => {
     expect(el.querySelector('h1')?.textContent).toBe('¡ENTREGADO!');
   });
 
+  it('en un ajuste de stock el cliente acepta o cancela', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const el = await abrir('/pedido', (db) =>
+      db.pedidos.update((ps) =>
+        ps.map((p) =>
+          p.usuarioId === USUARIO_ACTUAL_ID && p.estado === 'retirado'
+            ? { ...p, estado: 'esperando', fase: 'ajuste', riderId: undefined, aceptadoEn: undefined, itemsQuitados: [{ productoId: 'x', nombre: 'Hielo 2 kg', cantidad: 1, precioUnitario: 1500 }] }
+            : p,
+        ),
+      ),
+    );
+    expect(el.textContent).toContain('FALTAN PRODUCTOS');
+    expect(el.textContent).toContain('Hielo 2 kg');
+    [...el.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.trim() === 'Cancelar pedido')!.click();
+    await estable();
+    expect(el.textContent).toContain('CANCELADO');
+  });
+
   it('sin pedido en curso invita a pedir', async () => {
     const el = await abrir('/pedido', (db) =>
       db.pedidos.update((ps) => ps.map((p) => (p.usuarioId === USUARIO_ACTUAL_ID && p.estado === 'retirado' ? { ...p, estado: 'entregado' } : p))),
@@ -76,14 +94,14 @@ describe('Seguimiento (Usuarios)', () => {
     expect(el.querySelector('a[href="/pedir"]')).not.toBeNull();
   });
 
-  it('esperando rider: sin estimado y avisa el pago pendiente', async () => {
+  it('esperando la transferencia: sin estimado ni rider, muestra el alias', async () => {
     const el = await abrir('/pedido', (db) =>
       db.pedidos.update((ps) =>
-        ps.map((p) => (p.usuarioId === USUARIO_ACTUAL_ID && p.estado === 'retirado' ? { ...p, estado: 'esperando', riderId: undefined, aceptadoEn: undefined, pago: 'pendiente' } : p)),
+        ps.map((p) => (p.usuarioId === USUARIO_ACTUAL_ID && p.estado === 'retirado' ? { ...p, estado: 'esperando', fase: 'transferencia', riderId: undefined, aceptadoEn: undefined, pago: 'pendiente' } : p)),
       ),
     );
-    expect(el.textContent).toContain('Buscando rider');
+    expect(el.querySelector('.eta')).toBeNull();
     expect(el.textContent).toContain('Todavía ningún rider aceptó');
-    expect(el.textContent).toContain('Falta confirmar tu transferencia');
+    expect(el.textContent).toContain('PAGO POR TRANSFERENCIA');
   });
 });

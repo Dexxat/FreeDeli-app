@@ -28,9 +28,17 @@ describe('Realizado (Usuarios)', () => {
     }
     const el = h.routeNativeElement!;
     expect(el.textContent).toContain(`PEDIDO #A-${r.pedido.numero}`);
+    expect(el.textContent).toContain('REVISANDO STOCK');
+    expect(el.querySelector('.alias-valor')).toBeNull();
+
+    // El kiosco confirma el stock: aparece el alias para transferir.
+    db.guardarPedido({ ...db.buscarPedido(r.pedido.id)!, fase: 'transferencia' });
+    for (let i = 0; i < 4; i++) {
+      await esperar();
+      await h.fixture.whenStable();
+    }
     expect(el.querySelector('.alias-valor')?.textContent).toBe('laestacion.muniz');
     expect(el.textContent).toContain(`Transferí $${(15300 + r.pedido.costoEnvio).toLocaleString('es-AR')}`);
-    expect(el.textContent).toContain('Buscando rider');
     expect(el.querySelectorAll('fd-barra-estado li.pendiente')).toHaveLength(4);
     expect(el.querySelector('a[href$="' + r.pedido.id + '"]')?.textContent).toContain('VER SEGUIMIENTO');
   });

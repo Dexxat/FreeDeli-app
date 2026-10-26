@@ -11,13 +11,14 @@ import {
   minutosParaLlegar,
   totalPedido,
 } from '@freedeli/shared';
+import { PasoActual } from '../../ui/paso-actual';
 import { distinctUntilChanged, interval, map, of, startWith, switchMap } from 'rxjs';
 
 const HORA = new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
 
 @Component({
   selector: 'fd-seguimiento',
-  imports: [BarraEstado, PesosPipe, RouterLink],
+  imports: [BarraEstado, PesosPipe, RouterLink, PasoActual],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './seguimiento.html',
   styleUrl: './seguimiento.scss',

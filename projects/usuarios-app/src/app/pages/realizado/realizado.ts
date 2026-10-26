@@ -1,21 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { BarraEstado, PesosPipe, UsuariosApi, cantidadProductos, codigoPedido, nombreZona, totalPedido } from '@freedeli/shared';
 import { switchMap } from 'rxjs';
+import { PasoActual } from '../../ui/paso-actual';
 
-const TEXTO_ESTADO: Record<string, string> = {
-  esperando: 'Buscando rider…',
-  aceptado: 'Un rider aceptó tu pedido y va al kiosco.',
-  retirado: 'El rider retiró tu pedido.',
-  'en-camino': 'Tu pedido está en camino.',
-  entregado: 'Pedido entregado.',
-  cancelado: 'El pedido se canceló.',
-};
 
 @Component({
   selector: 'fd-realizado',
-  imports: [BarraEstado, PesosPipe, RouterLink],
+  imports: [BarraEstado, PesosPipe, RouterLink, PasoActual],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './realizado.html',
   styleUrl: './realizado.scss',
@@ -31,16 +24,4 @@ export default class Realizado {
   protected readonly zona = nombreZona;
   protected readonly cantidad = cantidadProductos;
   protected readonly total = totalPedido;
-  protected readonly textoEstado = computed(() => TEXTO_ESTADO[this.pedido()?.estado ?? 'esperando']);
-  protected readonly copiado = signal(false);
-
-  protected async copiarAlias(alias: string): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(alias);
-      this.copiado.set(true);
-      setTimeout(() => this.copiado.set(false), 2500);
-    } catch {
-      this.copiado.set(false);
-    }
-  }
 }
