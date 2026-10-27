@@ -48,6 +48,8 @@ jobs:
       - name: Pruebas de la API
         working-directory: backend
         env:
+          # Prisma la pide para generar el cliente; en la Mac la toma de backend/.env.
+          DATABASE_URL: postgresql://test:test@localhost:5432/freedeli_test
           TEST_DATABASE_URL: postgresql://test:test@localhost:5432/freedeli_test
         run: |
           npm test
