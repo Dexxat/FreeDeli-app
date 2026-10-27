@@ -1,5 +1,5 @@
 import { codigoRider } from '../models/rider.js';
-import { PEDIDO_MINIMO, costoEnvio, distanciaKm, calcularComision, puedeRecibirPedidos, minutosParaLlegar, direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules.js';
+import { PEDIDO_MINIMO, TOPE_ENVIO_CLIENTE, aporteKioscoEnvio, envioCliente, costoEnvio, distanciaKm, calcularComision, puedeRecibirPedidos, minutosParaLlegar, direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules.js';
 
 describe('PIN', () => {
   it('genera 4 dígitos con ceros a la izquierda', () => {
@@ -99,6 +99,19 @@ describe('envío por distancia', () => {
     expect(costoEnvio(0, { base: 1000, porKm: 400 })).toBe(1000);
     expect(costoEnvio(2.3, { base: 1000, porKm: 400 })).toBe(2000);
     expect(costoEnvio(2.6, { base: 1000, porKm: 400 })).toBe(2100);
+  });
+});
+
+describe('tope de envío del cliente', () => {
+  it('el cliente paga el costo real hasta el tope', () => {
+    expect(TOPE_ENVIO_CLIENTE).toBe(2500);
+    expect(envioCliente(1800)).toBe(1800);
+    expect(envioCliente(2500)).toBe(2500);
+    expect(envioCliente(4100)).toBe(2500);
+  });
+  it('el kiosco pone lo que supera el tope', () => {
+    expect(aporteKioscoEnvio({ costoEnvio: 2500, gananciaRider: 4100 })).toBe(1600);
+    expect(aporteKioscoEnvio({ costoEnvio: 1800, gananciaRider: 1800 })).toBe(0);
   });
 });
 

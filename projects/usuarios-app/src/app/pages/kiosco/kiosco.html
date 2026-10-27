@@ -5,6 +5,7 @@
       <span class="sutil">{{ zona(k.zona) }} · {{ km(k.distanciaKm) }} · {{ tiempo(k.tiempoEstimadoMin) }} · Envío {{ k.costoEnvio | pesos }}</span>
     </section>
 
+    <fd-aviso-horario />
     @if (!k.abierto || k.pausado) {
       <p class="aviso" role="alert">Este kiosco está cerrado ahora.</p>
     }
@@ -41,7 +42,7 @@
     @if (store.pedidoEnCurso(); as enCurso) {
       <a class="boton" [routerLink]="['/pedido', enCurso.id]">VER MI PEDIDO EN CURSO</a>
     } @else {
-      <button type="button" class="boton" [disabled]="enviando() || faltante() > 0 || !k.abierto || k.pausado" (click)="hacerPedido()">
+      <button type="button" class="boton" [disabled]="enviando() || faltante() > 0 || !k.abierto || k.pausado || !horario.abierto()" (click)="hacerPedido()">
         HACER PEDIDO
       </button>
     }

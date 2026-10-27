@@ -4,7 +4,7 @@ import { Roles, SesionActual, type Sesion } from '../auth/sesion.js';
 import { Perfiles } from '../comun/perfiles.js';
 import { ReglasConfig } from '../comun/reglas.config.js';
 import { ZONAS_API, geolocalizar, zonaApi, zonaDb, type ZonaApi } from '../comun/zonas.js';
-import { aceptarAjuste, cancelarPorCliente, costoEnvio, distanciaKm, puedeRecibirPedidos } from '../dominio.js';
+import { aceptarAjuste, cancelarPorCliente, costoEnvio, distanciaKm, envioCliente, puedeRecibirPedidos } from '../dominio.js';
 import { EstadoCuenta, EstadoPedido, Rol } from '../generated/prisma/enums.js';
 import { PedidosService } from '../pedidos/pedidos.service.js';
 import { NuevoPedidoDto } from '../pedidos/dto.js';
@@ -78,7 +78,8 @@ export class UsuarioController {
       pausado: k.pausado,
       tiempoEstimadoMin: k.tiempoEstimadoMin,
       distanciaKm: km,
-      costoEnvio: costoEnvio(km, this.reglas.tarifaEnvio),
+      // Lo que paga el usuario: el costo del viaje hasta el tope.
+      costoEnvio: envioCliente(costoEnvio(km, this.reglas.tarifaEnvio)),
     };
   }
 

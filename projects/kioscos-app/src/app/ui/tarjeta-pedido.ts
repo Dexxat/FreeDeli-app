@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { KioscosApi, Pedido, PesosPipe, cantidadProductos, codigoPedido, subtotalProductos, totalPedido } from '@freedeli/shared';
+import { KioscosApi, Pedido, PesosPipe, aporteKioscoEnvio, cantidadProductos, codigoPedido, subtotalProductos, totalPedido } from '@freedeli/shared';
 import { Observable, of, switchMap } from 'rxjs';
 
 /** Etiqueta del paso en el que está el pedido, desde el punto de vista del kiosco. */
@@ -53,6 +53,9 @@ export class TarjetaPedido {
   protected readonly cantidad = computed(() => cantidadProductos(this.pedido()));
   protected readonly total = computed(() => totalPedido(this.pedido()));
   protected readonly subtotal = computed(() => subtotalProductos(this.pedido()));
+  /** Lo que pone el kiosco porque el viaje supera el tope que paga el cliente. */
+  protected readonly aporteEnvio = computed(() => aporteKioscoEnvio(this.pedido()));
+  protected readonly envioRider = computed(() => this.pedido().gananciaRider + this.pedido().propina);
 
   protected alternarFaltante(productoId: string, falta: boolean): void {
     this.faltantes.update((fs) => (falta ? [...fs, productoId] : fs.filter((f) => f !== productoId)));

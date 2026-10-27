@@ -9,7 +9,10 @@ import {
   calcularComision,
   costoEnvio,
   distanciaKm,
+  envioCliente,
   puedeRecibirPedidos,
+  servicioAbierto,
+  textoHorario,
   type Pedido,
   type Resultado,
 } from '../dominio.js';
@@ -70,6 +73,9 @@ export class PedidosService {
   }
 
   async crear(usuarioId: string, nuevo: NuevoPedido): Promise<Pedido> {
+    if (!this.reglas.horarioLibre && !servicioAbierto(new Date())) {
+      throw new ConflictException({ statusCode: 409, codigo: 'fuera-de-horario', message: `FreeDeli toma pedidos de ${textoHorario()}.` });
+    }
     const usuario = await this.db.usuario.findUniqueOrThrow({ where: { id: usuarioId } });
     const kiosco = await this.db.kiosco.findUnique({ where: { id: nuevo.kioscoId }, include: { cuenta: true } });
     if (!kiosco || kiosco.cuenta?.estado !== 'APROBADA' || !puedeRecibirPedidos(kiosco)) {
@@ -91,7 +97,8 @@ export class PedidosService {
       throw new ConflictException({ statusCode: 409, codigo: 'pedido-en-curso', message: 'Ya tenés un pedido en curso.' });
     }
     const km = distanciaKm({ lat: kiosco.lat, lng: kiosco.lng }, { lat: usuario.lat, lng: usuario.lng });
-    const envio = costoEnvio(km, this.reglas.tarifaEnvio);
+    // El rider cobra el viaje completo; el cliente paga hasta el tope y el kiosco pone el resto.
+    const viaje = costoEnvio(km, this.reglas.tarifaEnvio);
     const fila = await this.db.pedido.create({
       data: {
         zona: kiosco.zona,
@@ -101,8 +108,8 @@ export class PedidosService {
         destinoDireccion: usuario.direccion,
         destinoNotas: usuario.notas,
         distanciaKm: km,
-        costoEnvio: envio,
-        gananciaRider: envio,
+        costoEnvio: envioCliente(viaje),
+        gananciaRider: viaje,
         aliasKiosco: kiosco.aliasCobro,
         comisionFreeDeli: calcularComision(subtotal, this.reglas.comisionPorcentaje),
         pin: randomInt(0, 10_000).toString().padStart(4, '0'),

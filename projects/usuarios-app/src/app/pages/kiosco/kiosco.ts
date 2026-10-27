@@ -5,6 +5,8 @@ import { PEDIDO_MINIMO, PesosPipe, Producto, UsuariosApi, nombreZona, rangoTiemp
 import { combineLatest, distinctUntilChanged, filter, map, shareReplay, switchMap, take, tap } from 'rxjs';
 import { UsuarioStore } from '../../core/usuario.store';
 import { formatearKm } from '../kioscos/kioscos';
+import { Horario } from '../../core/horario';
+import { AvisoHorario } from '../../ui/aviso-horario';
 
 const MOTIVOS = {
   'kiosco-cerrado': 'El kiosco cerró recién. Elegí otro.',
@@ -12,6 +14,7 @@ const MOTIVOS = {
   'producto-inexistente': 'Algún producto ya no está disponible. Revisá el pedido.',
   'pedido-minimo': 'El pedido mínimo es de $15.000 en productos.',
   'pedido-en-curso': 'Ya tenés un pedido en curso.',
+  'fuera-de-horario': 'FreeDeli toma pedidos de 00 a 08 hs.',
 } as const;
 
 /** Tope por producto, para evitar errores de tipeo. */
@@ -19,7 +22,7 @@ const MAXIMO_POR_PRODUCTO = 20;
 
 @Component({
   selector: 'fd-kiosco',
-  imports: [PesosPipe, RouterLink],
+  imports: [PesosPipe, RouterLink, AvisoHorario],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './kiosco.html',
   styleUrl: './kiosco.scss',
@@ -28,6 +31,7 @@ export default class Kiosco {
   private readonly api = inject(UsuariosApi);
   private readonly router = inject(Router);
   protected readonly store = inject(UsuarioStore);
+  protected readonly horario = inject(Horario);
 
   readonly kioscoId = input.required<string>();
   /** Id de un pedido anterior para cargar los mismos productos. */

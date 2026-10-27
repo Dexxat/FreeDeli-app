@@ -5,10 +5,11 @@ import { RouterLink } from '@angular/router';
 import { BarraEstado, PesosPipe, UsuariosApi, ZONAS, ZonaId, codigoPedido, nombreZona } from '@freedeli/shared';
 import { UsuarioStore } from '../../core/usuario.store';
 import { fechaRelativa } from '../../core/fechas';
+import { AvisoHorario } from '../../ui/aviso-horario';
 
 @Component({
   selector: 'fd-inicio',
-  imports: [RouterLink, BarraEstado, PesosPipe, FormsModule],
+  imports: [RouterLink, BarraEstado, PesosPipe, FormsModule, AvisoHorario],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './inicio.html',
   styleUrl: './inicio.scss',

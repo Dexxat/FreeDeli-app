@@ -70,6 +70,7 @@ describe('Flujo completo del pedido', () => {
     const k = ks.body.find((x: { id: string }) => x.id === kioscoId);
     expect(k).toMatchObject({ nombre: 'Kiosco Flujo', zona: 'san-miguel', abierto: true });
     expect(k.costoEnvio).toBeGreaterThanOrEqual(1000);
+    expect(k.costoEnvio).toBeLessThanOrEqual(2500);
     expect(k.saldo).toBeUndefined();
     productos = (await api().get(`/api/kioscos/${kioscoId}/productos`).set(auth(usuario)).expect(200)).body;
     expect(productos.map((p) => p.nombre)).toEqual(['Coca-Cola 1,5 L', 'Hielo 2 kg']);
@@ -80,6 +81,23 @@ describe('Flujo completo del pedido', () => {
     const r = await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 2 }] }).expect(409);
     expect(r.body).toMatchObject({ codigo: 'pedido-minimo' });
     expect(r.body.message).toContain('pedido mínimo');
+  });
+
+  it('fuera de 00 a 08 hs no toma pedidos', async () => {
+    const coca = productos.find((p) => p.precio === 2800)!;
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-27T17:00:00Z')); // 14 hs en Argentina
+    process.env.HORARIO_LIBRE = 'false';
+    try {
+      const r = await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }] }).expect(409);
+      expect(r.body).toMatchObject({ codigo: 'fuera-de-horario' });
+      expect(r.body.message).toContain('00 a 08 hs');
+      const h = await api().get('/api/horario').expect(200);
+      expect(h.body).toEqual({ desde: 0, hasta: 8, libre: false, abierto: false });
+    } finally {
+      process.env.HORARIO_LIBRE = 'true';
+      vi.useRealTimers();
+    }
   });
 
   it('recorre todo el flujo hasta Entregado', async () => {
@@ -93,6 +111,8 @@ describe('Flujo completo del pedido', () => {
     const p = creado.body;
     expect(p).toMatchObject({ estado: 'esperando', fase: 'stock', pago: 'pendiente', comisionFreeDeli: 1980 });
     expect(p.pin).toMatch(/^\d{4}$/);
+    // El rider cobra el viaje completo; el cliente paga hasta $2.500.
+    expect(p.costoEnvio).toBe(Math.min(p.gananciaRider, 2500));
     await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }] }).expect(409);
 
     // Kiosco: no tiene hielo. Se ajusta y el cliente acepta.

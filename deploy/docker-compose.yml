@@ -39,6 +39,7 @@ services:
       TARIFA_BASE: ${TARIFA_BASE:-1000}
       TARIFA_POR_KM: ${TARIFA_POR_KM:-400}
       ALIAS_FREEDELI: ${ALIAS_FREEDELI:-freedeli.pagos}
+      HORARIO_LIBRE: ${HORARIO_LIBRE:-false}
       TZ: America/Argentina/Buenos_Aires
 
   web:

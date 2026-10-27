@@ -47,6 +47,13 @@ describe('Inicio en vivo (Kioscos)', () => {
     expect(g.enCamino.map((p) => p.id)).toEqual(['f']);
   });
 
+  it('en un viaje largo le muestra al kiosco cuánto pone del envío', async () => {
+    const p = nuevoPedido();
+    db.guardarPedido({ ...p, costoEnvio: 2500, gananciaRider: 3400, propina: 0 });
+    await estable();
+    expect(columna('col-accion').querySelector('.aporte')?.textContent).toContain('vos ponés $900');
+  });
+
   it('un pedido nuevo aparece en TU TURNO y se confirma con un faltante', async () => {
     const p = nuevoPedido();
     await estable();

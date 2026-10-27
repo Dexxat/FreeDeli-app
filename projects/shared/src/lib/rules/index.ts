@@ -6,3 +6,4 @@ export * from './validaciones.rules.js';
 export * from './admin.rules.js';
 export * from './flujo.rules.js';
 export * from './reportes.rules.js';
+export * from './horario.rules.js';

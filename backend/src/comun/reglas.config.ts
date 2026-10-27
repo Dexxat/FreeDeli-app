@@ -18,6 +18,11 @@ export class ReglasConfig {
     return this.config.get('ALIAS_FREEDELI') ?? 'freedeli.pagos';
   }
 
+  /** true ignora el horario nocturno (00 a 08 hs). Solo para desarrollo y pruebas. */
+  get horarioLibre(): boolean {
+    return this.config.get('HORARIO_LIBRE') === 'true';
+  }
+
   /** Segundos que tiene un rider para aceptar una oferta. */
   get segundosOferta(): number {
     return Number(this.config.get('SEGUNDOS_OFERTA') ?? 30);

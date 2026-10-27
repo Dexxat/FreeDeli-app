@@ -55,11 +55,12 @@ export interface Pedido {
   /** Quién recibe: nombre corto del usuario, por ejemplo "Martina R.". */
   destino: { nombre: string; direccion: string; notas?: string };
   items: ItemPedido[];
+  /** Lo que paga el cliente por el envío: el costo real hasta TOPE_ENVIO_CLIENTE. */
   costoEnvio: number;
   /** Distancia del kiosco a la entrega, en km. Define el costo de envío. */
   distanciaKm: number;
   propina: number;
-  /** Lo que gana el rider por el envío (sin propina). */
+  /** Lo que gana el rider por el envío (sin propina): el costo real del viaje. */
   gananciaRider: number;
   pago: EstadoPago;
   /** Alias del kiosco al que transfiere el cliente. */

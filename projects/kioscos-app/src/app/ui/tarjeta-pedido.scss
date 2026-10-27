@@ -43,3 +43,4 @@ button:focus-visible, input:focus-visible { outline: 3px solid #fff; outline-off
 .secundario { min-height: 52px; margin: 4px 0 10px; background: var(--fd-navy-900); color: #fff; font-weight: 600; }
 .botones { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
 .error { margin: 0; font-size: 13px; font-weight: 700; color: var(--fd-amber-400); }
+.aporte { color: var(--fd-amber-400); }

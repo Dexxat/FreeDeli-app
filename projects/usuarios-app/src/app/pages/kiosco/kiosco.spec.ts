@@ -17,10 +17,10 @@ describe('Kiosco (Usuarios)', () => {
     }
   }
 
-  async function abrir(url: string, conPedidoEnCurso = false) {
+  async function abrir(url: string, conPedidoEnCurso = false, horarioLibre = true) {
     TestBed.configureTestingModule({
       providers: [
-        provideFreeDeliMocks({ latencia: 0 }),
+        provideFreeDeliMocks({ latencia: 0, horarioLibre }),
         provideRouter([{ path: 'pedir/:kioscoId', component: Kiosco }, { path: '**', children: [] }], withComponentInputBinding()),
       ],
     });
@@ -64,6 +64,32 @@ describe('Kiosco (Usuarios)', () => {
     expect(navegar).toHaveBeenCalledWith(['/pedido', creado.id, 'realizado']);
   });
 
+  it('fuera de 00 a 08 hs avisa que está cerrado y no deja pedir', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-27T17:00:00Z')); // 14 hs en Argentina
+    try {
+      const el = await abrir('/pedir/k1', false, false);
+      expect(el.querySelector('fd-aviso-horario')?.textContent).toContain('Tomamos pedidos de 00 a 08 hs');
+      for (let i = 0; i < 6; i++) agregar(el, 'Coca-Cola 1,5 L');
+      await estable();
+      expect(el.querySelector('.minimo')).toBeNull();
+      expect(boton(el, 'HACER PEDIDO').disabled).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('de madrugada no muestra el aviso', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-27T05:30:00Z')); // 02:30 en Argentina
+    try {
+      const el = await abrir('/pedir/k1', false, false);
+      expect(el.querySelector('fd-aviso-horario')?.textContent?.trim()).toBe('');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('el botón − no baja de cero', async () => {
     const el = await abrir('/pedir/k1');
     const menos = el.querySelector<HTMLButtonElement>('[aria-label="Quitar Alfajor triple"]')!;
@@ -71,7 +97,7 @@ describe('Kiosco (Usuarios)', () => {
   });
 
   it('"Pedí de nuevo" carga los productos del pedido anterior', async () => {
-    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0 })] });
+    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0, horarioLibre: true })] });
     const anterior = TestBed.inject(MockDb).pedidos().find((p) => p.usuarioId === USUARIO_ACTUAL_ID && p.estado === 'entregado')!;
     TestBed.resetTestingModule();
     const el = await abrir(`/pedir/${anterior.kioscoId}?repetir=${anterior.id}`);

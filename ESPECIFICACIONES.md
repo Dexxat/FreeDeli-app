@@ -89,10 +89,12 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 - **Comisión de FreeDeli:** de lo que cobra el kiosco, como mínimo **$1.500** por pedido van al alias de la empresa. Se descuentan directamente del pago del cliente.
 - **Quién retiene:** el cliente transfiere al alias del kiosco. El kiosco retiene el dinero hasta que el rider ingresa el PIN.
 - **Al ingresar el PIN:** el kiosco le transfiere el costo de envío al rider y la comisión a FreeDeli.
-- **Envío:** lo paga el cliente junto con los productos y es la ganancia del rider.
+- **Envío dividido:** el rider siempre cobra el costo completo del viaje. El cliente paga ese costo hasta un tope de **$2.500**. Si el viaje cuesta más, el kiosco pone la diferencia. _El tope es provisorio._
+- **Por qué el kiosco pone la diferencia:** de madrugada FreeDeli le acerca ventas que de otra forma no tendría.
 - **Comisión:** el 10 % del subtotal de productos, nunca menos de $1.500.
 - **Pedido mínimo:** $15.000 en productos. Con el 10 % da justo la comisión mínima de $1.500.
 - **Saldo prepago del kiosco:** el kiosco carga crédito en FreeDeli. Al liberarse cada pago, la comisión se descuenta de ese saldo. Si no le alcanza para la comisión mínima, no recibe pedidos.
+- **Horario:** FreeDeli toma pedidos de **00 a 08 hs**, hora de Argentina. Fuera de ese horario la app de usuarios avisa que está cerrado y no deja pedir.
 - **Costo de envío:** base + un valor por km de distancia entre el kiosco y la entrega, redondeado a $100 para arriba. _Pendiente: definir los montos._ Por ahora se usan valores provisorios: $1.000 de base y $400 por km.
 
 ---

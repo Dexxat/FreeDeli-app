@@ -17,7 +17,14 @@ describe('movimientoDePedido', () => {
     expect(m.comisionFreeDeli).toBe(1500);
     expect(m.netoKiosco).toBe(7400 - 2300 - 1500);
   });
+  it('si el viaje supera el tope, el kiosco pone la diferencia', () => {
+    const m = movimientoDePedido({ ...base, costoEnvio: 2500, gananciaRider: 3400, propina: 0 });
+    expect(m.totalCliente).toBe(5600 + 2500);
+    expect(m.envioRider).toBe(3400);
+    expect(m.aporteEnvio).toBe(900);
+    expect(m.netoKiosco).toBe(5600 + 2500 - 3400 - 1500);
+  });
   it('un cancelado no mueve dinero', () => {
-    expect(movimientoDePedido({ ...base, estado: 'cancelado' })).toMatchObject({ totalCliente: 0, envioRider: 0, comisionFreeDeli: 0, netoKiosco: 0 });
+    expect(movimientoDePedido({ ...base, estado: 'cancelado' })).toMatchObject({ totalCliente: 0, envioRider: 0, aporteEnvio: 0, comisionFreeDeli: 0, netoKiosco: 0 });
   });
 });

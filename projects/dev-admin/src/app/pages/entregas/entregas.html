@@ -42,6 +42,9 @@
                 <ul class="items">
                   <li><span>Pagó el cliente</span><span>{{ e.totalCliente | pesos }}</span></li>
                   <li><span>Envío al rider ({{ e.riderId ? codigoRider(e.riderId) : '—' }})</span><span>{{ e.envioRider | pesos }}</span></li>
+                  @if (e.aporteEnvio > 0) {
+                    <li><span>Del envío, puso el kiosco</span><span>{{ e.aporteEnvio | pesos }}</span></li>
+                  }
                   <li><span>Comisión FreeDeli</span><span class="amarillo">{{ e.comisionFreeDeli | pesos }}</span></li>
                   <li><span>Neto del kiosco</span><span>{{ e.netoKiosco | pesos }}</span></li>
                 </ul>

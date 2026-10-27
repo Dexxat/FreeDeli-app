@@ -5,6 +5,9 @@
     <span class="paso">{{ paso() }}</span>
   </header>
   <p class="sutil">{{ hora() }} · {{ cantidad() }} productos · {{ total() | pesos }} · para {{ p.destino.nombre }}</p>
+  @if (aporteEnvio() > 0) {
+    <p class="sutil aporte">Viaje largo: el cliente paga {{ p.costoEnvio | pesos }} de envío y vos ponés {{ aporteEnvio() | pesos }}. Al rider le pagás {{ envioRider() | pesos }}.</p>
+  }
 
   @if (p.estado === 'esperando' && p.fase === 'stock') {
     <fieldset class="stock">

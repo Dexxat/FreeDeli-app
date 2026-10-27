@@ -24,6 +24,8 @@ export interface MovimientoKiosco {
   totalCliente: number;
   /** Lo que el kiosco le transfiere al rider. */
   envioRider: number;
+  /** La parte del envío que pone el kiosco porque supera el tope que paga el cliente. */
+  aporteEnvio: number;
   /** Lo que el kiosco le transfiere a FreeDeli. */
   comisionFreeDeli: number;
   /** Lo que le queda al kiosco. */

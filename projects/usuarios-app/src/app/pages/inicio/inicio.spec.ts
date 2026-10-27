@@ -25,7 +25,7 @@ describe('Inicio (Usuarios)', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [Inicio],
-      providers: [provideFreeDeliMocks({ latencia: 0 }), provideRouter([])],
+      providers: [provideFreeDeliMocks({ latencia: 0, horarioLibre: true }), provideRouter([])],
     });
     db = TestBed.inject(MockDb);
   });

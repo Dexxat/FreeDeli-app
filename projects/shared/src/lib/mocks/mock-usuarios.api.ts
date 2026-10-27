@@ -6,8 +6,9 @@ import { Kiosco, Producto } from '../models/kiosco';
 import { Pedido, cantidadProductos, totalPedido } from '../models/pedido';
 import { DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } from '../models/usuario';
 import { ZonaId } from '../models/zona';
-import { ESTADOS_ABIERTOS, PEDIDO_MINIMO, calcularComision, costoEnvio, distanciaKm, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
-import { FREEDELI_CONFIG } from '../config/freedeli.config';
+import { ESTADOS_ABIERTOS, PEDIDO_MINIMO, calcularComision, costoEnvio, distanciaKm, envioCliente, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
+import { servicioAbierto } from '../rules/horario.rules';
+import { FREEDELI_CONFIG, HORARIO_LIBRE } from '../config/freedeli.config';
 import { MockDb, USUARIO_ACTUAL_ID } from './mock-db';
 import { Resultado, aceptarAjuste, cancelarPorCliente } from '../rules/flujo.rules';
 import { LATENCIA_MOCK } from './mock-riders.api';
@@ -17,6 +18,7 @@ export class MockUsuariosApi extends UsuariosApi {
   private readonly db = inject(MockDb);
   private readonly latencia = inject(LATENCIA_MOCK);
   private readonly config = inject(FREEDELI_CONFIG);
+  private readonly horarioLibre = inject(HORARIO_LIBRE);
   private readonly pedidos$ = toObservable(this.db.pedidos);
 
   private readonly abierto = computed(
@@ -58,12 +60,18 @@ export class MockUsuariosApi extends UsuariosApi {
     return this.responder(this.usuario());
   }
 
-  /** El kiosco con distancia y costo de envío hasta la dirección del usuario. */
-  private paraUsuario(k: Kiosco): Kiosco {
+  /** Costo real del viaje desde el kiosco hasta la dirección del usuario. */
+  private viaje(k: Kiosco): { km: number; costo: number } {
     const u = this.usuario();
     const destino = u.direccion.ubicacion ?? this.db.geolocalizar(u.direccion.direccion, u.direccion.zona);
     const km = distanciaKm(k.ubicacion, destino);
-    return { ...k, distanciaKm: km, costoEnvio: costoEnvio(km, this.config.tarifaEnvio) };
+    return { km, costo: costoEnvio(km, this.config.tarifaEnvio) };
+  }
+
+  /** El kiosco con distancia y la parte del envío que paga el usuario. */
+  private paraUsuario(k: Kiosco): Kiosco {
+    const { km, costo } = this.viaje(k);
+    return { ...k, distanciaKm: km, costoEnvio: envioCliente(costo) };
   }
 
   kioscosAbiertos(zona?: ZonaId): Observable<Kiosco[]> {
@@ -92,7 +100,9 @@ export class MockUsuariosApi extends UsuariosApi {
 
     let resultado: ResultadoCrearPedido;
     const subtotal = lineas.reduce((a, i) => a + i.cantidad * (catalogo.find((p) => p.id === i.productoId)?.precio ?? 0), 0);
-    if (!kiosco || !puedeRecibirPedidos(kiosco)) {
+    if (!this.horarioLibre && !servicioAbierto(new Date())) {
+      resultado = { ok: false, motivo: 'fuera-de-horario' };
+    } else if (!kiosco || !puedeRecibirPedidos(kiosco)) {
       resultado = { ok: false, motivo: 'kiosco-cerrado' };
     } else if (lineas.length === 0) {
       resultado = { ok: false, motivo: 'sin-productos' };
@@ -121,7 +131,8 @@ export class MockUsuariosApi extends UsuariosApi {
         costoEnvio: kiosco.costoEnvio,
         distanciaKm: kiosco.distanciaKm ?? 0,
         propina: 0,
-        gananciaRider: kiosco.costoEnvio,
+        // El rider cobra el viaje completo; lo que supera el tope lo pone el kiosco.
+        gananciaRider: this.viaje(encontrado!).costo,
         // El cliente transfiere al alias del kiosco; queda pendiente hasta que el kiosco lo confirme.
         pago: 'pendiente',
         aliasKiosco: kiosco.aliasCobro,

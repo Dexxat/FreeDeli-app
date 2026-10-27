@@ -28,6 +28,12 @@ export function provideFreeDeliConfig(config: FreeDeliConfig) {
   return { provide: FREEDELI_CONFIG, useValue: config };
 }
 
+/**
+ * true para ignorar el horario nocturno (00 a 08 hs): solo para desarrollo y pruebas.
+ * En producción queda en false.
+ */
+export const HORARIO_LIBRE = new InjectionToken<boolean>('HORARIO_LIBRE', { factory: () => false });
+
 /** Link que abre el chat con FreeDeli, opcionalmente con un mensaje ya escrito. */
 export function linkWhatsApp(numero: string, mensaje?: string): string {
   const base = `https://wa.me/${numero}`;

@@ -4,6 +4,9 @@ import { UsuariosApi } from '../api/usuarios.api';
 import { subtotalProductos, totalPedido } from '../models/pedido';
 import { MockDb, USUARIO_ACTUAL_ID } from './mock-db';
 import { provideFreeDeliMocks } from './provide-mocks';
+import { FREEDELI_CONFIG, TARIFA_ENVIO_PROVISORIA } from '../config/freedeli.config';
+
+const FREEDELI_CONFIG_BASE = { whatsapp: '5491100000000', comisionPorcentaje: 10, tarifaEnvio: TARIFA_ENVIO_PROVISORIA, aliasFreeDeli: 'freedeli.pagos' };
 
 const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -11,8 +14,13 @@ describe('MockUsuariosApi', () => {
   let api: UsuariosApi;
   let db: MockDb;
 
-  function configurar(simular?: { cliente?: boolean; kiosco?: boolean; rider?: boolean }) {
-    TestBed.configureTestingModule({ providers: [provideFreeDeliMocks({ latencia: 0, simular, demoras: { paso: 40 } })] });
+  function configurar(simular?: { cliente?: boolean; kiosco?: boolean; rider?: boolean }, extra: { horarioLibre?: boolean; tarifaBase?: number } = {}) {
+    TestBed.configureTestingModule({
+      providers: [
+        provideFreeDeliMocks({ latencia: 0, simular, demoras: { paso: 40 }, horarioLibre: extra.horarioLibre ?? true }),
+        ...(extra.tarifaBase ? [{ provide: FREEDELI_CONFIG, useValue: { ...FREEDELI_CONFIG_BASE, tarifaEnvio: { base: extra.tarifaBase, porKm: 400 } } }] : []),
+      ],
+    });
     api = TestBed.inject(UsuariosApi);
     db = TestBed.inject(MockDb);
   }
@@ -40,6 +48,40 @@ describe('MockUsuariosApi', () => {
     configurar();
     const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
     expect(r).toEqual({ ok: false, motivo: 'pedido-en-curso' });
+  });
+
+  describe('horario nocturno', () => {
+    afterEach(() => vi.useRealTimers());
+
+    it('fuera de 00 a 08 hs no deja pedir', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-10-27T17:00:00Z')); // 14 hs en Argentina
+      configurar(undefined, { horarioLibre: false });
+      sinPedidoAbierto();
+      const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
+      expect(r).toEqual({ ok: false, motivo: 'fuera-de-horario' });
+    });
+
+    it('de madrugada deja pedir', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-10-27T05:30:00Z')); // 02:30 en Argentina
+      configurar(undefined, { horarioLibre: false });
+      sinPedidoAbierto();
+      const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
+      expect(r.ok).toBe(true);
+    });
+  });
+
+  it('el cliente paga el envío hasta el tope y el rider cobra el viaje completo', async () => {
+    configurar(undefined, { tarifaBase: 3000 });
+    sinPedidoAbierto();
+    const k = (await firstValueFrom(api.kioscosAbiertos())).find((x) => x.id === 'k1')!;
+    expect(k.costoEnvio).toBe(2500);
+    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
+    if (!r.ok) throw new Error('no se creó');
+    // $3.000 + 0,5 km × $400 = $3.200: el cliente paga $2.500 y el kiosco pone $700.
+    expect(r.pedido).toMatchObject({ costoEnvio: 2500, gananciaRider: 3200 });
+    expect(totalPedido(r.pedido)).toBe(6 * 2800 + 2500);
   });
 
   it('crea el pedido con precios del catálogo, PIN y la dirección del usuario', async () => {

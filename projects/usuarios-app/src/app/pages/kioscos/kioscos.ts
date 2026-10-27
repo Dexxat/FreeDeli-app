@@ -3,6 +3,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { PesosPipe, UsuariosApi, ZONAS, ZonaId, nombreZona, rangoTiempo } from '@freedeli/shared';
 import { startWith, switchMap } from 'rxjs';
+import { AvisoHorario } from '../../ui/aviso-horario';
 
 const FILTROS: { id: ZonaId | null; etiqueta: string }[] = [{ id: null, etiqueta: 'Todas' }, ...ZONAS.map((z) => ({ id: z.id, etiqueta: z.nombre }))];
 
@@ -18,7 +19,7 @@ export function inicialKiosco(nombre: string): string {
 
 @Component({
   selector: 'fd-kioscos',
-  imports: [RouterLink, PesosPipe],
+  imports: [AvisoHorario, RouterLink, PesosPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './kioscos.html',
   styleUrl: './kioscos.scss',

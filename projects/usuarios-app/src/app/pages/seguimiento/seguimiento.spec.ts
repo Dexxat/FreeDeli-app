@@ -20,7 +20,7 @@ describe('Seguimiento (Usuarios)', () => {
   async function abrir(url: string, preparar?: (db: MockDb) => void) {
     TestBed.configureTestingModule({
       providers: [
-        provideFreeDeliMocks({ latencia: 0 }),
+        provideFreeDeliMocks({ latencia: 0, horarioLibre: true }),
         provideRouter(
           [{ path: 'pedido', component: Seguimiento }, { path: 'pedido/:pedidoId', component: Seguimiento }, { path: '**', children: [] }],
           withComponentInputBinding(),

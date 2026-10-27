@@ -78,5 +78,6 @@ gunzip -c respaldos/freedeli-AAAAMMDD-HHMM.sql.gz | docker compose exec -T postg
 ## Pendiente antes de abrir al público
 
 - Definir la tarifa de envío real (`TARIFA_BASE`, `TARIFA_POR_KM`) y el alias de FreeDeli (`ALIAS_FREEDELI`).
+- Dejar `HORARIO_LIBRE=false` para que solo se pida de 00 a 08 hs.
 - Cargar el WhatsApp real de la empresa en `projects/shared/src/lib/config/freedeli.config.ts`.
 - La ubicación de las direcciones es aproximada (centro de la zona). Para distancias reales hace falta un servicio de mapas.

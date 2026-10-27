@@ -10,6 +10,7 @@ import { DEMORA_OFERTA_MOCK, MockPedidosApi } from './mock-pedidos.api';
 import { LATENCIA_MOCK, MockRidersApi } from './mock-riders.api';
 import { ACTORES_SIMULADOS, ActoresSimulados, DEMORAS_SIMULACION, DemorasSimulacion, MockSimulador } from './mock-simulador';
 import { MockUsuariosApi } from './mock-usuarios.api';
+import { HORARIO_LIBRE } from '../config/freedeli.config';
 
 export interface OpcionesMocks {
   latencia?: number;
@@ -17,6 +18,8 @@ export interface OpcionesMocks {
   /** Partes que simula el mock. Por defecto, ninguna. */
   simular?: Partial<ActoresSimulados>;
   demoras?: Partial<DemorasSimulacion>;
+  /** true para poder hacer pedidos fuera del horario nocturno (desarrollo y pruebas). */
+  horarioLibre?: boolean;
 }
 
 /** Conecta las APIs a los datos simulados en memoria. Cambiar por el backend real cuando exista. */
@@ -27,6 +30,7 @@ export function provideFreeDeliMocks(opciones: OpcionesMocks = {}): EnvironmentP
     ...(opciones.latencia !== undefined ? [{ provide: LATENCIA_MOCK, useValue: opciones.latencia }] : []),
     ...(opciones.demoraOferta !== undefined ? [{ provide: DEMORA_OFERTA_MOCK, useValue: opciones.demoraOferta }] : []),
     { provide: ACTORES_SIMULADOS, useValue: actores },
+    ...(opciones.horarioLibre !== undefined ? [{ provide: HORARIO_LIBRE, useValue: opciones.horarioLibre }] : []),
     ...(opciones.demoras ? [{ provide: DEMORAS_SIMULACION, useValue: { paso: 7_000, pedidoNuevo: 45_000, ...opciones.demoras } }] : []),
     { provide: RidersApi, useClass: MockRidersApi },
     { provide: PedidosApi, useClass: MockPedidosApi },

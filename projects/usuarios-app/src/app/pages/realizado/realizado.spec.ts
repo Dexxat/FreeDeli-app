@@ -11,7 +11,7 @@ describe('Realizado (Usuarios)', () => {
   it('muestra número, alias para transferir y resumen', async () => {
     TestBed.configureTestingModule({
       providers: [
-        provideFreeDeliMocks({ latencia: 0 }),
+        provideFreeDeliMocks({ latencia: 0, horarioLibre: true }),
         provideRouter([{ path: 'pedido/:pedidoId/realizado', component: Realizado }, { path: '**', children: [] }], withComponentInputBinding()),
       ],
     });

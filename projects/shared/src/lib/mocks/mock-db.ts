@@ -6,7 +6,7 @@ import { Usuario } from '../models/usuario';
 import { Conflicto, MovimientoSaldo } from '../models/admin';
 import { codigoPedido } from '../models/pedido';
 import { CENTRO_ZONA, DemandaZona, Ubicacion, ZONAS, ZonaId } from '../models/zona';
-import { PEDIDO_MINIMO, calcularComision, costoEnvio, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
+import { PEDIDO_MINIMO, calcularComision, costoEnvio, envioCliente, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
 import { TARIFA_ENVIO_PROVISORIA } from '../config/freedeli.config';
 
 /** Generador pseudoaleatorio con semilla, para que los datos simulados sean siempre los mismos. */
@@ -241,7 +241,7 @@ export class MockDb {
         notas: random() < 0.4 ? 'Timbre 2B, dejar en portería' : undefined,
       },
       items,
-      costoEnvio: costoEnvio(km, TARIFA_ENVIO_PROVISORIA),
+      costoEnvio: envioCliente(costoEnvio(km, TARIFA_ENVIO_PROVISORIA)),
       distanciaKm: km,
       propina: random() < 0.35 ? pick([300, 500, 1000]) : 0,
       gananciaRider: costoEnvio(km, TARIFA_ENVIO_PROVISORIA),

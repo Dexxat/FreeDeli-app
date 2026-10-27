@@ -62,6 +62,23 @@ export function costoEnvio(km: number, tarifa: { base: number; porKm: number }):
   return Math.ceil((tarifa.base + tarifa.porKm * km) / 100) * 100;
 }
 
+/**
+ * Lo máximo que paga el cliente por el envío, en pesos. Si el viaje cuesta más,
+ * el kiosco pone la diferencia: el rider siempre cobra el costo completo.
+ * _Provisorio hasta definir la tarifa real._
+ */
+export const TOPE_ENVIO_CLIENTE = 2500;
+
+/** La parte del envío que paga el cliente: el costo real, hasta el tope. */
+export function envioCliente(costoReal: number, tope = TOPE_ENVIO_CLIENTE): number {
+  return Math.min(costoReal, tope);
+}
+
+/** Lo que pone el kiosco para completar el envío del rider (sin propina). */
+export function aporteKioscoEnvio(p: { costoEnvio: number; gananciaRider: number }): number {
+  return Math.max(0, p.gananciaRider - p.costoEnvio);
+}
+
 /** Monto mínimo de productos por pedido, en pesos. Con el 10 % da la comisión mínima. */
 export const PEDIDO_MINIMO = 15_000;
 
