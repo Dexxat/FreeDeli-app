@@ -45,3 +45,11 @@ npx ng serve dev-admin -c api --port 4302    # ingresa con DEV_EMAIL y DEV_CLAVE
 npx ng test shared --watch=false   # y cada app: riders-app, usuarios-app, kioscos-app, dev-admin
 cd backend && npm test && npm run test:e2e
 ```
+
+Pruebas end to end, con las cuatro apps en el navegador contra la API y Postgres (detalle en [e2e/README.md](e2e/README.md)):
+
+```bash
+cd e2e && npm install && npm test
+```
+
+En GitHub corren solas en cada push: [.github/workflows/ci.yml](.github/workflows/ci.yml).

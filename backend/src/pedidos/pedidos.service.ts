@@ -94,34 +94,39 @@ export class PedidosService {
     if (subtotal < PEDIDO_MINIMO) {
       throw new ConflictException({ statusCode: 409, codigo: 'pedido-minimo', message: `El pedido mínimo es de $${PEDIDO_MINIMO.toLocaleString('es-AR')} en productos.` });
     }
-    if (await this.db.pedido.findFirst({ where: { usuarioId, estado: { in: ABIERTOS_DB } } })) {
-      throw new ConflictException({ statusCode: 409, codigo: 'pedido-en-curso', message: 'Ya tenés un pedido en curso.' });
-    }
     if (!dentroDelArea({ lat: usuario.lat, lng: usuario.lng })) {
       throw new ConflictException({ statusCode: 409, codigo: 'fuera-de-cobertura', message: 'Tu dirección está fuera del área donde entrega FreeDeli.' });
     }
     const km = distanciaKm({ lat: kiosco.lat, lng: kiosco.lng }, { lat: usuario.lat, lng: usuario.lng });
     // El rider cobra el viaje completo; el cliente paga hasta el tope y el kiosco pone el resto.
     const viaje = costoEnvio(km, this.reglas.tarifaEnvio);
-    const fila = await this.db.pedido.create({
-      data: {
-        zona: kiosco.zona,
-        kioscoId: kiosco.id,
-        usuarioId,
-        destinoNombre: usuario.nombreCorto,
-        destinoDireccion: usuario.direccion,
-        destinoNotas: usuario.notas,
-        distanciaKm: km,
-        costoEnvio: envioCliente(viaje),
-        gananciaRider: viaje,
-        aliasKiosco: kiosco.aliasCobro,
-        comisionFreeDeli: calcularComision(subtotal, this.reglas.comisionPorcentaje),
-        pin: randomInt(0, 10_000).toString().padStart(4, '0'),
-        estado: EstadoPedido.ESPERANDO,
-        fase: FasePedido.STOCK,
-        items: { create: items },
-      },
-      include: INCLUIR_PEDIDO,
+    // Un pedido abierto por usuario: se bloquea la fila del usuario para que dos pedidos
+    // simultáneos (doble toque, dos pestañas) no pasen los dos el control.
+    const fila = await this.db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Usuario" WHERE id = ${usuarioId} FOR UPDATE`;
+      if (await tx.pedido.findFirst({ where: { usuarioId, estado: { in: ABIERTOS_DB } } })) {
+        throw new ConflictException({ statusCode: 409, codigo: 'pedido-en-curso', message: 'Ya tenés un pedido en curso.' });
+      }
+      return tx.pedido.create({
+        data: {
+          zona: kiosco.zona,
+          kioscoId: kiosco.id,
+          usuarioId,
+          destinoNombre: usuario.nombreCorto,
+          destinoDireccion: usuario.direccion,
+          destinoNotas: usuario.notas,
+          distanciaKm: km,
+          costoEnvio: envioCliente(viaje),
+          gananciaRider: viaje,
+          aliasKiosco: kiosco.aliasCobro,
+          comisionFreeDeli: calcularComision(subtotal, this.reglas.comisionPorcentaje),
+          pin: randomInt(0, 10_000).toString().padStart(4, '0'),
+          estado: EstadoPedido.ESPERANDO,
+          fase: FasePedido.STOCK,
+          items: { create: items },
+        },
+        include: INCLUIR_PEDIDO,
+      });
     });
     const pedido = aDominio(fila);
     this.eventos.emitir({ tipo: 'pedido', pedido });

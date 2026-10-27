@@ -17,6 +17,13 @@ function puertoLibre(): Promise<number> {
 }
 
 export default async function setup(project: TestProject) {
+  // En CI se usa un Postgres de servicio (TEST_DATABASE_URL); en la Mac, uno embebido y descartable.
+  const externa = process.env.TEST_DATABASE_URL;
+  if (externa) {
+    execFileSync('npx', ['prisma', 'migrate', 'deploy'], { env: { ...process.env, DATABASE_URL: externa }, stdio: 'pipe' });
+    project.provide('databaseUrl', externa);
+    return async () => {};
+  }
   const dir = mkdtempSync(join(tmpdir(), 'freedeli-pg-'));
   const port = await puertoLibre();
   const pg = new EmbeddedPostgres({ databaseDir: dir, user: 'test', password: 'test', port, persistent: false, onLog: () => {}, onError: () => {} });

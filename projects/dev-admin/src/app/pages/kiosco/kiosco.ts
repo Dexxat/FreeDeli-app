@@ -65,9 +65,13 @@ export default class Kiosco {
   protected acreditar(montoTexto: string, referencia: string, form: HTMLFormElement): void {
     const k = this.kiosco();
     if (!k) return;
-    const monto = Number(montoTexto.replace(/\D/g, ''));
     this.errorCarga.set(null);
     this.cargaOk.set(null);
+    const monto = montoDeCarga(montoTexto);
+    if (monto === null) {
+      this.errorCarga.set('Ingresá un monto en pesos, mayor a cero. Por ejemplo: 20000 o 20.000.');
+      return;
+    }
     this.api.acreditarSaldo(k.id, monto, referencia).subscribe({
       next: () => {
         this.cargaOk.set(`Se acreditaron $${monto.toLocaleString('es-AR')}.`);
@@ -84,4 +88,15 @@ export default class Kiosco {
     this.enviando.set(true);
     this.api.pausarKiosco(k.id, !k.pausado).subscribe({ next: () => this.enviando.set(false), error: () => this.enviando.set(false) });
   }
+}
+
+/**
+ * "20.000", "$ 20000" → 20000. Cualquier otra cosa (negativos, letras, decimales, cero) → null.
+ * Antes se borraban los caracteres no numéricos y "-500" acreditaba $500.
+ */
+export function montoDeCarga(texto: string): number | null {
+  const limpio = texto.trim().replace(/^\$\s*/, '');
+  if (!/^\d{1,3}(\.\d{3})*$|^\d+$/.test(limpio)) return null;
+  const monto = Number(limpio.replace(/\./g, ''));
+  return monto > 0 ? monto : null;
 }
