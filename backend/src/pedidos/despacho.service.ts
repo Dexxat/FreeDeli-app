@@ -8,6 +8,7 @@ import { EstadoCuenta, EstadoPedido, FasePedido } from '../generated/prisma/enum
 import { EventosService } from '../eventos/eventos.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PedidosService } from './pedidos.service.js';
+import { AvisosRiderService } from '../avisos/avisos-rider.service.js';
 
 /** No se le vuelve a ofrecer el mismo pedido a un rider hasta pasado este tiempo. */
 const ESPERA_REOFERTA_MS = 2 * 60_000;
@@ -29,6 +30,7 @@ export class DespachoService implements OnModuleInit, OnModuleDestroy {
     private readonly pedidos: PedidosService,
     private readonly reglas: ReglasConfig,
     private readonly config: ConfigService,
+    private readonly avisos: AvisosRiderService,
   ) {}
 
   onModuleInit(): void {
@@ -93,7 +95,9 @@ export class DespachoService implements OnModuleInit, OnModuleDestroy {
       });
       return { riderId: rider.id, oferta: { ...armarOferta(aDominio(fila), ahora, this.reglas.segundosOferta), expiraEn } };
     });
-    if (oferta) this.eventos.emitir({ tipo: 'oferta', ...oferta });
+    if (!oferta) return;
+    this.eventos.emitir({ tipo: 'oferta', ...oferta });
+    this.avisos.pedidoNuevo(oferta.riderId, oferta.oferta, this.reglas.segundosOferta);
   }
 
   async ofertaActual(riderId: string): Promise<OfertaPedido | null> {

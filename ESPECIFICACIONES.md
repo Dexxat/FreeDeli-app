@@ -60,12 +60,13 @@ Dentro de MAIN también están:
 2. **Vivo (pedido en curso):** número de pedido, tiempo transcurrido, progreso (Aceptado → Retirado → En camino → Entregado), kiosco de retiro, dirección de entrega con notas, productos, estado del cobro, ganancia del envío. Botones: cómo llegar y WhatsApp de FreeDeli. Para cerrar el pedido, el rider ingresa el **PIN del cliente** (4 dígitos) y toca "Confirmar entrega".
 3. **Historial de pedidos:** filtros Hoy / Semana / Mes, resumen (cantidad y total) y lista con hora, número, kiosco → destino, zona, estado (Entregado / Cancelado) y monto.
 4. **Ganancias:** se ven por jornada, por semana o del mes pasado. Muestra el total, la cantidad de pedidos, el promedio por pedido, las horas online, un gráfico de barras (por hora, por día o por semana) y el desglose (envíos + propinas = total).
-5. **Perfil y configuración:** datos personales (nombre y apellido, DNI, teléfono, email), vehículo (moto y patente), datos de cobro (alias/CBU), preferencias (notificaciones, sonidos 8 bit), contacto por WhatsApp con FreeDeli y cerrar sesión.
+5. **Perfil y configuración:** datos personales (nombre y apellido, DNI, teléfono, email), vehículo (moto y patente), datos de cobro (alias/CBU), preferencias (avisos por WhatsApp, sonidos 8 bit), contacto por WhatsApp con FreeDeli y cerrar sesión.
 
 ### Pedido entrante
 
 - Solo le llegan pedidos al rider que está **ON**, no está pausado y no tiene un pedido en curso.
 - El aviso aparece encima de cualquier sección, con sonido 8 bit (si están activados) y vibración.
+- **Avisos por WhatsApp:** todos los avisos al rider llegan por WhatsApp, también con la app cerrada: pedido nuevo (con el link a la app), el kiosco lo aprobó, el kiosco eligió a otro, y el alta aprobada o rechazada. El rider los puede apagar en su perfil. Por eso el teléfono del rider tiene que ser un celular con WhatsApp.
 - Tiene **30 segundos** para aceptar, con cuenta regresiva.
 - Antes de aceptar ve: kiosco y zona de retiro, la entrega aproximada (calle y altura redondeada, por ejemplo "Conesa al 1800"), la cantidad de productos y su ganancia. La dirección exacta y las notas aparecen al aceptar.
 - Si rechaza o deja vencer el aviso, el pedido pasa a otro rider **sin castigo**: sigue ON.

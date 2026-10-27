@@ -1,7 +1,7 @@
 import { IsEmail, IsIn, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 import { Cumple } from '../comun/validar.js';
 import { ZONAS_API, type ZonaApi } from '../comun/zonas.js';
-import { aliasCbuValido, dniValido, imagenValida, nombreCompletoValido, patenteValida, telefonoValido } from '../dominio.js';
+import { aliasCbuValido, celularValido, dniValido, imagenValida, nombreCompletoValido, patenteValida, telefonoValido } from '../dominio.js';
 
 /** Mensajes de validación compartidos por los formularios de alta y de ajustes. */
 export const MENSAJES = {
@@ -9,6 +9,7 @@ export const MENSAJES = {
   nombre: 'Ingresá tu nombre y apellido.',
   dni: 'DNI inválido.',
   telefono: 'Ingresá un teléfono con código de área.',
+  celular: 'Ingresá tu celular con WhatsApp, con código de área (por ejemplo 11 5555-0142).',
   patente: 'Usá el formato A123BCD o 123ABC.',
   aliasCbu: 'Alias de 6 a 20 caracteres o CBU de 22 dígitos.',
   direccion: 'Ingresá la calle y la altura.',
@@ -79,7 +80,8 @@ export class RegistroRiderDto extends CredencialesDto {
   @Cumple(nombreCompletoValido, MENSAJES.nombre)
   nombre!: string;
 
-  @Cumple(telefonoValido, MENSAJES.telefono)
+  /** Los avisos le llegan por WhatsApp: tiene que ser un celular. */
+  @Cumple(celularValido, MENSAJES.celular)
   telefono!: string;
 
   @Cumple(dniValido, MENSAJES.dni)

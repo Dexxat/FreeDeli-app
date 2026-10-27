@@ -17,10 +17,12 @@ import { DocumentosService } from './rider/documentos.service.js';
 import { SaludController } from './salud.controller.js';
 import { HorarioController } from './horario.controller.js';
 import { UsuarioController } from './usuario/usuario.controller.js';
+import { WhatsappService } from './avisos/whatsapp.service.js';
+import { AvisosRiderService } from './avisos/avisos-rider.service.js';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, EventosModule, AuthModule],
   controllers: [SaludController, HorarioController, CuentasController, UsuarioController, KioscoController, RiderController, AdminController, EventosController],
-  providers: [ReglasConfig, Perfiles, CuentasService, DocumentosService, PedidosService, DespachoService],
+  providers: [ReglasConfig, Perfiles, CuentasService, DocumentosService, PedidosService, DespachoService, WhatsappService, AvisosRiderService],
 })
 export class AppModule {}

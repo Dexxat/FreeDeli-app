@@ -10,6 +10,7 @@ import { geolocalizar } from '../comun/zonas.js';
 import { AprobarRiderDto, CambiosProductoDto, DatosKioscoDto, ProductoDto, StockDto } from '../pedidos/dto.js';
 import { PedidosService } from '../pedidos/pedidos.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { AvisosRiderService } from '../avisos/avisos-rider.service.js';
 
 /** App de Kioscos: pedidos en vivo, flujo y catálogo. */
 @Roles(Rol.KIOSCO)
@@ -20,6 +21,7 @@ export class KioscoController {
     private readonly perfiles: Perfiles,
     private readonly pedidos: PedidosService,
     private readonly reglas: ReglasConfig,
+    private readonly avisos: AvisosRiderService,
   ) {}
 
   @Get()
@@ -50,7 +52,10 @@ export class KioscoController {
 
   @Post('pedidos/:id/aprobar-rider') @HttpCode(200)
   async aprobarRider(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string, @Body() dto: AprobarRiderDto) {
-    return this.pedidos.transicionar(id, await this.propio(s), (p) => aprobarRider(p, dto.aprobado, new Date()));
+    const p = await this.pedidos.transicionar(id, await this.propio(s), (x) => aprobarRider(x, dto.aprobado, new Date()));
+    if (dto.aprobado) this.avisos.pedidoAprobado(p.riderId!, p);
+    else this.avisos.pedidoRechazado(p.ridersRechazados!.at(-1)!, p);
+    return p;
   }
 
   /** "Confirmar envío": el kiosco le entregó el pedido al rider. */
@@ -114,7 +119,7 @@ export class KioscoController {
   @Patch('productos/:id')
   async editarProducto(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string, @Body() dto: CambiosProductoDto) {
     const kioscoId = await this.perfiles.kioscoId(s.sub);
-    const r = await this.db.producto.updateMany({ where: { id, kioscoId }, data: { ...dto, nombre: dto.nombre?.trim() } });
+    const r = await this.db.producto.updateMany({ where: { id, kioscoId }, data: { nombre: dto.nombre?.trim(), precio: dto.precio, disponible: dto.disponible } });
     if (r.count === 0) throw new NotFoundException('No encontramos el producto.');
     return this.db.producto.findUniqueOrThrow({ where: { id } });
   }

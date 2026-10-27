@@ -3,15 +3,13 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { Observable, delay, distinctUntilChanged, map, of, throwError } from 'rxjs';
 import { AdminApi } from '../api/admin.api';
 import { AlertaAdmin, AltaPendiente, MovimientoSaldo, EntregaAdmin, FilaMain, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
-import { ZONAS, ZonaId } from '../models/zona';
-import { Pedido } from '../models/pedido';
-import { codigoPedido } from '../models/pedido';
+import { ZonaId } from '../models/zona';
+import { Pedido, codigoPedido } from '../models/pedido';
 import { PeriodoHistorial } from '../models/rider';
 import { MINUTOS_DEMORA, SALDO_BAJO, movimientoDePedido } from '../rules/admin.rules';
 import { entregaAdmin, filaMain, gananciasAdmin } from '../rules/reportes.rules';
-
 import { COMISION_MINIMA, ESTADOS_ABIERTOS, puedeRecibirPedidos } from '../rules/pedido.rules';
-import { enRango, inicioDelDia, rangoPeriodo, sumarDias } from '../rules/periodos.rules';
+import { enRango, inicioDelDia, rangoPeriodo } from '../rules/periodos.rules';
 import { MockDb } from './mock-db';
 import { LATENCIA_MOCK } from './mock-riders.api';
 import { DocumentosRider, SIN_DOCUMENTOS } from '../rules/documentos.rules';

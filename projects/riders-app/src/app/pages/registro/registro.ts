@@ -14,7 +14,7 @@ import { AuthApi, CampoFoto, RegistroRider, mensajeDeError, normalizarDni, norma
         <h1 class="titulo">QUIERO SER RIDER</h1>
         <p class="texto">Completá tus datos. FreeDeli revisa el alta y te avisa por WhatsApp.</p>
         <label class="campo">Nombre y apellido<input name="nombre" autocomplete="name" [(ngModel)]="datos.nombre" /></label>
-        <label class="campo">Teléfono<input name="telefono" type="tel" autocomplete="tel" [(ngModel)]="datos.telefono" /></label>
+        <label class="campo">Celular con WhatsApp (ahí te avisamos los pedidos)<input name="telefono" type="tel" autocomplete="tel" [(ngModel)]="datos.telefono" /></label>
         <label class="campo">DNI<input name="dni" inputmode="numeric" [(ngModel)]="datos.dni" /></label>
         <label class="campo">Email<input name="email" type="email" autocomplete="email" [(ngModel)]="datos.email" /></label>
         <label class="campo">Contraseña (mínimo 8)<input name="clave" type="password" autocomplete="new-password" [(ngModel)]="datos.clave" /></label>

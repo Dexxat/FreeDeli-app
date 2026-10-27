@@ -1,4 +1,4 @@
-import { aliasCbuValido, dniValido, emailValido, nombreCompletoValido, nombreCorto, normalizarDni, patenteValida, primerNombre, telefonoValido } from './validaciones.rules.js';
+import { aliasCbuValido, dniValido, emailValido, nombreCompletoValido, nombreCorto, normalizarDni, patenteValida, primerNombre, telefonoValido, whatsappArgentina } from './validaciones.rules.js';
 
 describe('validaciones', () => {
   it('email', () => {
@@ -45,5 +45,21 @@ describe('datos personales', () => {
     expect(nombreCorto('Martina Rodríguez')).toBe('Martina R.');
     expect(nombreCorto('martina rodríguez')).toBe('martina R.');
     expect(nombreCorto('Martina')).toBe('Martina');
+  });
+});
+
+describe('whatsappArgentina', () => {
+  it('lleva los celulares al formato de WhatsApp', () => {
+    expect(whatsappArgentina('11 5555-0142')).toBe('5491155550142');
+    expect(whatsappArgentina('+54 9 11 5555-0142')).toBe('5491155550142');
+    expect(whatsappArgentina('011 15 5555-0142')).toBe('5491155550142');
+    expect(whatsappArgentina('(0221) 15 455-1234')).toBe('5492214551234');
+    expect(whatsappArgentina('54 11 5555 0142')).toBe('5491155550142');
+  });
+
+  it('rechaza lo que no es un celular con código de área', () => {
+    expect(whatsappArgentina('5555-0142')).toBeNull();
+    expect(whatsappArgentina('11 5555-01420')).toBeNull();
+    expect(whatsappArgentina('')).toBeNull();
   });
 });

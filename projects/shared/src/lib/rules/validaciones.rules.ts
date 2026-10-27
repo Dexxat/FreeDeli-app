@@ -52,3 +52,27 @@ export function nombreCorto(nombre: string): string {
 export function normalizarPatente(patente: string): string {
   return patente.replace(/\s/g, '').toUpperCase();
 }
+
+/**
+ * Celular argentino en el formato de WhatsApp (549 + área + número, 13 dígitos).
+ * Acepta cómo lo escribe la gente: "11 5555-0142", "+54 9 11 5555-0142", "011 15 5555-0142".
+ * null si no se puede interpretar como un celular con código de área.
+ */
+export function whatsappArgentina(telefono: string): string | null {
+  let d = telefono.replace(/\D/g, '');
+  if (d.startsWith('54')) d = d.slice(2);
+  if (d.startsWith('9')) d = d.slice(1);
+  if (d.startsWith('0')) d = d.slice(1);
+  // El "15" de los celulares va después del código de área (de 2 a 4 dígitos): se saca.
+  if (d.length === 12) {
+    const area = [2, 3, 4].find((n) => d.slice(n, n + 2) === '15');
+    if (area === undefined) return null;
+    d = d.slice(0, area) + d.slice(area + 2);
+  }
+  return /^[1-9]\d{9}$/.test(d) ? `549${d}` : null;
+}
+
+/** Celular argentino al que se le puede escribir por WhatsApp (los riders reciben los avisos así). */
+export function celularValido(telefono: string): boolean {
+  return whatsappArgentina(telefono) !== null;
+}

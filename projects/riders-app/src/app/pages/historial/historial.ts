@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Pedido, PeriodoHistorial, PesosPipe, RidersApi, codigoPedido, nombreZona } from '@freedeli/shared';
-import { map, startWith, switchMap } from 'rxjs';
+import { startWith, switchMap } from 'rxjs';
 
 const PERIODOS: { id: PeriodoHistorial; etiqueta: string }[] = [
   { id: 'hoy', etiqueta: 'HOY' },

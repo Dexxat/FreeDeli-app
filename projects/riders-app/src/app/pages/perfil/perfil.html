@@ -30,7 +30,7 @@
         <label class="campo">
           <span>Teléfono</span>
           <input type="tel" formControlName="telefono" autocomplete="tel" [attr.aria-invalid]="invalido(formDatos.controls.telefono)" />
-          @if (invalido(formDatos.controls.telefono)) { <span class="error">Ingresá un teléfono con código de área.</span> }
+          @if (invalido(formDatos.controls.telefono)) { <span class="error">Ingresá tu celular con WhatsApp, con código de área.</span> }
         </label>
         <label class="campo">
           <span>Email</span>
@@ -111,7 +111,7 @@
     <h2 class="subtitulo">PREFERENCIAS</h2>
     <div class="preferencias">
       <label>
-        Notificaciones de pedidos
+        Avisos por WhatsApp
         <input type="checkbox" [checked]="r.preferencias.notificaciones" (change)="cambiarPreferencia('notificaciones', $any($event.target).checked)" />
       </label>
       <label>

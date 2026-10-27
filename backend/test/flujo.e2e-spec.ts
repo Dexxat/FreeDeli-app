@@ -195,7 +195,7 @@ describe('Flujo completo del pedido', () => {
       api().post(`/api/kiosco/pedidos/${p.id}/stock`).set(auth(kiosco)).send({ faltantes: [] }),
       api().post(`/api/kiosco/pedidos/${p.id}/stock`).set(auth(kiosco)).send({ faltantes: [] }),
     ]);
-    expect([a.status, b.status].sort()).toEqual([200, 409]);
+    expect([a.status, b.status].sort((x, y) => x - y)).toEqual([200, 409]);
     await api().post(`/api/pedidos/${p.id}/cancelar`).set(auth(usuario)).expect(200);
   });
 

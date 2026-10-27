@@ -51,9 +51,12 @@ describe('Inicio (Riders)', () => {
     const ridersAntes = Number(zonas()[0].querySelectorAll('.valor')[1].textContent);
     expect(interruptor().textContent).toContain('OFF');
     interruptor().click();
-    await estable();
-    expect(interruptor().textContent).toContain('ON');
-    expect(interruptor().getAttribute('aria-pressed')).toBe('true');
-    expect(Number(zonas()[0].querySelectorAll('.valor')[1].textContent)).toBe(ridersAntes + 1);
+    // La demanda se vuelve a pedir después del cambio: se espera a que llegue, sin tiempos fijos.
+    await vi.waitFor(async () => {
+      await fixture.whenStable();
+      expect(interruptor().textContent).toContain('ON');
+      expect(interruptor().getAttribute('aria-pressed')).toBe('true');
+      expect(Number(zonas()[0].querySelectorAll('.valor')[1].textContent)).toBe(ridersAntes + 1);
+    });
   });
 });

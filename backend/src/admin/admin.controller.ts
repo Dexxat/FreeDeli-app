@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, NotFoundException, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, NotFoundException, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { Roles } from '../auth/sesion.js';
 import { PERIODOS_ADMIN, periodoDe, zonasDe } from '../comun/consultas.js';
 import { zonaApi } from '../comun/zonas.js';

@@ -2,12 +2,16 @@ import { Controller, Get, HttpCode, NotFoundException, Param, ParseUUIDPipe, Pos
 import { EstadoCuenta, Rol } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { Roles } from '../auth/sesion.js';
+import { AvisosRiderService } from '../avisos/avisos-rider.service.js';
 
 /** Altas de kioscos y riders: se registran solos y el dueño las aprueba desde FreeDeli Dev. */
 @Roles(Rol.DEV)
 @Controller('cuentas')
 export class CuentasController {
-  constructor(private readonly db: PrismaService) {}
+  constructor(
+    private readonly db: PrismaService,
+    private readonly avisos: AvisosRiderService,
+  ) {}
 
   @Get('pendientes')
   pendientes() {
@@ -33,11 +37,18 @@ export class CuentasController {
 
   @Post(':id/aprobar') @HttpCode(200)
   aprobar(@Param('id', ParseUUIDPipe) id: string) {
-    return this.cambiarEstado(id, EstadoCuenta.APROBADA);
+    return this.resolver(id, true);
   }
 
   @Post(':id/rechazar') @HttpCode(200)
   rechazar(@Param('id', ParseUUIDPipe) id: string) {
-    return this.cambiarEstado(id, EstadoCuenta.RECHAZADA);
+    return this.resolver(id, false);
+  }
+
+  /** Aprueba o rechaza el alta. A los riders se les avisa por WhatsApp. */
+  private async resolver(id: string, aprobada: boolean) {
+    const cuenta = await this.cambiarEstado(id, aprobada ? EstadoCuenta.APROBADA : EstadoCuenta.RECHAZADA);
+    if (cuenta.rol === Rol.RIDER) this.avisos.alta(cuenta.id, aprobada);
+    return cuenta;
   }
 }

@@ -3,7 +3,7 @@ import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsEmail, IsIn, IsInt, I
 import { MENSAJES } from '../auth/dto.js';
 import { Cumple } from '../comun/validar.js';
 import { ZONAS_API, type ZonaApi } from '../comun/zonas.js';
-import { aliasCbuValido, dniValido, nombreCompletoValido, patenteValida, telefonoValido } from '../dominio.js';
+import { aliasCbuValido, celularValido, dniValido, nombreCompletoValido, patenteValida } from '../dominio.js';
 
 export class LineaDto {
   @IsUUID() productoId!: string;
@@ -61,7 +61,7 @@ export class PerfilRiderDto {
   @IsOptional() @Cumple(nombreCompletoValido, MENSAJES.nombre) nombre?: string;
   @IsOptional() @Cumple(dniValido, MENSAJES.dni) dni?: string;
   @IsOptional() @IsEmail({}, { message: MENSAJES.email }) email?: string;
-  @IsOptional() @Cumple(telefonoValido, MENSAJES.telefono) telefono?: string;
+  @IsOptional() @Cumple(celularValido, MENSAJES.celular) telefono?: string;
   @IsOptional() @IsString() @MinLength(2) @MaxLength(60) vehiculoModelo?: string;
   @IsOptional() @Cumple(patenteValida, MENSAJES.patente) patente?: string;
   @IsOptional() @Cumple(aliasCbuValido, MENSAJES.aliasCbu) aliasCbu?: string;

@@ -75,9 +75,30 @@ Para restaurar un respaldo:
 gunzip -c respaldos/freedeli-AAAAMMDD-HHMM.sql.gz | docker compose exec -T postgres psql -U freedeli freedeli
 ```
 
+## WhatsApp
+
+Todos los avisos a los riders salen por WhatsApp, con la API oficial de Meta (Cloud API).
+
+1. Crear una app de tipo "Business" en developers.facebook.com y agregarle el producto WhatsApp.
+2. Registrar el número de la empresa que va a mandar los avisos. Tiene que ser un número sin WhatsApp común instalado.
+3. Crear un token permanente de usuario del sistema con permiso `whatsapp_business_messaging`.
+4. Completar en `.env` `WHATSAPP_TOKEN` y `WHATSAPP_NUMERO_ID` (el "Phone number ID" del número, no el número).
+5. En WhatsApp Manager, crear estas plantillas en categoría **Utilidad** e idioma **Español (ARG)**, y esperar a que las aprueben:
+
+| Plantilla | Texto |
+|---|---|
+| `freedeli_pedido_nuevo` | 🛵 Pedido nuevo en {{1}} ({{2}}). Ganás {{3}}. Tenés {{4}} segundos para aceptarlo en la app: {{5}} |
+| `freedeli_pedido_aprobado` | ✅ {{1}} te confirmó el pedido {{2}}. Pasá a retirarlo por {{3}}. |
+| `freedeli_pedido_rechazado` | El kiosco eligió otro rider para el pedido {{1}}. Seguís en línea. |
+| `freedeli_alta_aprobada` | ¡Hola {{1}}! Tu alta de rider en FreeDeli fue aprobada. Entrá a la app y conectate: {{2}} |
+| `freedeli_alta_rechazada` | Hola {{1}}, tu alta de rider en FreeDeli no fue aprobada. Si creés que es un error, respondé este mensaje. |
+
+Sin token, la API sigue funcionando y deja cada aviso en el log. El rider puede apagar los avisos desde su perfil.
+
 ## Pendiente antes de abrir al público
 
 - Definir la tarifa de envío real (`TARIFA_CERCA`, `TARIFA_MEDIA`, `TARIFA_LEJOS`) y el alias de FreeDeli (`ALIAS_FREEDELI`).
 - Dejar `HORARIO_LIBRE=false` para que solo se pida de 00 a 08 hs.
+- Configurar WhatsApp y que Meta apruebe las plantillas (ver arriba).
 - Cargar el WhatsApp real de la empresa en `projects/shared/src/lib/config/freedeli.config.ts`.
 - La ubicación de las direcciones es aproximada (centro de la zona). Para distancias reales hace falta un servicio de mapas.

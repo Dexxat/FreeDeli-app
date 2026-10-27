@@ -41,6 +41,10 @@ services:
       TARIFA_LEJOS: ${TARIFA_LEJOS:-5000}
       ALIAS_FREEDELI: ${ALIAS_FREEDELI:-freedeli.pagos}
       HORARIO_LIBRE: ${HORARIO_LIBRE:-false}
+      # Avisos a los riders por WhatsApp (Cloud API de Meta). Sin token no se envían.
+      WHATSAPP_TOKEN: ${WHATSAPP_TOKEN:-}
+      WHATSAPP_NUMERO_ID: ${WHATSAPP_NUMERO_ID:-}
+      URL_APP_RIDERS: https://riders.${DOMINIO}
       TZ: America/Argentina/Buenos_Aires
 
   web:

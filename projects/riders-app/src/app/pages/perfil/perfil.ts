@@ -12,13 +12,13 @@ import {
   TipoDocumento,
   mensajeDeError,
   aliasCbuValido,
+  celularValido,
   dniValido,
   emailValido,
   linkWhatsApp,
   nombreCompletoValido,
   normalizarPatente,
   patenteValida,
-  telefonoValido,
 } from '@freedeli/shared';
 import { RiderStore } from '../../core/rider.store';
 
@@ -56,7 +56,7 @@ export default class Perfil {
   protected readonly formDatos = this.fb.group({
     nombre: ['', regla(nombreCompletoValido, 'nombre')],
     dni: ['', regla(dniValido, 'dni')],
-    telefono: ['', regla(telefonoValido, 'telefono')],
+    telefono: ['', regla(celularValido, 'telefono')],
     email: ['', regla(emailValido, 'email')],
   });
 
