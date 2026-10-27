@@ -4,7 +4,8 @@ import { Observable, delay, distinctUntilChanged, map, of, throwError } from 'rx
 import { ResultadoCrearPedido, UsuariosApi } from '../api/usuarios.api';
 import { Kiosco, Producto } from '../models/kiosco';
 import { Pedido, cantidadProductos, totalPedido } from '../models/pedido';
-import { DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } from '../models/usuario';
+import { DatosPersonales, DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } from '../models/usuario';
+import { nombreCorto, normalizarDni } from '../rules/validaciones.rules';
 import { ZonaId } from '../models/zona';
 import { ESTADOS_ABIERTOS, PEDIDO_MINIMO, calcularComision, costoEnvio, distanciaKm, envioCliente, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
 import { servicioAbierto } from '../rules/horario.rules';
@@ -58,6 +59,12 @@ export class MockUsuariosApi extends UsuariosApi {
   cambiarDireccion(direccion: DireccionEntrega): Observable<Usuario> {
     const ubicacion = this.db.geolocalizar(direccion.direccion, direccion.zona);
     this.db.usuarios.update((us) => us.map((u) => (u.id === USUARIO_ACTUAL_ID ? { ...u, direccion: { ...direccion, ubicacion } } : u)));
+    return this.responder(this.usuario());
+  }
+
+  actualizarDatos(datos: DatosPersonales): Observable<Usuario> {
+    const limpio = { nombre: datos.nombre.trim(), dni: normalizarDni(datos.dni), email: datos.email.trim().toLowerCase(), telefono: datos.telefono.trim() };
+    this.db.usuarios.update((us) => us.map((u) => (u.id === USUARIO_ACTUAL_ID ? { ...u, ...limpio } : u)));
     return this.responder(this.usuario());
   }
 
@@ -130,7 +137,7 @@ export class MockUsuariosApi extends UsuariosApi {
         kioscoNombre: kiosco.nombre,
         kioscoDireccion: kiosco.direccion,
         usuarioId: u.id,
-        destino: { nombre: u.nombreCorto, direccion: u.direccion.direccion, notas: u.direccion.notas },
+        destino: { nombre: nombreCorto(u.nombre), direccion: u.direccion.direccion, notas: u.direccion.notas },
         items: lineas.map((i) => {
           const prod = catalogo.find((p) => p.id === i.productoId)!;
           return { productoId: prod.id, nombre: prod.nombre, cantidad: i.cantidad, precioUnitario: prod.precio };

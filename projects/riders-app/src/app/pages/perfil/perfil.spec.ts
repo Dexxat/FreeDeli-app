@@ -62,11 +62,23 @@ describe('Perfil (Riders)', () => {
     expect(el.querySelector('form')).toBeNull();
   });
 
-  it('el DNI no es editable', async () => {
+  it('edita nombre, DNI, teléfono y email', async () => {
     el.querySelector<HTMLButtonElement>('[aria-label="Editar datos personales"]')!.click();
     await estable();
-    expect(el.querySelector('input[formcontrolname=dni]')).toBeNull();
-    expect(el.querySelectorAll('form input')).toHaveLength(2);
+    expect(el.querySelectorAll('form input')).toHaveLength(4);
+    escribir('nombre', 'Lucas');
+    escribir('dni', '12');
+    boton('GUARDAR').click();
+    await estable();
+    expect(el.textContent).toContain('Ingresá tu nombre y apellido.');
+    expect(el.textContent).toContain('Ingresá un DNI de 7 u 8 números.');
+
+    escribir('nombre', 'Lucas Romero Díaz');
+    escribir('dni', '38.456.999');
+    boton('GUARDAR').click();
+    await estable();
+    expect(rider()).toMatchObject({ nombre: 'Lucas Romero Díaz', dni: '38456999' });
+    expect(el.querySelector('form')).toBeNull();
   });
 
   it('cambia la preferencia de sonidos', async () => {

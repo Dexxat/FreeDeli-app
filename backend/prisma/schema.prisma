@@ -74,8 +74,9 @@ model Usuario {
   id          String   @id @default(uuid())
   cuentaId    String   @unique
   cuenta      Cuenta   @relation(fields: [cuentaId], references: [id])
+  /// Nombre y apellido.
   nombre      String
-  nombreCorto String
+  dni         String?
   telefono    String
   direccion   String
   notas       String?

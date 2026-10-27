@@ -18,6 +18,16 @@
     @if (editando() === 'datos') {
       <form class="formulario" [formGroup]="formDatos" (ngSubmit)="guardarDatos()" novalidate>
         <label class="campo">
+          <span>Nombre y apellido</span>
+          <input type="text" formControlName="nombre" autocomplete="name" [attr.aria-invalid]="invalido(formDatos.controls.nombre)" />
+          @if (invalido(formDatos.controls.nombre)) { <span class="error">Ingresá tu nombre y apellido.</span> }
+        </label>
+        <label class="campo">
+          <span>DNI</span>
+          <input type="text" formControlName="dni" inputmode="numeric" [attr.aria-invalid]="invalido(formDatos.controls.dni)" />
+          @if (invalido(formDatos.controls.dni)) { <span class="error">Ingresá un DNI de 7 u 8 números.</span> }
+        </label>
+        <label class="campo">
           <span>Teléfono</span>
           <input type="tel" formControlName="telefono" autocomplete="tel" [attr.aria-invalid]="invalido(formDatos.controls.telefono)" />
           @if (invalido(formDatos.controls.telefono)) { <span class="error">Ingresá un teléfono con código de área.</span> }
@@ -27,8 +37,6 @@
           <input type="email" formControlName="email" autocomplete="email" [attr.aria-invalid]="invalido(formDatos.controls.email)" />
           @if (invalido(formDatos.controls.email)) { <span class="error">Ingresá un email válido.</span> }
         </label>
-        <div class="fila-fija"><span>DNI</span><span>{{ r.dni }}</span></div>
-        <p class="sutil">Para cambiar tu nombre o DNI, escribinos por WhatsApp.</p>
         <div class="botones">
           <button type="button" class="secundario" (click)="cancelar()">Cancelar</button>
           <button type="submit" class="primario" [disabled]="store.guardando()">GUARDAR</button>
@@ -36,6 +44,7 @@
       </form>
     } @else {
       <dl class="lista">
+        <div><dt>Nombre</dt><dd>{{ r.nombre }}</dd></div>
         <div><dt>Teléfono</dt><dd>{{ r.telefono }}</dd></div>
         <div><dt>Email</dt><dd>{{ r.email }}</dd></div>
         <div><dt>DNI</dt><dd>{{ r.dni }}</dd></div>

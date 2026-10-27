@@ -1,6 +1,6 @@
 @if (store.usuario(); as u) {
   <section class="bloque">
-    <h1 class="saludo">Hola, {{ u.nombre }}</h1>
+    <h1 class="saludo">Hola, {{ primerNombre(u.nombre) }}</h1>
     @if (!editando()) {
       <div class="direccion">
         <span class="direccion-texto">

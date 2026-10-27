@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { DireccionEntrega, Pedido, SesionService, Usuario, UsuariosApi } from '@freedeli/shared';
-import { catchError, of, switchMap } from 'rxjs';
+import { DatosPersonales, DireccionEntrega, Pedido, SesionService, Usuario, UsuariosApi, mensajeDeError } from '@freedeli/shared';
+import { Observable, catchError, of, switchMap } from 'rxjs';
 
 /** Usuario con sesión iniciada y su pedido en curso. Se recargan al cambiar la sesión. */
 @Injectable({ providedIn: 'root' })
@@ -23,18 +23,27 @@ export class UsuarioStore {
       .subscribe((u) => this.usuario.set(u));
   }
 
-  cambiarDireccion(direccion: DireccionEntrega): Promise<boolean> {
+  cambiarDireccion(direccion: DireccionEntrega): Promise<string | null> {
+    return this.guardar(this.api.cambiarDireccion(direccion));
+  }
+
+  actualizarDatos(datos: DatosPersonales): Promise<string | null> {
+    return this.guardar(this.api.actualizarDatos(datos));
+  }
+
+  /** Guarda y actualiza el usuario. Devuelve null si salió bien, o el mensaje de error. */
+  private guardar(cambio: Observable<Usuario>): Promise<string | null> {
     this.guardando.set(true);
     return new Promise((resolver) =>
-      this.api.cambiarDireccion(direccion).subscribe({
+      cambio.subscribe({
         next: (u) => {
           this.usuario.set(u);
           this.guardando.set(false);
-          resolver(true);
+          resolver(null);
         },
-        error: () => {
+        error: (e: unknown) => {
           this.guardando.set(false);
-          resolver(false);
+          resolver(mensajeDeError(e));
         },
       }),
     );

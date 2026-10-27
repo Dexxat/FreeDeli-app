@@ -33,7 +33,7 @@ export async function armarEscenario(app: INestApplication, sufijo: string) {
   await api().patch('/api/rider/estado').set(auth(rider)).send({ disponible: true, zonas: ['san-miguel'] }).expect(200);
 
   const usuario = (
-    await api().post('/api/auth/registro/usuario').send({ email: `u-${sufijo}@test.local`, clave: 'claveUsuario1', nombre: 'Martina Rodríguez', telefono: '11 5555-0199', direccion: 'Belgrano 845', zona: 'san-miguel' }).expect(201)
+    await api().post('/api/auth/registro/usuario').send({ email: `u-${sufijo}@test.local`, clave: 'claveUsuario1', nombre: 'Martina Rodríguez', dni: '40111444', telefono: '11 5555-0199', direccion: 'Belgrano 845', zona: 'san-miguel' }).expect(201)
   ).body.token as string;
 
   /** Hace un pedido de 6 Coca-Cola y lo lleva hasta Entregado. */

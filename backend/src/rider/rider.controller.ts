@@ -1,9 +1,10 @@
-import { Body, ConflictException, Controller, ForbiddenException, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { PERIODOS_HISTORIAL, PERIODOS_RIDER, periodoDe } from '../comun/consultas.js';
 import { Roles, SesionActual, type Sesion } from '../auth/sesion.js';
 import { Perfiles } from '../comun/perfiles.js';
+import { CuentasService } from '../cuentas/cuentas.service.js';
 import { ZONAS_API, zonaApi, zonaDb } from '../comun/zonas.js';
-import { confirmarRetiro, entregarConPin, inicioDelDia, rangoPeriodo, resumirGanancias, salirEnCamino } from '../dominio.js';
+import { confirmarRetiro, entregarConPin, inicioDelDia, normalizarDni, normalizarPatente, rangoPeriodo, resumirGanancias, salirEnCamino } from '../dominio.js';
 import { EstadoCuenta, EstadoPedido, FasePedido, Rol } from '../generated/prisma/enums.js';
 import { DespachoService } from '../pedidos/despacho.service.js';
 import { EstadoRiderDto, PerfilRiderDto, PinDto } from '../pedidos/dto.js';
@@ -17,6 +18,7 @@ export class RiderController {
   constructor(
     private readonly db: PrismaService,
     private readonly perfiles: Perfiles,
+    private readonly cuentas: CuentasService,
     private readonly pedidos: PedidosService,
     private readonly despacho: DespachoService,
   ) {}
@@ -52,13 +54,18 @@ export class RiderController {
 
   @Patch('perfil')
   async editarPerfil(@SesionActual() s: Sesion, @Body() dto: PerfilRiderDto) {
-    const { email, ...resto } = dto;
-    if (email) {
-      const otra = await this.db.cuenta.findUnique({ where: { email: email.toLowerCase() } });
-      if (otra && otra.id !== s.sub) throw new ConflictException('Ya hay una cuenta con ese email.');
-      await this.db.cuenta.update({ where: { id: s.sub }, data: { email: email.toLowerCase() } });
-    }
-    await this.db.rider.update({ where: { cuentaId: s.sub }, data: { ...resto, patente: resto.patente?.toUpperCase() } });
+    const { email, nombre, dni, patente, telefono, ...resto } = dto;
+    if (email) await this.cuentas.cambiarEmail(s.sub, email);
+    await this.db.rider.update({
+      where: { cuentaId: s.sub },
+      data: {
+        ...resto,
+        nombre: nombre?.trim().replace(/\s+/g, ' '),
+        dni: dni && normalizarDni(dni),
+        patente: patente && normalizarPatente(patente),
+        telefono: telefono?.trim(),
+      },
+    });
     return this.perfil(s);
   }
 

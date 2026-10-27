@@ -1,8 +1,22 @@
 import { IsEmail, IsIn, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { Cumple } from '../comun/validar.js';
 import { ZONAS_API, type ZonaApi } from '../comun/zonas.js';
+import { aliasCbuValido, dniValido, nombreCompletoValido, patenteValida, telefonoValido } from '../dominio.js';
+
+/** Mensajes de validación compartidos por los formularios de alta y de ajustes. */
+export const MENSAJES = {
+  email: 'Ingresá un email válido.',
+  nombre: 'Ingresá tu nombre y apellido.',
+  dni: 'DNI inválido.',
+  telefono: 'Ingresá un teléfono con código de área.',
+  patente: 'Usá el formato A123BCD o 123ABC.',
+  aliasCbu: 'Alias de 6 a 20 caracteres o CBU de 22 dígitos.',
+  direccion: 'Ingresá la calle y la altura.',
+  zona: 'Zona inválida.',
+} as const;
 
 export class CredencialesDto {
-  @IsEmail({}, { message: 'Ingresá un email válido.' })
+  @IsEmail({}, { message: MENSAJES.email })
   email!: string;
 
   @IsString()
@@ -11,23 +25,38 @@ export class CredencialesDto {
   clave!: string;
 }
 
-const TELEFONO = /^[\d\s\-+()]{10,20}$/;
-const ALIAS_O_CBU = /^(\d{22}|[A-Za-z0-9.-]{6,20})$/;
-
-export class RegistroUsuarioDto extends CredencialesDto {
-  @IsString() @MinLength(2) @MaxLength(60)
+/** Datos personales de usuarios y riders: en el alta y en Ajustes. */
+export class DatosPersonalesDto {
+  @Cumple(nombreCompletoValido, MENSAJES.nombre)
   nombre!: string;
 
-  @Matches(TELEFONO, { message: 'Ingresá un teléfono con código de área.' })
+  @Cumple(dniValido, MENSAJES.dni)
+  dni!: string;
+
+  @IsEmail({}, { message: MENSAJES.email })
+  email!: string;
+
+  @Cumple(telefonoValido, MENSAJES.telefono)
+  telefono!: string;
+}
+
+export class RegistroUsuarioDto extends CredencialesDto {
+  @Cumple(nombreCompletoValido, MENSAJES.nombre)
+  nombre!: string;
+
+  @Cumple(dniValido, MENSAJES.dni)
+  dni!: string;
+
+  @Cumple(telefonoValido, MENSAJES.telefono)
   telefono!: string;
 
-  @IsString() @Matches(/\d/, { message: 'Ingresá la calle y la altura.' }) @MaxLength(120)
+  @IsString() @Matches(/\d/, { message: MENSAJES.direccion }) @MaxLength(120)
   direccion!: string;
 
   @IsOptional() @IsString() @MaxLength(120)
   notas?: string;
 
-  @IsIn(ZONAS_API, { message: 'Zona inválida.' })
+  @IsIn(ZONAS_API, { message: MENSAJES.zona })
   zona!: ZonaApi;
 }
 
@@ -35,32 +64,32 @@ export class RegistroKioscoDto extends CredencialesDto {
   @IsString() @MinLength(3) @MaxLength(60)
   nombre!: string;
 
-  @IsString() @Matches(/\d/, { message: 'Ingresá la calle y la altura.' }) @MaxLength(120)
+  @IsString() @Matches(/\d/, { message: MENSAJES.direccion }) @MaxLength(120)
   direccion!: string;
 
-  @IsIn(ZONAS_API, { message: 'Zona inválida.' })
+  @IsIn(ZONAS_API, { message: MENSAJES.zona })
   zona!: ZonaApi;
 
-  @Matches(ALIAS_O_CBU, { message: 'Alias de 6 a 20 caracteres o CBU de 22 dígitos.' })
+  @Cumple(aliasCbuValido, MENSAJES.aliasCbu)
   aliasCobro!: string;
 }
 
 export class RegistroRiderDto extends CredencialesDto {
-  @IsString() @MinLength(3) @MaxLength(60)
+  @Cumple(nombreCompletoValido, MENSAJES.nombre)
   nombre!: string;
 
-  @Matches(TELEFONO, { message: 'Ingresá un teléfono con código de área.' })
+  @Cumple(telefonoValido, MENSAJES.telefono)
   telefono!: string;
 
-  @Matches(/^[\d.]{7,10}$/, { message: 'DNI inválido.' })
+  @Cumple(dniValido, MENSAJES.dni)
   dni!: string;
 
   @IsString() @MinLength(2) @MaxLength(60)
   vehiculoModelo!: string;
 
-  @Matches(/^(\d{3}[A-Za-z]{3}|[A-Za-z]\d{3}[A-Za-z]{3})$/, { message: 'Usá el formato A123BCD o 123ABC.' })
+  @Cumple(patenteValida, MENSAJES.patente)
   patente!: string;
 
-  @Matches(ALIAS_O_CBU, { message: 'Alias de 6 a 20 caracteres o CBU de 22 dígitos.' })
+  @Cumple(aliasCbuValido, MENSAJES.aliasCbu)
   aliasCbu!: string;
 }

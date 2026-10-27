@@ -40,6 +40,16 @@ describe('MockUsuariosApi', () => {
     expect(muniz.map((k) => k.id)).toEqual(['k3']);
   });
 
+  it('actualiza los datos personales y el rider ve el nombre corto', async () => {
+    configurar();
+    const u = await firstValueFrom(api.actualizarDatos({ nombre: ' Martina Gómez ', dni: '40.111.333', email: 'MARTINA@nuevo.com', telefono: '11 5555-0000' }));
+    expect(u).toMatchObject({ nombre: 'Martina Gómez', dni: '40111333', email: 'martina@nuevo.com', telefono: '11 5555-0000' });
+    sinPedidoAbierto();
+    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
+    if (!r.ok) throw new Error('no se creó');
+    expect(r.pedido.destino.nombre).toBe('Martina G.');
+  });
+
   it('el usuario tiene un pedido en curso en el seed', async () => {
     configurar();
     expect(await firstValueFrom(api.pedidoEnCurso())).toMatchObject({ estado: 'retirado', usuarioId: USUARIO_ACTUAL_ID });

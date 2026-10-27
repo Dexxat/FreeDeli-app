@@ -1,10 +1,12 @@
 import { Body, Controller, Get, HttpCode, NotFoundException, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { DireccionDto } from './dto.js';
+import { DatosPersonalesDto } from '../auth/dto.js';
+import { CuentasService } from '../cuentas/cuentas.service.js';
 import { Roles, SesionActual, type Sesion } from '../auth/sesion.js';
 import { Perfiles } from '../comun/perfiles.js';
 import { ReglasConfig } from '../comun/reglas.config.js';
 import { ZONAS_API, geolocalizar, zonaApi, zonaDb, type ZonaApi } from '../comun/zonas.js';
-import { aceptarAjuste, cancelarPorCliente, costoEnvio, distanciaKm, envioCliente, puedeRecibirPedidos } from '../dominio.js';
+import { aceptarAjuste, cancelarPorCliente, costoEnvio, distanciaKm, envioCliente, normalizarDni, puedeRecibirPedidos } from '../dominio.js';
 import { EstadoCuenta, EstadoPedido, Rol } from '../generated/prisma/enums.js';
 import { PedidosService } from '../pedidos/pedidos.service.js';
 import { NuevoPedidoDto } from '../pedidos/dto.js';
@@ -17,6 +19,7 @@ export class UsuarioController {
   constructor(
     private readonly db: PrismaService,
     private readonly perfiles: Perfiles,
+    private readonly cuentas: CuentasService,
     private readonly pedidos: PedidosService,
     private readonly reglas: ReglasConfig,
   ) {}
@@ -27,11 +30,21 @@ export class UsuarioController {
     return {
       id: u.id,
       nombre: u.nombre,
-      nombreCorto: u.nombreCorto,
+      dni: u.dni ?? '',
       telefono: u.telefono,
       email: u.cuenta.email,
       direccion: { direccion: u.direccion, notas: u.notas ?? undefined, zona: zonaApi(u.zona), ubicacion: { lat: u.lat, lng: u.lng } },
     };
+  }
+
+  @Patch('usuario/datos')
+  async cambiarDatos(@SesionActual() s: Sesion, @Body() dto: DatosPersonalesDto) {
+    await this.cuentas.cambiarEmail(s.sub, dto.email);
+    await this.db.usuario.update({
+      where: { cuentaId: s.sub },
+      data: { nombre: dto.nombre.trim().replace(/\s+/g, ' '), dni: normalizarDni(dto.dni), telefono: dto.telefono.trim() },
+    });
+    return this.perfil(s);
   }
 
   @Patch('usuario/direccion')

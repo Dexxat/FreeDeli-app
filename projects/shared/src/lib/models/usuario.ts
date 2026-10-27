@@ -9,14 +9,17 @@ export interface DireccionEntrega {
   ubicacion?: Ubicacion;
 }
 
-export interface Usuario {
-  id: string;
-  /** Nombre para el saludo, por ejemplo "Martina". */
+/** Datos personales que el usuario edita en Ajustes. */
+export interface DatosPersonales {
+  /** Nombre y apellido, por ejemplo "Martina Rodríguez". */
   nombre: string;
-  /** Nombre corto que ve el rider, por ejemplo "Martina R.". */
-  nombreCorto: string;
-  telefono: string;
+  dni: string;
   email: string;
+  telefono: string;
+}
+
+export interface Usuario extends DatosPersonales {
+  id: string;
   direccion: DireccionEntrega;
 }
 

@@ -110,7 +110,7 @@ export class Api {
     const email = `usuario-${id}@e2e.local`;
     const clave = 'claveUsuario1';
     const { token } = await this.llamar<{ token: string }>('POST', '/auth/registro/usuario', {
-      email, clave, nombre: 'Martina Rodríguez', telefono: '11 5555-0199', direccion: opciones.direccion ?? 'Belgrano 845', zona: opciones.zona ?? 'san-miguel',
+      email, clave, nombre: 'Martina Rodríguez', dni: '40111222', telefono: '11 5555-0199', direccion: opciones.direccion ?? 'Belgrano 845', zona: opciones.zona ?? 'san-miguel',
     });
     return { email, clave, token };
   }

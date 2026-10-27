@@ -59,7 +59,7 @@ Dentro de MAIN también están:
 2. **Vivo (pedido en curso):** número de pedido, tiempo transcurrido, progreso (Aceptado → Retirado → En camino → Entregado), kiosco de retiro, dirección de entrega con notas, productos, estado del cobro, ganancia del envío. Botones: cómo llegar y WhatsApp de FreeDeli. Para cerrar el pedido, el rider ingresa el **PIN del cliente** (4 dígitos) y toca "Confirmar entrega".
 3. **Historial de pedidos:** filtros Hoy / Semana / Mes, resumen (cantidad y total) y lista con hora, número, kiosco → destino, zona, estado (Entregado / Cancelado) y monto.
 4. **Ganancias:** se ven por jornada, por semana o del mes pasado. Muestra el total, la cantidad de pedidos, el promedio por pedido, las horas online, un gráfico de barras (por hora, por día o por semana) y el desglose (envíos + propinas = total).
-5. **Perfil y configuración:** datos personales (teléfono, email, DNI), vehículo (moto y patente), datos de cobro (alias/CBU), preferencias (notificaciones, sonidos 8 bit), contacto por WhatsApp con FreeDeli y cerrar sesión.
+5. **Perfil y configuración:** datos personales (nombre y apellido, DNI, teléfono, email), vehículo (moto y patente), datos de cobro (alias/CBU), preferencias (notificaciones, sonidos 8 bit), contacto por WhatsApp con FreeDeli y cerrar sesión.
 
 ### Pedido entrante
 
@@ -72,8 +72,7 @@ Dentro de MAIN también están:
 
 ### Perfil: qué puede editar el rider
 
-- Puede editar teléfono, email, moto, patente y alias/CBU.
-- Nombre y DNI quedan fijos: se cambian escribiendo al WhatsApp de FreeDeli.
+- Puede editar nombre y apellido, DNI, teléfono, email, moto, patente y alias/CBU.
 - No puede cerrar sesión con un pedido en curso.
 
 Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
@@ -88,7 +87,7 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 - **Comisión de FreeDeli:** de lo que cobra el kiosco, como mínimo **$1.500** por pedido van al alias de la empresa. Se descuentan directamente del pago del cliente.
 - **Quién retiene:** el cliente transfiere al alias del kiosco. El kiosco retiene el dinero hasta que el rider ingresa el PIN.
 - **Al ingresar el PIN:** el kiosco le transfiere el costo de envío al rider y la comisión a FreeDeli.
-- **Envío dividido:** el rider siempre cobra el costo completo del viaje. El cliente paga ese costo hasta un tope de **$2.500**. Si el viaje cuesta más, el kiosco pone la diferencia. _El tope es provisorio._
+- **Envío dividido:** el rider siempre cobra el costo completo del viaje. El cliente paga ese costo hasta un tope de **$2.500**. Si el viaje cuesta más, el kiosco pone la diferencia.
 - **Por qué el kiosco pone la diferencia:** de madrugada FreeDeli le acerca ventas que de otra forma no tendría.
 - **Comisión:** el 10 % del subtotal de productos, nunca menos de $1.500.
 - **Pedido mínimo:** $15.000 en productos. Con el 10 % da justo la comisión mínima de $1.500.
@@ -98,7 +97,7 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
   - Menos de 1,5 km: $3.000.
   - De 1,5 a 3 km: $4.000.
   - Más de 3 km: $5.000.
-  - _Montos provisorios._ Con el tope de $2.500 para el cliente, el kiosco pone entre $500 y $2.500 por pedido.
+  - _Montos de los anillos provisorios._ Con el tope de $2.500 para el cliente, el kiosco pone entre $500 y $2.500 por pedido.
 - **Área de cobertura:** FreeDeli entrega solo dentro del rombo entre San Miguel, Muñiz y Bella Vista. Afuera no se entrega, también porque son zonas menos seguras para los riders. Una dirección fuera del área no puede pedir. Las esquinas son:
   - Norte, terminal de ómnibus San Miguel: -34.532705, -58.701625.
   - Este, Av. Pres. Illia y Moine: -34.554047, -58.672300.
@@ -157,6 +156,8 @@ La acción principal es **PEDIR**: es el botón más grande de la pantalla de in
 
 El usuario puede tener un solo pedido abierto. Mientras tenga uno en curso, PEDIR lo lleva al seguimiento.
 
-Navegación inferior: Inicio · Pedir · Mi pedido · Ajustes. _Pendiente: definir la pantalla de Ajustes (el diseño ya la incluye)._
+Navegación inferior: Inicio · Pedir · Mi pedido · Ajustes.
+
+**Ajustes:** nombre y apellido, DNI, email y teléfono, y cerrar sesión. El DNI se pide también al crear la cuenta.
 
 Diseño de referencia: canvas, página "App Usuario".

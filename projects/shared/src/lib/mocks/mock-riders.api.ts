@@ -6,6 +6,7 @@ import { PeriodoGanancias, PeriodoHistorial, ResumenGanancias, Rider } from '../
 import { DemandaZona, ZonaId } from '../models/zona';
 import { resumirGanancias } from '../rules/ganancias.rules';
 import { enRango, rangoPeriodo } from '../rules/periodos.rules';
+import { normalizarDni } from '../rules/validaciones.rules';
 import { MockDb, RIDER_ACTUAL_ID } from './mock-db';
 
 /** Latencia simulada de red, en ms. En tests conviene 0. */
@@ -44,7 +45,7 @@ export class MockRidersApi extends RidersApi {
   }
 
   actualizarPerfil(cambios: CambiosPerfilRider): Observable<Rider> {
-    return this.actualizar(cambios);
+    return this.actualizar({ ...cambios, ...(cambios.dni && { dni: normalizarDni(cambios.dni) }) });
   }
 
   demanda(): Observable<DemandaZona[]> {

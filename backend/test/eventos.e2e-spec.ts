@@ -60,7 +60,7 @@ describe('Eventos en tiempo real (SSE)', () => {
     const prod = (await api().post('/api/kiosco/productos').set(auth(kiosco)).send({ nombre: 'Fernet 750 ml', precio: 9000 })).body;
 
     const registrar = async (email: string) =>
-      (await api().post('/api/auth/registro/usuario').send({ email, clave: 'claveUsuario1', nombre: 'Ana P', telefono: '11 5555-0101', direccion: 'Pringles 210', zona: 'muniz' }).expect(201)).body.token;
+      (await api().post('/api/auth/registro/usuario').send({ email, clave: 'claveUsuario1', nombre: 'Ana Pérez', dni: '40111333', telefono: '11 5555-0101', direccion: 'Pringles 210', zona: 'muniz' }).expect(201)).body.token;
     const ana = await registrar('ana@sse.local');
     const otro = await registrar('otro@sse.local');
     const pedido = (await api().post('/api/pedidos').set(auth(ana)).send({ kioscoId, items: [{ productoId: prod.id, cantidad: 2 }] }).expect(201)).body;

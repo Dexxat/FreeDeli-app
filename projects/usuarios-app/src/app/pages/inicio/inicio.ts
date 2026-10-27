@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { BarraEstado, PesosPipe, UsuariosApi, ZONAS, ZonaId, codigoPedido, nombreZona } from '@freedeli/shared';
+import { BarraEstado, PesosPipe, UsuariosApi, ZONAS, ZonaId, codigoPedido, nombreZona, primerNombre } from '@freedeli/shared';
 import { UsuarioStore } from '../../core/usuario.store';
 import { fechaRelativa } from '../../core/fechas';
 import { AvisoHorario } from '../../ui/aviso-horario';
@@ -23,6 +23,7 @@ export default class Inicio {
 
   protected readonly zonas = ZONAS;
   protected readonly zona = nombreZona;
+  protected readonly primerNombre = primerNombre;
   protected readonly codigo = codigoPedido;
   protected readonly fecha = fechaRelativa;
 
@@ -62,11 +63,11 @@ export default class Inicio {
       this.errorDireccion.set(true);
       return;
     }
-    const ok = await this.store.cambiarDireccion({
+    const error = await this.store.cambiarDireccion({
       direccion: this.direccion.trim(),
       notas: this.notas.trim() || undefined,
       zona: this.zonaElegida,
     });
-    if (ok) this.editando.set(false);
+    if (!error) this.editando.set(false);
   }
 }

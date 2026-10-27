@@ -15,7 +15,7 @@ export default class Registro {
   private readonly router = inject(Router);
 
   protected readonly zonas = ZONAS;
-  protected datos: RegistroUsuario = { nombre: '', telefono: '', email: '', clave: '', direccion: '', notas: '', zona: 'san-miguel' };
+  protected datos: RegistroUsuario = { nombre: '', dni: '', telefono: '', email: '', clave: '', direccion: '', notas: '', zona: 'san-miguel' };
   protected readonly enviando = signal(false);
   protected readonly error = signal<string | null>(null);
 

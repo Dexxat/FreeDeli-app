@@ -6,8 +6,11 @@ import {
   FREEDELI_CONFIG,
   PedidosApi,
   aliasCbuValido,
+  dniValido,
   emailValido,
   linkWhatsApp,
+  nombreCompletoValido,
+  normalizarPatente,
   patenteValida,
   telefonoValido,
 } from '@freedeli/shared';
@@ -40,6 +43,8 @@ export default class Perfil {
   protected readonly enviado = signal(false);
 
   protected readonly formDatos = this.fb.group({
+    nombre: ['', regla(nombreCompletoValido, 'nombre')],
+    dni: ['', regla(dniValido, 'dni')],
     telefono: ['', regla(telefonoValido, 'telefono')],
     email: ['', regla(emailValido, 'email')],
   });
@@ -64,7 +69,7 @@ export default class Perfil {
     if (!r) return;
     this.enviado.set(false);
     if (seccion === 'datos') {
-      this.formDatos.reset({ telefono: r.telefono, email: r.email });
+      this.formDatos.reset({ nombre: r.nombre, dni: r.dni, telefono: r.telefono, email: r.email });
     } else {
       this.formVehiculo.reset({ modelo: r.vehiculo.modelo, patente: r.vehiculo.patente, aliasCbu: r.cobro.aliasCbu });
     }
@@ -78,8 +83,8 @@ export default class Perfil {
   protected async guardarDatos(): Promise<void> {
     this.enviado.set(true);
     if (this.formDatos.invalid) return;
-    const { telefono, email } = this.formDatos.getRawValue();
-    if (await this.store.actualizarPerfil({ telefono: telefono.trim(), email: email.trim() })) this.editando.set(null);
+    const { nombre, dni, telefono, email } = this.formDatos.getRawValue();
+    if (await this.store.actualizarPerfil({ nombre: nombre.trim(), dni, telefono: telefono.trim(), email: email.trim() })) this.editando.set(null);
   }
 
   protected async guardarVehiculo(): Promise<void> {
@@ -87,7 +92,7 @@ export default class Perfil {
     if (this.formVehiculo.invalid) return;
     const { modelo, patente, aliasCbu } = this.formVehiculo.getRawValue();
     const ok = await this.store.actualizarPerfil({
-      vehiculo: { modelo: modelo.trim(), patente: patente.replace(/\s/g, '').toUpperCase() },
+      vehiculo: { modelo: modelo.trim(), patente: normalizarPatente(patente) },
       cobro: { aliasCbu: aliasCbu.trim() },
     });
     if (ok) this.editando.set(null);

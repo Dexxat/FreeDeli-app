@@ -2,6 +2,7 @@ import { ConflictException, Injectable, Logger, OnApplicationBootstrap, Unauthor
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { geolocalizar, zonaDb } from '../comun/zonas.js';
+import { normalizarDni, normalizarPatente } from '../dominio.js';
 import { EstadoCuenta, Rol } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { hashearClave, verificarClave } from './clave.js';
@@ -53,7 +54,6 @@ export class AuthService implements OnApplicationBootstrap {
     const email = dto.email.toLowerCase();
     await this.emailLibre(email);
     const { lat, lng } = geolocalizar(dto.direccion, dto.zona);
-    const [nombre, apellido] = dto.nombre.trim().split(/\s+/);
     const cuenta = await this.db.cuenta.create({
       data: {
         email,
@@ -62,9 +62,9 @@ export class AuthService implements OnApplicationBootstrap {
         estado: EstadoCuenta.APROBADA,
         usuario: {
           create: {
-            nombre,
-            nombreCorto: apellido ? `${nombre} ${apellido[0]}.` : nombre,
-            telefono: dto.telefono,
+            nombre: dto.nombre.trim().replace(/\s+/g, ' '),
+            dni: normalizarDni(dto.dni),
+            telefono: dto.telefono.trim(),
             direccion: dto.direccion.trim(),
             notas: dto.notas?.trim() || null,
             zona: zonaDb(dto.zona),
@@ -107,11 +107,11 @@ export class AuthService implements OnApplicationBootstrap {
         estado: EstadoCuenta.PENDIENTE,
         rider: {
           create: {
-            nombre: dto.nombre.trim(),
-            telefono: dto.telefono,
-            dni: dto.dni,
+            nombre: dto.nombre.trim().replace(/\s+/g, ' '),
+            telefono: dto.telefono.trim(),
+            dni: normalizarDni(dto.dni),
             vehiculoModelo: dto.vehiculoModelo.trim(),
-            patente: dto.patente.toUpperCase(),
+            patente: normalizarPatente(dto.patente),
             aliasCbu: dto.aliasCbu,
             zonas: [],
           },

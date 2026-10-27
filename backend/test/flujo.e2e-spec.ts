@@ -57,7 +57,7 @@ describe('Flujo completo del pedido', () => {
     usuario = (
       await api()
         .post('/api/auth/registro/usuario')
-        .send({ email: 'u@flujo.local', clave: 'claveUsuario1', nombre: 'Martina R', telefono: '11 5555-0199', direccion: 'Belgrano 845', zona: 'san-miguel' })
+        .send({ email: 'u@flujo.local', clave: 'claveUsuario1', nombre: 'Martina Rodríguez', dni: '40111222', telefono: '11 5555-0199', direccion: 'Belgrano 845', zona: 'san-miguel' })
         .expect(201)
     ).body.token;
   });

@@ -63,8 +63,8 @@ export class MockDb {
   readonly usuarios = signal<Usuario[]>([
     {
       id: USUARIO_ACTUAL_ID,
-      nombre: 'Martina',
-      nombreCorto: 'Martina R.',
+      nombre: 'Martina Rodríguez',
+      dni: '40111222',
       telefono: '+54 9 11 5555-0199',
       email: 'martina@example.com',
       direccion: { direccion: 'Belgrano 845', notas: 'Depto 2B, tocar timbre', zona: 'san-miguel', ubicacion: { lat: -34.543, lng: -58.701 } },

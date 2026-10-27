@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { Perfiles } from './comun/perfiles.js';
 import { ReglasConfig } from './comun/reglas.config.js';
 import { CuentasController } from './cuentas/cuentas.controller.js';
+import { CuentasService } from './cuentas/cuentas.service.js';
 import { EventosController } from './eventos/eventos.controller.js';
 import { EventosModule } from './eventos/eventos.module.js';
 import { KioscoController } from './kiosco/kiosco.controller.js';
@@ -19,6 +20,6 @@ import { UsuarioController } from './usuario/usuario.controller.js';
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, EventosModule, AuthModule],
   controllers: [SaludController, HorarioController, CuentasController, UsuarioController, KioscoController, RiderController, AdminController, EventosController],
-  providers: [ReglasConfig, Perfiles, PedidosService, DespachoService],
+  providers: [ReglasConfig, Perfiles, CuentasService, PedidosService, DespachoService],
 })
 export class AppModule {}

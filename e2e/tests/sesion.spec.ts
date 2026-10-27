@@ -9,6 +9,7 @@ test.describe('cuentas y sesiones', () => {
     await usuario.getByRole('link', { name: 'Crear cuenta' }).click();
     const email = `nuevo-${unico()}@e2e.local`;
     await usuario.locator('input[name=nombre]').fill('Sofía Gómez');
+    await usuario.locator('input[name=dni]').fill('40.111.999');
     await usuario.locator('input[name=telefono]').fill('11 5555-0111');
     await usuario.locator('input[name=email]').fill(email);
     await usuario.locator('input[name=clave]').fill('claveUsuario1');
@@ -22,6 +23,31 @@ test.describe('cuentas y sesiones', () => {
     // La sesión sobrevive a recargar la página.
     await usuario.reload();
     await expect(usuario.getByText('Hola, Sofía')).toBeVisible();
+  });
+
+  test('el usuario edita sus datos en Ajustes y entra con el email nuevo', async ({ api, abrir }) => {
+    const u = await api.usuario();
+    const usuario = await abrir('usuarios');
+    await ingresar(usuario, u.email, u.clave, /\/inicio$/);
+    await usuario.goto(`${urlApp('usuarios')}/ajustes`);
+    const nombre = usuario.getByLabel('Nombre y apellido');
+    await expect(nombre).toHaveValue('Martina Rodríguez');
+    await expect(usuario.getByLabel('DNI')).toHaveValue('40111222');
+    await nombre.fill('Martina Gómez');
+    const nuevoEmail = `cambiado-${unico()}@e2e.local`;
+    await usuario.getByLabel('Email').fill(nuevoEmail);
+    await boton(usuario, 'GUARDAR').click();
+    await expect(usuario.getByText('Datos guardados.')).toBeVisible();
+
+    // El email de otra cuenta no se puede tomar.
+    const otro = await api.usuario();
+    await usuario.getByLabel('Email').fill(otro.email);
+    await boton(usuario, 'GUARDAR').click();
+    await expect(usuario.getByRole('alert')).toHaveText('Ya hay una cuenta con ese email.');
+
+    await boton(usuario, 'Cerrar sesión').click();
+    await ingresar(usuario, nuevoEmail, u.clave, /\/inicio$/);
+    await expect(usuario.getByText('Hola, Martina')).toBeVisible();
   });
 
   test('errores al ingresar', async ({ api, abrir }) => {

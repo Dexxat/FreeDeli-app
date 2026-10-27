@@ -3,7 +3,7 @@ import { DemandaZona, ZonaId } from '../models/zona';
 import { Pedido } from '../models/pedido';
 import { PeriodoGanancias, PeriodoHistorial, ResumenGanancias, Rider } from '../models/rider';
 
-export type CambiosPerfilRider = Partial<Pick<Rider, 'telefono' | 'email' | 'vehiculo' | 'cobro' | 'preferencias'>>;
+export type CambiosPerfilRider = Partial<Pick<Rider, 'nombre' | 'dni' | 'telefono' | 'email' | 'vehiculo' | 'cobro' | 'preferencias'>>;
 
 /** Operaciones del rider que tiene la sesión iniciada. */
 export abstract class RidersApi {

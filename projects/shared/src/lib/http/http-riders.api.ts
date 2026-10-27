@@ -35,6 +35,8 @@ export class HttpRidersApi extends RidersApi {
   actualizarPerfil(c: CambiosPerfilRider): Observable<Rider> {
     return this.http
       .patch<RiderJson>(`${this.url}/rider/perfil`, {
+        nombre: c.nombre,
+        dni: c.dni,
         email: c.email,
         telefono: c.telefono,
         vehiculoModelo: c.vehiculo?.modelo,

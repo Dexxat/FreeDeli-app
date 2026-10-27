@@ -1,0 +1,32 @@
+<h1 class="titulo">AJUSTES</h1>
+
+<form class="formulario" [formGroup]="form" (ngSubmit)="guardar()" novalidate aria-labelledby="titulo-datos">
+  <h2 id="titulo-datos" class="subtitulo">DATOS PERSONALES</h2>
+  <label class="campo">
+    <span>Nombre y apellido</span>
+    <input formControlName="nombre" autocomplete="name" [attr.aria-invalid]="invalido(form.controls.nombre)" />
+    @if (invalido(form.controls.nombre)) { <span class="error">Ingresá tu nombre y apellido.</span> }
+  </label>
+  <label class="campo">
+    <span>DNI</span>
+    <input formControlName="dni" inputmode="numeric" [attr.aria-invalid]="invalido(form.controls.dni)" />
+    @if (invalido(form.controls.dni)) { <span class="error">Ingresá un DNI de 7 u 8 números.</span> }
+  </label>
+  <label class="campo">
+    <span>Email</span>
+    <input type="email" formControlName="email" autocomplete="email" [attr.aria-invalid]="invalido(form.controls.email)" />
+    @if (invalido(form.controls.email)) { <span class="error">Ingresá un email válido.</span> }
+  </label>
+  <label class="campo">
+    <span>Teléfono</span>
+    <input type="tel" formControlName="telefono" autocomplete="tel" [attr.aria-invalid]="invalido(form.controls.telefono)" />
+    @if (invalido(form.controls.telefono)) { <span class="error">Ingresá un teléfono con código de área.</span> }
+  </label>
+  @if (error(); as e) { <p class="aviso" role="alert">{{ e }}</p> }
+  @if (guardado()) { <p class="ok" role="status">Datos guardados.</p> }
+  <button type="submit" class="primario" [disabled]="store.guardando()">GUARDAR</button>
+</form>
+
+@if (conApi) {
+  <button type="button" class="salir" (click)="salir()">Cerrar sesión</button>
+}

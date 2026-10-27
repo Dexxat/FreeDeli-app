@@ -18,10 +18,23 @@ describe('Perfiles, reportes y panel Dev', () => {
 
   it('usuario: perfil y cambio de dirección', async () => {
     const perfil = (await e.api().get('/api/usuario/perfil').set(auth(e.usuario)).expect(200)).body;
-    expect(perfil).toMatchObject({ nombre: 'Martina', nombreCorto: 'Martina R.', direccion: { direccion: 'Belgrano 845', zona: 'san-miguel' } });
+    expect(perfil).toMatchObject({ nombre: 'Martina Rodríguez', dni: '40111444', direccion: { direccion: 'Belgrano 845', zona: 'san-miguel' } });
     const nuevo = (await e.api().patch('/api/usuario/direccion').set(auth(e.usuario)).send({ direccion: 'Paunero 1500', notas: 'PB', zona: 'muniz' }).expect(200)).body;
     expect(nuevo.direccion).toMatchObject({ direccion: 'Paunero 1500', notas: 'PB', zona: 'muniz' });
     await e.api().patch('/api/usuario/direccion').set(auth(e.usuario)).send({ direccion: 'Sin altura', zona: 'muniz' }).expect(400);
+  });
+
+  it('usuario: edita nombre, DNI, email y teléfono', async () => {
+    const datos = { nombre: 'Martina  Gómez', dni: '40.222.333', email: 'Martina.Gomez@Test.local', telefono: '11 5555-0000' };
+    const r = (await e.api().patch('/api/usuario/datos').set(auth(e.usuario)).send(datos).expect(200)).body;
+    expect(r).toMatchObject({ nombre: 'Martina Gómez', dni: '40222333', email: 'martina.gomez@test.local', telefono: '11 5555-0000' });
+    // Sigue entrando con el email nuevo.
+    await e.api().post('/api/auth/ingresar').send({ email: 'martina.gomez@test.local', clave: 'claveUsuario1' }).expect(200);
+    // El email de otra cuenta no se puede usar.
+    const otra = (await e.api().get('/api/rider').set(auth(e.rider)).expect(200)).body.email;
+    await e.api().patch('/api/usuario/datos').set(auth(e.usuario)).send({ ...datos, email: otra }).expect(409);
+    const malo = await e.api().patch('/api/usuario/datos').set(auth(e.usuario)).send({ ...datos, nombre: 'Martina', dni: '12' }).expect(400);
+    expect(malo.body.message).toEqual(expect.arrayContaining(['Ingresá tu nombre y apellido.', 'DNI inválido.']));
   });
 
   it('rider: historial, ganancias, demanda y perfil', async () => {
@@ -35,8 +48,8 @@ describe('Perfiles, reportes y panel Dev', () => {
     const demanda = (await e.api().get('/api/rider/demanda').set(auth(e.rider)).expect(200)).body;
     // Otros archivos de test dejan riders conectados en la misma base: al menos este.
     expect(demanda.find((d: { zona: string }) => d.zona === 'san-miguel').ridersActivos).toBeGreaterThanOrEqual(1);
-    const perfil = (await e.api().patch('/api/rider/perfil').set(auth(e.rider)).send({ patente: 'b456cde', sonidos8bit: false, email: 'lucas-nuevo@test.local' }).expect(200)).body;
-    expect(perfil).toMatchObject({ vehiculo: { patente: 'B456CDE' }, preferencias: { sonidos8bit: false }, email: 'lucas-nuevo@test.local' });
+    const perfil = (await e.api().patch('/api/rider/perfil').set(auth(e.rider)).send({ patente: 'b 456 cde', sonidos8bit: false, email: 'lucas-nuevo@test.local', nombre: 'Lucas  Romero', dni: '38.456.123' }).expect(200)).body;
+    expect(perfil).toMatchObject({ nombre: 'Lucas Romero', dni: '38456123', vehiculo: { patente: 'B456CDE' }, preferencias: { sonidos8bit: false }, email: 'lucas-nuevo@test.local' });
     await e.api().patch('/api/rider/perfil').set(auth(e.rider)).send({ email: 'dev@test.local' }).expect(409);
   });
 

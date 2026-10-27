@@ -8,7 +8,9 @@ import { Cuenta, RespuestaSesion, SesionService } from './sesion';
 export interface RegistroUsuario {
   email: string;
   clave: string;
+  /** Nombre y apellido. */
   nombre: string;
+  dni: string;
   telefono: string;
   direccion: string;
   notas?: string;

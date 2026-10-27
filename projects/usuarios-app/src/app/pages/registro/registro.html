@@ -2,6 +2,7 @@
   <form class="caja" (ngSubmit)="crear()" novalidate>
     <h1 class="titulo">CREAR CUENTA</h1>
     <label class="campo">Nombre y apellido<input name="nombre" autocomplete="name" [(ngModel)]="datos.nombre" /></label>
+    <label class="campo">DNI<input name="dni" inputmode="numeric" [(ngModel)]="datos.dni" /></label>
     <label class="campo">Teléfono<input name="telefono" type="tel" autocomplete="tel" [(ngModel)]="datos.telefono" /></label>
     <label class="campo">Email<input name="email" type="email" autocomplete="email" [(ngModel)]="datos.email" /></label>
     <label class="campo">Contraseña (mínimo 8)<input name="clave" type="password" autocomplete="new-password" [(ngModel)]="datos.clave" /></label>

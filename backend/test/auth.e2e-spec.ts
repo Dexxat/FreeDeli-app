@@ -17,6 +17,7 @@ describe('Auth y altas', () => {
     email: 'martina@test.local',
     clave: 'claveSegura1',
     nombre: 'Martina Rodríguez',
+    dni: '40.111.555',
     telefono: '+54 9 11 5555-0199',
     direccion: 'Belgrano 845',
     notas: 'Depto 2B',

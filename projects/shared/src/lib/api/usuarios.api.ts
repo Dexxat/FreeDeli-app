@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { Kiosco, Producto } from '../models/kiosco';
 import { Pedido } from '../models/pedido';
-import { DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } from '../models/usuario';
+import { DatosPersonales, DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } from '../models/usuario';
 import { ZonaId } from '../models/zona';
 
 export type ResultadoCrearPedido =
@@ -12,7 +12,9 @@ export type ResultadoCrearPedido =
 export abstract class UsuariosApi {
   abstract perfil(): Observable<Usuario>;
   abstract cambiarDireccion(direccion: DireccionEntrega): Observable<Usuario>;
-  /** Kioscos abiertos y no pausados. Sin zona, todos. */
+  /** Falla con el mensaje del servidor si el email ya es de otra cuenta. */
+  abstract actualizarDatos(datos: DatosPersonales): Observable<Usuario>;
+  /** Kioscos que reciben pedidos ahora. Sin zona, todos. */
   abstract kioscosAbiertos(zona?: ZonaId): Observable<Kiosco[]>;
   abstract kiosco(id: string): Observable<Kiosco | null>;
   abstract productos(kioscoId: string): Observable<Producto[]>;

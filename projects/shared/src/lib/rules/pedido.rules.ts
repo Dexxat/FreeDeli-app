@@ -77,7 +77,6 @@ export function costoEnvio(km: number, tarifa: { cerca: number; media: number; l
 /**
  * Lo máximo que paga el cliente por el envío, en pesos. Si el viaje cuesta más,
  * el kiosco pone la diferencia: el rider siempre cobra el costo completo.
- * _Provisorio hasta definir la tarifa real._
  */
 export const TOPE_ENVIO_CLIENTE = 2500;
 

@@ -1,6 +1,9 @@
 import { Type } from 'class-transformer';
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength, ValidateNested } from 'class-validator';
+import { MENSAJES } from '../auth/dto.js';
+import { Cumple } from '../comun/validar.js';
 import { ZONAS_API, type ZonaApi } from '../comun/zonas.js';
+import { aliasCbuValido, dniValido, nombreCompletoValido, patenteValida, telefonoValido } from '../dominio.js';
 
 export class LineaDto {
   @IsUUID() productoId!: string;
@@ -53,12 +56,15 @@ export class PausaDto {
   @IsBoolean() pausado!: boolean;
 }
 
+/** Cambios del perfil del rider: cada sección de Ajustes manda solo lo suyo. */
 export class PerfilRiderDto {
-  @IsOptional() @IsEmail({}, { message: 'Ingresá un email válido.' }) email?: string;
-  @IsOptional() @Matches(/^[\d\s\-+()]{10,20}$/, { message: 'Ingresá un teléfono con código de área.' }) telefono?: string;
+  @IsOptional() @Cumple(nombreCompletoValido, MENSAJES.nombre) nombre?: string;
+  @IsOptional() @Cumple(dniValido, MENSAJES.dni) dni?: string;
+  @IsOptional() @IsEmail({}, { message: MENSAJES.email }) email?: string;
+  @IsOptional() @Cumple(telefonoValido, MENSAJES.telefono) telefono?: string;
   @IsOptional() @IsString() @MinLength(2) @MaxLength(60) vehiculoModelo?: string;
-  @IsOptional() @Matches(/^(\d{3}[A-Za-z]{3}|[A-Za-z]\d{3}[A-Za-z]{3})$/, { message: 'Usá el formato A123BCD o 123ABC.' }) patente?: string;
-  @IsOptional() @Matches(/^(\d{22}|[A-Za-z0-9.-]{6,20})$/, { message: 'Alias de 6 a 20 caracteres o CBU de 22 dígitos.' }) aliasCbu?: string;
+  @IsOptional() @Cumple(patenteValida, MENSAJES.patente) patente?: string;
+  @IsOptional() @Cumple(aliasCbuValido, MENSAJES.aliasCbu) aliasCbu?: string;
   @IsOptional() @IsBoolean() notificaciones?: boolean;
   @IsOptional() @IsBoolean() sonidos8bit?: boolean;
 }

@@ -4,7 +4,7 @@ import { Observable, catchError, distinctUntilChanged, filter, map, merge, of, s
 import { ResultadoCrearPedido, UsuariosApi } from '../api/usuarios.api.js';
 import { Kiosco, Producto } from '../models/kiosco.js';
 import { Pedido, cantidadProductos, totalPedido } from '../models/pedido.js';
-import { DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } from '../models/usuario.js';
+import { DatosPersonales, DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } from '../models/usuario.js';
 import { ZonaId } from '../models/zona.js';
 import { ESTADOS_ABIERTOS } from '../rules/pedido.rules.js';
 import { API_URL } from './api-url';
@@ -27,6 +27,10 @@ export class HttpUsuariosApi extends UsuariosApi {
 
   cambiarDireccion(d: DireccionEntrega): Observable<Usuario> {
     return this.http.patch<Usuario>(`${this.url}/usuario/direccion`, { direccion: d.direccion, notas: d.notas, zona: d.zona });
+  }
+
+  actualizarDatos(datos: DatosPersonales): Observable<Usuario> {
+    return this.http.patch<Usuario>(`${this.url}/usuario/datos`, datos);
   }
 
   kioscosAbiertos(zona?: ZonaId): Observable<Kiosco[]> {
