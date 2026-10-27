@@ -5,9 +5,10 @@ import { Rider } from '../models/rider';
 import { Usuario } from '../models/usuario';
 import { Conflicto, MovimientoSaldo } from '../models/admin';
 import { codigoPedido } from '../models/pedido';
-import { CENTRO_ZONA, DemandaZona, Ubicacion, ZONAS, ZonaId } from '../models/zona';
+import { DemandaZona, Ubicacion, ZONAS, ZonaId } from '../models/zona';
 import { PEDIDO_MINIMO, calcularComision, costoEnvio, envioCliente, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
 import { TARIFA_ENVIO_PROVISORIA } from '../config/freedeli.config';
+import { geolocalizarProvisorio } from '../rules/cobertura.rules';
 
 /** Generador pseudoaleatorio con semilla, para que los datos simulados sean siempre los mismos. */
 function crearRandom(semilla: number): () => number {
@@ -26,11 +27,11 @@ export const USUARIO_ACTUAL_ID = 'u1';
 export const KIOSCO_ACTUAL_ID = 'k1';
 
 const KIOSCOS: Kiosco[] = [
-  { id: 'k1', nombre: 'Kiosco El Faro', zona: 'san-miguel', direccion: 'Av. Pres. Perón 1420', ubicacion: { lat: -34.5405, lng: -58.712 }, abierto: true, pausado: false, saldo: 48000, tiempoEstimadoMin: 25, costoEnvio: 0, aliasCobro: 'elfaro.kiosco' },
-  { id: 'k2', nombre: 'Maxikiosco 24', zona: 'san-miguel', direccion: 'Belgrano 980', ubicacion: { lat: -34.5452, lng: -58.7085 }, abierto: true, pausado: false, saldo: 12500, tiempoEstimadoMin: 20, costoEnvio: 0, aliasCobro: 'maxi24.sm' },
-  { id: 'k3', nombre: 'Kiosco La Estación', zona: 'muniz', direccion: 'Av. Ricchieri 455', ubicacion: { lat: -34.5478, lng: -58.699 }, abierto: true, pausado: false, saldo: 30200, tiempoEstimadoMin: 30, costoEnvio: 0, aliasCobro: 'laestacion.muniz' },
-  { id: 'k4', nombre: 'Drugstore Bella', zona: 'bella-vista', direccion: 'Senador Morón 1210', ubicacion: { lat: -34.5611, lng: -58.6912 }, abierto: true, pausado: false, saldo: 61000, tiempoEstimadoMin: 35, costoEnvio: 0, aliasCobro: 'drugstore.bella' },
-  { id: 'k5', nombre: 'Kiosco Pixel', zona: 'bella-vista', direccion: 'Av. Gaspar Campos 3300', ubicacion: { lat: -34.565, lng: -58.686 }, abierto: false, pausado: false, saldo: 5000, tiempoEstimadoMin: 30, costoEnvio: 0, aliasCobro: 'kiosco.pixel' },
+  { id: 'k1', nombre: 'Kiosco El Faro', zona: 'san-miguel', direccion: 'Av. Pres. Perón 1420', ubicacion: { lat: -34.5475, lng: -58.7125 }, abierto: true, pausado: false, saldo: 48000, tiempoEstimadoMin: 25, costoEnvio: 0, aliasCobro: 'elfaro.kiosco' },
+  { id: 'k2', nombre: 'Maxikiosco 24', zona: 'san-miguel', direccion: 'Belgrano 980', ubicacion: { lat: -34.551, lng: -58.716 }, abierto: true, pausado: false, saldo: 12500, tiempoEstimadoMin: 20, costoEnvio: 0, aliasCobro: 'maxi24.sm' },
+  { id: 'k3', nombre: 'Kiosco La Estación', zona: 'muniz', direccion: 'Av. Ricchieri 455', ubicacion: { lat: -34.5565, lng: -58.711 }, abierto: true, pausado: false, saldo: 30200, tiempoEstimadoMin: 30, costoEnvio: 0, aliasCobro: 'laestacion.muniz' },
+  { id: 'k4', nombre: 'Drugstore Bella', zona: 'bella-vista', direccion: 'Senador Morón 1210', ubicacion: { lat: -34.5629, lng: -58.6932 }, abierto: true, pausado: false, saldo: 61000, tiempoEstimadoMin: 35, costoEnvio: 0, aliasCobro: 'drugstore.bella' },
+  { id: 'k5', nombre: 'Kiosco Pixel', zona: 'bella-vista', direccion: 'Av. Gaspar Campos 3300', ubicacion: { lat: -34.57, lng: -58.702 }, abierto: false, pausado: false, saldo: 5000, tiempoEstimadoMin: 30, costoEnvio: 0, aliasCobro: 'kiosco.pixel' },
 ];
 
 const PRODUCTOS = [
@@ -66,7 +67,7 @@ export class MockDb {
       nombreCorto: 'Martina R.',
       telefono: '+54 9 11 5555-0199',
       email: 'martina@example.com',
-      direccion: { direccion: 'Belgrano 845', notas: 'Depto 2B, tocar timbre', zona: 'san-miguel', ubicacion: { lat: -34.5447, lng: -58.7101 } },
+      direccion: { direccion: 'Belgrano 845', notas: 'Depto 2B, tocar timbre', zona: 'san-miguel', ubicacion: { lat: -34.5495, lng: -58.714 } },
     },
   ]);
   readonly riders = signal<Rider[]>([
@@ -110,11 +111,7 @@ export class MockDb {
    * El backend real usará un servicio de mapas.
    */
   geolocalizar(direccion: string, zona: ZonaId): Ubicacion {
-    let h = 0;
-    for (const c of direccion) h = (h * 31 + c.charCodeAt(0)) | 0;
-    const desvio = (n: number) => (((n % 1000) + 1000) % 1000) / 1000 - 0.5;
-    const centro = CENTRO_ZONA[zona];
-    return { lat: centro.lat + desvio(h) * 0.02, lng: centro.lng + desvio(h >> 10) * 0.02 };
+    return geolocalizarProvisorio(direccion, zona);
   }
 
   readonly movimientosSaldo = signal<MovimientoSaldo[]>([]);

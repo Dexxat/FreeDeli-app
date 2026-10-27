@@ -1,6 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { DespachoService } from '../src/pedidos/despacho.service.js';
+import { PrismaService } from '../src/prisma/prisma.service.js';
 import { crearApp } from './app.js';
 
 describe('Flujo completo del pedido', () => {
@@ -69,8 +70,8 @@ describe('Flujo completo del pedido', () => {
     const ks = await api().get('/api/kioscos?zona=san-miguel').set(auth(usuario)).expect(200);
     const k = ks.body.find((x: { id: string }) => x.id === kioscoId);
     expect(k).toMatchObject({ nombre: 'Kiosco Flujo', zona: 'san-miguel', abierto: true });
-    expect(k.costoEnvio).toBeGreaterThanOrEqual(1000);
-    expect(k.costoEnvio).toBeLessThanOrEqual(2500);
+    // El viaje más barato ($3.000) ya supera el tope: el cliente paga $2.500.
+    expect(k.costoEnvio).toBe(2500);
     expect(k.saldo).toBeUndefined();
     productos = (await api().get(`/api/kioscos/${kioscoId}/productos`).set(auth(usuario)).expect(200)).body;
     expect(productos.map((p) => p.nombre)).toEqual(['Coca-Cola 1,5 L', 'Hielo 2 kg']);
@@ -100,6 +101,20 @@ describe('Flujo completo del pedido', () => {
     }
   });
 
+  it('no toma pedidos para direcciones fuera del área de cobertura', async () => {
+    const coca = productos.find((p) => p.precio === 2800)!;
+    const db = app.get(PrismaService);
+    const donde = { cuenta: { email: 'u@flujo.local' } };
+    const antes = await db.usuario.findFirstOrThrow({ where: donde });
+    await db.usuario.update({ where: { id: antes.id }, data: { lat: -34.52, lng: -58.71 } }); // al norte de San Miguel
+    try {
+      const r = await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }] }).expect(409);
+      expect(r.body).toMatchObject({ codigo: 'fuera-de-cobertura' });
+    } finally {
+      await db.usuario.update({ where: { id: antes.id }, data: { lat: antes.lat, lng: antes.lng } });
+    }
+  });
+
   it('recorre todo el flujo hasta Entregado', async () => {
     const coca = productos.find((p) => p.precio === 2800)!;
     const hielo = productos.find((p) => p.precio === 1500)!;
@@ -112,7 +127,8 @@ describe('Flujo completo del pedido', () => {
     expect(p).toMatchObject({ estado: 'esperando', fase: 'stock', pago: 'pendiente', comisionFreeDeli: 1980 });
     expect(p.pin).toMatch(/^\d{4}$/);
     // El rider cobra el viaje completo; el cliente paga hasta $2.500.
-    expect(p.costoEnvio).toBe(Math.min(p.gananciaRider, 2500));
+    expect(p.costoEnvio).toBe(2500);
+    expect([3000, 4000, 5000]).toContain(p.gananciaRider);
     await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }] }).expect(409);
 
     // Kiosco: no tiene hielo. Se ajusta y el cliente acepta.

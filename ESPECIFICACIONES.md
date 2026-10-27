@@ -95,7 +95,12 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 - **Pedido mínimo:** $15.000 en productos. Con el 10 % da justo la comisión mínima de $1.500.
 - **Saldo prepago del kiosco:** el kiosco carga crédito en FreeDeli. Al liberarse cada pago, la comisión se descuenta de ese saldo. Si no le alcanza para la comisión mínima, no recibe pedidos.
 - **Horario:** FreeDeli toma pedidos de **00 a 08 hs**, hora de Argentina. Fuera de ese horario la app de usuarios avisa que está cerrado y no deja pedir.
-- **Costo de envío:** base + un valor por km de distancia entre el kiosco y la entrega, redondeado a $100 para arriba. _Pendiente: definir los montos._ Por ahora se usan valores provisorios: $1.000 de base y $400 por km.
+- **Costo de envío por anillos:** lo que cobra el rider es un monto fijo según la distancia en línea recta entre el kiosco y la entrega. De madrugada no hay tráfico, así que no se mide el tiempo ni se usan APIs de mapas pagas.
+  - Menos de 1,5 km: $3.000.
+  - De 1,5 a 3 km: $4.000.
+  - Más de 3 km: $5.000.
+  - _Montos provisorios._ Con el tope de $2.500 para el cliente, el kiosco pone entre $500 y $2.500 por pedido.
+- **Área de cobertura:** FreeDeli entrega solo dentro del rombo entre San Miguel, Muñiz y Bella Vista: estación San Miguel al norte, hacia la estación Bella Vista al este, hacia Av. Gaspar Campos al sur y hacia Gral. Las Heras al oeste. Una dirección fuera del área no puede pedir. _Las esquinas son aproximadas y hay que ajustarlas con las coordenadas reales._
 
 ---
 

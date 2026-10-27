@@ -8,6 +8,7 @@ import { DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } 
 import { ZonaId } from '../models/zona';
 import { ESTADOS_ABIERTOS, PEDIDO_MINIMO, calcularComision, costoEnvio, distanciaKm, envioCliente, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
 import { servicioAbierto } from '../rules/horario.rules';
+import { dentroDelArea } from '../rules/cobertura.rules';
 import { FREEDELI_CONFIG, HORARIO_LIBRE } from '../config/freedeli.config';
 import { MockDb, USUARIO_ACTUAL_ID } from './mock-db';
 import { Resultado, aceptarAjuste, cancelarPorCliente } from '../rules/flujo.rules';
@@ -60,11 +61,15 @@ export class MockUsuariosApi extends UsuariosApi {
     return this.responder(this.usuario());
   }
 
+  /** Dónde entregar: la ubicación de la dirección del usuario. */
+  private destino() {
+    const u = this.usuario();
+    return u.direccion.ubicacion ?? this.db.geolocalizar(u.direccion.direccion, u.direccion.zona);
+  }
+
   /** Costo real del viaje desde el kiosco hasta la dirección del usuario. */
   private viaje(k: Kiosco): { km: number; costo: number } {
-    const u = this.usuario();
-    const destino = u.direccion.ubicacion ?? this.db.geolocalizar(u.direccion.direccion, u.direccion.zona);
-    const km = distanciaKm(k.ubicacion, destino);
+    const km = distanciaKm(k.ubicacion, this.destino());
     return { km, costo: costoEnvio(km, this.config.tarifaEnvio) };
   }
 
@@ -102,6 +107,8 @@ export class MockUsuariosApi extends UsuariosApi {
     const subtotal = lineas.reduce((a, i) => a + i.cantidad * (catalogo.find((p) => p.id === i.productoId)?.precio ?? 0), 0);
     if (!this.horarioLibre && !servicioAbierto(new Date())) {
       resultado = { ok: false, motivo: 'fuera-de-horario' };
+    } else if (!dentroDelArea(this.destino())) {
+      resultado = { ok: false, motivo: 'fuera-de-cobertura' };
     } else if (!kiosco || !puedeRecibirPedidos(kiosco)) {
       resultado = { ok: false, motivo: 'kiosco-cerrado' };
     } else if (lineas.length === 0) {

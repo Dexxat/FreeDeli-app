@@ -78,7 +78,7 @@ Los días se cuentan en la hora local del servidor: correrlo con `TZ=America/Arg
 
 Las ofertas se dan a un rider por vez, al que hace más tiempo que no recibe una, con 30 segundos para responder. Si vence o la rechaza, pasa al siguiente.
 
-Variables opcionales: `COMISION_PORCENTAJE` (10), `TARIFA_BASE` (1000), `TARIFA_POR_KM` (400), `ALIAS_FREEDELI`, `SEGUNDOS_OFERTA` (30), `DESPACHO_AUTOMATICO` (true), `HORARIO_LIBRE` (false: solo se pide de 00 a 08 hs; true para desarrollo y pruebas).
+Variables opcionales: `COMISION_PORCENTAJE` (10), `TARIFA_CERCA` (3000), `TARIFA_MEDIA` (4000), `TARIFA_LEJOS` (5000), `ALIAS_FREEDELI`, `SEGUNDOS_OFERTA` (30), `DESPACHO_AUTOMATICO` (true), `HORARIO_LIBRE` (false: solo se pide de 00 a 08 hs; true para desarrollo y pruebas).
 
 ## Producción
 

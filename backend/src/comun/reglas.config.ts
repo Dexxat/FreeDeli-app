@@ -10,8 +10,13 @@ export class ReglasConfig {
     return Number(this.config.get('COMISION_PORCENTAJE') ?? 10);
   }
 
-  get tarifaEnvio(): { base: number; porKm: number } {
-    return { base: Number(this.config.get('TARIFA_BASE') ?? 1000), porKm: Number(this.config.get('TARIFA_POR_KM') ?? 400) };
+  /** Lo que cobra el rider por anillo: menos de 1,5 km, de 1,5 a 3 km, y más de 3 km. */
+  get tarifaEnvio(): { cerca: number; media: number; lejos: number } {
+    return {
+      cerca: Number(this.config.get('TARIFA_CERCA') ?? 3000),
+      media: Number(this.config.get('TARIFA_MEDIA') ?? 4000),
+      lejos: Number(this.config.get('TARIFA_LEJOS') ?? 5000),
+    };
   }
 
   get aliasFreeDeli(): string {

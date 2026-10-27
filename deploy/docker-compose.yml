@@ -36,8 +36,9 @@ services:
       DEV_CLAVE: ${DEV_CLAVE:?Definí DEV_CLAVE en deploy/.env}
       CORS_ORIGENES: https://${DOMINIO},https://kioscos.${DOMINIO},https://riders.${DOMINIO},https://dev.${DOMINIO}
       COMISION_PORCENTAJE: ${COMISION_PORCENTAJE:-10}
-      TARIFA_BASE: ${TARIFA_BASE:-1000}
-      TARIFA_POR_KM: ${TARIFA_POR_KM:-400}
+      TARIFA_CERCA: ${TARIFA_CERCA:-3000}
+      TARIFA_MEDIA: ${TARIFA_MEDIA:-4000}
+      TARIFA_LEJOS: ${TARIFA_LEJOS:-5000}
       ALIAS_FREEDELI: ${ALIAS_FREEDELI:-freedeli.pagos}
       HORARIO_LIBRE: ${HORARIO_LIBRE:-false}
       TZ: America/Argentina/Buenos_Aires

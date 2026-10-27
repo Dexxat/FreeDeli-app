@@ -6,7 +6,7 @@ import { ZonaId } from '../models/zona';
 
 export type ResultadoCrearPedido =
   | { ok: true; pedido: Pedido }
-  | { ok: false; motivo: 'kiosco-cerrado' | 'sin-productos' | 'producto-inexistente' | 'pedido-minimo' | 'pedido-en-curso' | 'fuera-de-horario' };
+  | { ok: false; motivo: 'kiosco-cerrado' | 'sin-productos' | 'producto-inexistente' | 'pedido-minimo' | 'pedido-en-curso' | 'fuera-de-horario' | 'fuera-de-cobertura' };
 
 /** Operaciones del usuario con sesión iniciada (app FreeDeli). */
 export abstract class UsuariosApi {

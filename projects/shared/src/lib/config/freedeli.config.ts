@@ -5,19 +5,21 @@ export interface FreeDeliConfig {
   whatsapp: string;
   /** Porcentaje del subtotal de productos que cobra FreeDeli. La comisión nunca baja de COMISION_MINIMA. */
   comisionPorcentaje: number;
-  /** Costo de envío = base + porKm × distancia, redondeado a $100 para arriba. */
+  /** Lo que cobra el rider según el anillo de distancia (ver ANILLOS_KM). */
   tarifaEnvio: TarifaEnvio;
   /** Alias de FreeDeli al que los kioscos transfieren para cargar saldo. */
   aliasFreeDeli: string;
 }
 
+/** Monto fijo por anillo: menos de 1,5 km, de 1,5 a 3 km, y más de 3 km. */
 export interface TarifaEnvio {
-  base: number;
-  porKm: number;
+  cerca: number;
+  media: number;
+  lejos: number;
 }
 
 /** Valores provisorios hasta definir la tarifa real. */
-export const TARIFA_ENVIO_PROVISORIA: TarifaEnvio = { base: 1000, porKm: 400 };
+export const TARIFA_ENVIO_PROVISORIA: TarifaEnvio = { cerca: 3000, media: 4000, lejos: 5000 };
 
 /** Valores por defecto. Reemplazar el WhatsApp por el real con provideFreeDeliConfig(). */
 export const FREEDELI_CONFIG = new InjectionToken<FreeDeliConfig>('FREEDELI_CONFIG', {

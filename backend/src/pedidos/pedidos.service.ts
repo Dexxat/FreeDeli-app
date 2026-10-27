@@ -8,6 +8,7 @@ import {
   PEDIDO_MINIMO,
   calcularComision,
   costoEnvio,
+  dentroDelArea,
   distanciaKm,
   envioCliente,
   puedeRecibirPedidos,
@@ -95,6 +96,9 @@ export class PedidosService {
     }
     if (await this.db.pedido.findFirst({ where: { usuarioId, estado: { in: ABIERTOS_DB } } })) {
       throw new ConflictException({ statusCode: 409, codigo: 'pedido-en-curso', message: 'Ya tenés un pedido en curso.' });
+    }
+    if (!dentroDelArea({ lat: usuario.lat, lng: usuario.lng })) {
+      throw new ConflictException({ statusCode: 409, codigo: 'fuera-de-cobertura', message: 'Tu dirección está fuera del área donde entrega FreeDeli.' });
     }
     const km = distanciaKm({ lat: kiosco.lat, lng: kiosco.lng }, { lat: usuario.lat, lng: usuario.lng });
     // El rider cobra el viaje completo; el cliente paga hasta el tope y el kiosco pone el resto.

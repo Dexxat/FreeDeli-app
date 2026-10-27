@@ -1,5 +1,5 @@
 import { codigoRider } from '../models/rider.js';
-import { PEDIDO_MINIMO, TOPE_ENVIO_CLIENTE, aporteKioscoEnvio, envioCliente, costoEnvio, distanciaKm, calcularComision, puedeRecibirPedidos, minutosParaLlegar, direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules.js';
+import { anilloEnvio, PEDIDO_MINIMO, TOPE_ENVIO_CLIENTE, aporteKioscoEnvio, envioCliente, costoEnvio, distanciaKm, calcularComision, puedeRecibirPedidos, minutosParaLlegar, direccionAproximada, rangoTiempo, estadosDeBarra, generarPin, pinValido, siguienteEstado } from './pedido.rules.js';
 
 describe('PIN', () => {
   it('genera 4 dígitos con ceros a la izquierda', () => {
@@ -95,10 +95,14 @@ describe('envío por distancia', () => {
   it('calcula la distancia en km', () => {
     expect(distanciaKm({ lat: -34.5433, lng: -58.7117 }, { lat: -34.5626, lng: -58.6895 })).toBe(3);
   });
-  it('base + por km, redondeado a $100 para arriba', () => {
-    expect(costoEnvio(0, { base: 1000, porKm: 400 })).toBe(1000);
-    expect(costoEnvio(2.3, { base: 1000, porKm: 400 })).toBe(2000);
-    expect(costoEnvio(2.6, { base: 1000, porKm: 400 })).toBe(2100);
+  it('cobra un monto fijo por anillo', () => {
+    const t = { cerca: 3000, media: 4000, lejos: 5000 };
+    expect(costoEnvio(0, t)).toBe(3000);
+    expect(costoEnvio(1.4, t)).toBe(3000);
+    expect(costoEnvio(1.5, t)).toBe(4000);
+    expect(costoEnvio(3, t)).toBe(4000);
+    expect(costoEnvio(3.1, t)).toBe(5000);
+    expect(anilloEnvio(0.8)).toBe('cerca');
   });
 });
 

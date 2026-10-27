@@ -57,9 +57,21 @@ export function distanciaKm(a: Ubicacion, b: Ubicacion): number {
   return Math.round(2 * 6371 * Math.asin(Math.sqrt(h)) * 10) / 10;
 }
 
-/** Base + valor por km, redondeado a $100 para arriba. */
-export function costoEnvio(km: number, tarifa: { base: number; porKm: number }): number {
-  return Math.ceil((tarifa.base + tarifa.porKm * km) / 100) * 100;
+/** Límites de los anillos de tarifa, en km desde el kiosco. */
+export const ANILLOS_KM = { cerca: 1.5, media: 3 } as const;
+
+export type AnilloEnvio = 'cerca' | 'media' | 'lejos';
+
+/** Anillo en el que cae la entrega: menos de 1,5 km, de 1,5 a 3 km, o más de 3 km. */
+export function anilloEnvio(km: number): AnilloEnvio {
+  if (km < ANILLOS_KM.cerca) return 'cerca';
+  if (km <= ANILLOS_KM.media) return 'media';
+  return 'lejos';
+}
+
+/** Lo que cobra el rider por el viaje: un monto fijo según el anillo. */
+export function costoEnvio(km: number, tarifa: { cerca: number; media: number; lejos: number }): number {
+  return tarifa[anilloEnvio(km)];
 }
 
 /**

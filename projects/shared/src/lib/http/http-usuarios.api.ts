@@ -12,7 +12,7 @@ import { EventosCliente } from './eventos';
 import { revivirPedido } from './revivir';
 
 type MotivoCrear = Extract<ResultadoCrearPedido, { ok: false }>['motivo'];
-const MOTIVOS: readonly MotivoCrear[] = ['kiosco-cerrado', 'sin-productos', 'producto-inexistente', 'pedido-minimo', 'pedido-en-curso', 'fuera-de-horario'];
+const MOTIVOS: readonly MotivoCrear[] = ['kiosco-cerrado', 'sin-productos', 'producto-inexistente', 'pedido-minimo', 'pedido-en-curso', 'fuera-de-horario', 'fuera-de-cobertura'];
 
 /** UsuariosApi contra la API real, con actualizaciones en tiempo real. */
 @Injectable()

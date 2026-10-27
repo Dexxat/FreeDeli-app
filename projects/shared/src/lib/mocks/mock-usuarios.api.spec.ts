@@ -4,6 +4,7 @@ import { UsuariosApi } from '../api/usuarios.api';
 import { subtotalProductos, totalPedido } from '../models/pedido';
 import { MockDb, USUARIO_ACTUAL_ID } from './mock-db';
 import { provideFreeDeliMocks } from './provide-mocks';
+import { anilloEnvio } from '../rules/pedido.rules';
 import { FREEDELI_CONFIG, TARIFA_ENVIO_PROVISORIA } from '../config/freedeli.config';
 
 const FREEDELI_CONFIG_BASE = { whatsapp: '5491100000000', comisionPorcentaje: 10, tarifaEnvio: TARIFA_ENVIO_PROVISORIA, aliasFreeDeli: 'freedeli.pagos' };
@@ -14,11 +15,11 @@ describe('MockUsuariosApi', () => {
   let api: UsuariosApi;
   let db: MockDb;
 
-  function configurar(simular?: { cliente?: boolean; kiosco?: boolean; rider?: boolean }, extra: { horarioLibre?: boolean; tarifaBase?: number } = {}) {
+  function configurar(simular?: { cliente?: boolean; kiosco?: boolean; rider?: boolean }, extra: { horarioLibre?: boolean; tarifa?: { cerca: number; media: number; lejos: number } } = {}) {
     TestBed.configureTestingModule({
       providers: [
         provideFreeDeliMocks({ latencia: 0, simular, demoras: { paso: 40 }, horarioLibre: extra.horarioLibre ?? true }),
-        ...(extra.tarifaBase ? [{ provide: FREEDELI_CONFIG, useValue: { ...FREEDELI_CONFIG_BASE, tarifaEnvio: { base: extra.tarifaBase, porKm: 400 } } }] : []),
+        ...(extra.tarifa ? [{ provide: FREEDELI_CONFIG, useValue: { ...FREEDELI_CONFIG_BASE, tarifaEnvio: extra.tarifa } }] : []),
       ],
     });
     api = TestBed.inject(UsuariosApi);
@@ -73,15 +74,23 @@ describe('MockUsuariosApi', () => {
   });
 
   it('el cliente paga el envío hasta el tope y el rider cobra el viaje completo', async () => {
-    configurar(undefined, { tarifaBase: 3000 });
+    configurar();
     sinPedidoAbierto();
     const k = (await firstValueFrom(api.kioscosAbiertos())).find((x) => x.id === 'k1')!;
     expect(k.costoEnvio).toBe(2500);
     const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
     if (!r.ok) throw new Error('no se creó');
-    // $3.000 + 0,5 km × $400 = $3.200: el cliente paga $2.500 y el kiosco pone $700.
-    expect(r.pedido).toMatchObject({ costoEnvio: 2500, gananciaRider: 3200 });
+    // Anillo de menos de 1,5 km: el rider cobra $3.000, el cliente paga $2.500 y el kiosco pone $500.
+    expect(r.pedido).toMatchObject({ costoEnvio: 2500, gananciaRider: 3000 });
     expect(totalPedido(r.pedido)).toBe(6 * 2800 + 2500);
+  });
+
+  it('si el viaje cuesta menos que el tope, el cliente paga el costo real', async () => {
+    configurar(undefined, { tarifa: { cerca: 1800, media: 2200, lejos: 2600 } });
+    sinPedidoAbierto();
+    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
+    if (!r.ok) throw new Error('no se creó');
+    expect(r.pedido).toMatchObject({ costoEnvio: 1800, gananciaRider: 1800 });
   });
 
   it('crea el pedido con precios del catálogo, PIN y la dirección del usuario', async () => {
@@ -94,12 +103,12 @@ describe('MockUsuariosApi', () => {
     if (!r.ok) return;
     expect(r.pedido.estado).toBe('esperando');
     expect(r.pedido.items).toEqual([{ productoId: 'k1-p1', nombre: 'Coca-Cola 1,5 L', cantidad: 6, precioUnitario: 2800 }]);
-    // El Faro queda a unos 500 m de Belgrano 845: $1.000 + 0,5 km × $400 = $1.200.
-    expect(r.pedido.distanciaKm).toBe(0.5);
-    expect(totalPedido(r.pedido)).toBe(6 * 2800 + 1200);
+    // El Faro queda a unos 300 m de Belgrano 845: anillo cercano, $3.000 al rider y $2.500 el cliente.
+    expect(r.pedido.distanciaKm).toBe(0.3);
+    expect(totalPedido(r.pedido)).toBe(6 * 2800 + 2500);
     expect(r.pedido.pin).toMatch(/^\d{4}$/);
     expect(r.pedido.destino.direccion).toBe('Belgrano 845');
-    expect(r.pedido).toMatchObject({ pago: 'pendiente', aliasKiosco: 'elfaro.kiosco', comisionFreeDeli: 1680, gananciaRider: 1200, costoEnvio: 1200 });
+    expect(r.pedido).toMatchObject({ pago: 'pendiente', aliasKiosco: 'elfaro.kiosco', comisionFreeDeli: 1680, gananciaRider: 3000, costoEnvio: 2500 });
   });
 
   it('rechaza kiosco cerrado, carrito vacío y productos de otro kiosco', async () => {
@@ -115,7 +124,11 @@ describe('MockUsuariosApi', () => {
     const cerca = await firstValueFrom(api.kiosco('k1'));
     const lejos = await firstValueFrom(api.kiosco('k4'));
     expect(cerca!.distanciaKm).toBeLessThan(lejos!.distanciaKm!);
-    expect(cerca!.costoEnvio).toBeLessThan(lejos!.costoEnvio);
+    expect(anilloEnvio(cerca!.distanciaKm!)).toBe('cerca');
+    expect(anilloEnvio(lejos!.distanciaKm!)).toBe('media');
+    // Los dos superan el tope: el cliente paga lo mismo.
+    expect(cerca!.costoEnvio).toBe(2500);
+    expect(lejos!.costoEnvio).toBe(2500);
   });
 
   it('exige el pedido mínimo de $15.000 en productos', async () => {
