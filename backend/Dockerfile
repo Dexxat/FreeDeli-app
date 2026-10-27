@@ -3,14 +3,18 @@
 
 FROM node:24-slim AS build
 WORKDIR /app
+# openssl: Prisma lo usa para elegir el motor de migraciones correcto para Linux.
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 COPY backend/package.json backend/package-lock.json backend/
-RUN cd backend && npm ci --ignore-scripts
+# Sin scripts de instalación, salvo los de Prisma: bajan el motor que usa `migrate deploy`.
+RUN cd backend && npm ci --ignore-scripts && npm rebuild prisma @prisma/engines
 COPY backend backend
 COPY projects/shared/package.json projects/shared/package.json
 COPY projects/shared/src/lib/dominio.ts projects/shared/src/lib/dominio.ts
 COPY projects/shared/src/lib/models projects/shared/src/lib/models
 COPY projects/shared/src/lib/rules projects/shared/src/lib/rules
-RUN cd backend && npx prisma generate && npx nest build && npm prune --omit=dev
+# generate no se conecta a la base, pero la config exige la variable: alcanza con un valor de relleno.
+RUN cd backend && DATABASE_URL=postgresql://x:x@localhost:5432/x npx prisma generate && npx nest build && npm prune --omit=dev
 
 FROM node:24-slim
 ENV NODE_ENV=production TZ=America/Argentina/Buenos_Aires

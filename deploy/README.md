@@ -35,6 +35,20 @@ Cada app llama a la API en `/api` de su propio subdominio, así que no hace falt
    Caddy pide los certificados HTTPS solo, en cuanto el DNS apunta al VPS.
 5. **Probar.** `https://DOMINIO/api/salud` responde `{"ok":true}`. Ingresar a `https://dev.DOMINIO` con `DEV_EMAIL` y `DEV_CLAVE`.
 
+## Probarlo en la Mac
+
+Con Docker Desktop se puede levantar todo igual que en el servidor, usando `localhost` como dominio:
+
+```bash
+cd deploy
+cp .env.example .env   # DOMINIO=localhost y completar las claves
+docker compose up -d --build
+```
+
+Las apps quedan en https://localhost, https://kioscos.localhost, https://riders.localhost y https://dev.localhost. Caddy usa un certificado local que el navegador no reconoce: la primera vez hay que aceptar la advertencia ("Configuración avanzada" → "Continuar").
+
+Para apagarlo: `docker compose down` (los datos quedan en el volumen; `docker compose down -v` los borra).
+
 ## Actualizar
 
 ```bash
