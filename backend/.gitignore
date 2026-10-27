@@ -8,3 +8,4 @@ coverage/
 .env
 .pgdata/
 src/generated/
+*.tsbuildinfo
