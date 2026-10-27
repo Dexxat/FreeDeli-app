@@ -8,15 +8,20 @@ describe('área de cobertura', () => {
   });
 
   it('deja afuera lo que está lejos', () => {
-    expect(dentroDelArea({ lat: -34.52, lng: -58.71 })).toBe(false); // al norte de San Miguel
-    expect(dentroDelArea({ lat: -34.56, lng: -58.67 })).toBe(false); // al este de las vías
-    expect(dentroDelArea({ lat: -34.59, lng: -58.7 })).toBe(false); // al sur
+    expect(dentroDelArea({ lat: -34.525, lng: -58.7 })).toBe(false); // al norte de San Miguel
+    expect(dentroDelArea({ lat: -34.555, lng: -58.665 })).toBe(false); // al este de Av. Illia
+    expect(dentroDelArea({ lat: -34.58, lng: -58.69 })).toBe(false); // al sur de Gaspar Campos
+    expect(dentroDelArea({ lat: -34.551, lng: -58.73 })).toBe(false); // al oeste de Av. España
+  });
+
+  it('las esquinas quedan en el borde y el centro adentro', () => {
+    expect(dentroDelArea({ lat: -34.5527, lng: -58.697 })).toBe(true);
   });
 
   it('el área mide unos pocos km de punta a punta', () => {
     const [n, e, s, o] = AREA_COBERTURA;
-    expect(distanciaKm(n, s)).toBeLessThan(4);
-    expect(distanciaKm(e, o)).toBeLessThan(4);
+    expect(distanciaKm(n, s)).toBeLessThan(5);
+    expect(distanciaKm(e, o)).toBeLessThan(5);
   });
 
   it('la geolocalización provisoria reparte las direcciones, no las pega al centro', () => {

@@ -103,8 +103,8 @@ describe('MockUsuariosApi', () => {
     if (!r.ok) return;
     expect(r.pedido.estado).toBe('esperando');
     expect(r.pedido.items).toEqual([{ productoId: 'k1-p1', nombre: 'Coca-Cola 1,5 L', cantidad: 6, precioUnitario: 2800 }]);
-    // El Faro queda a unos 300 m de Belgrano 845: anillo cercano, $3.000 al rider y $2.500 el cliente.
-    expect(r.pedido.distanciaKm).toBe(0.3);
+    // El Faro queda a unos 200 m de Belgrano 845: anillo cercano, $3.000 al rider y $2.500 el cliente.
+    expect(r.pedido.distanciaKm).toBe(0.2);
     expect(totalPedido(r.pedido)).toBe(6 * 2800 + 2500);
     expect(r.pedido.pin).toMatch(/^\d{4}$/);
     expect(r.pedido.destino.direccion).toBe('Belgrano 845');

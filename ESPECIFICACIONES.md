@@ -100,7 +100,11 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
   - De 1,5 a 3 km: $4.000.
   - Más de 3 km: $5.000.
   - _Montos provisorios._ Con el tope de $2.500 para el cliente, el kiosco pone entre $500 y $2.500 por pedido.
-- **Área de cobertura:** FreeDeli entrega solo dentro del rombo entre San Miguel, Muñiz y Bella Vista: estación San Miguel al norte, hacia la estación Bella Vista al este, hacia Av. Gaspar Campos al sur y hacia Gral. Las Heras al oeste. Una dirección fuera del área no puede pedir. _Las esquinas son aproximadas y hay que ajustarlas con las coordenadas reales._
+- **Área de cobertura:** FreeDeli entrega solo dentro del rombo entre San Miguel, Muñiz y Bella Vista. Afuera no se entrega, también porque son zonas menos seguras para los riders. Una dirección fuera del área no puede pedir. Las esquinas son:
+  - Norte, terminal de ómnibus San Miguel: -34.532705, -58.701625.
+  - Este, Av. Pres. Illia y Moine: -34.554047, -58.672300.
+  - Sur, Av. Gaspar Campos en Bella Vista: -34.572896, -58.692213.
+  - Oeste, Av. España y Fernando Fader: -34.551329, -58.721658.
 
 ---
 

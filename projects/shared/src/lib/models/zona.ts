@@ -17,11 +17,11 @@ export interface Ubicacion {
   lng: number;
 }
 
-/** Centro aproximado de cada zona, dentro del área de cobertura. Estimado del mapa de cobertura. */
+/** Centro aproximado de cada zona, dentro del área de cobertura. */
 export const CENTRO_ZONA: Record<ZonaId, Ubicacion> = {
-  'san-miguel': { lat: -34.549, lng: -58.712 },
-  muniz: { lat: -34.555, lng: -58.709 },
-  'bella-vista': { lat: -34.565, lng: -58.704 },
+  'san-miguel': { lat: -34.542, lng: -58.7 },
+  muniz: { lat: -34.552, lng: -58.7 },
+  'bella-vista': { lat: -34.563, lng: -58.694 },
 };
 
 export function nombreZona(id: ZonaId): string {

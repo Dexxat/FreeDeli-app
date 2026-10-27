@@ -2,13 +2,14 @@ import { CENTRO_ZONA, Ubicacion, ZonaId } from '../models/zona.js';
 
 /**
  * Área donde FreeDeli entrega: el rombo entre San Miguel, Muñiz y Bella Vista.
- * _Coordenadas aproximadas_, estimadas a partir del mapa de cobertura. Ajustarlas con las esquinas reales.
+ * Las cuatro esquinas las definió el dueño en Google Maps. Afuera no se entrega,
+ * también por seguridad de los riders.
  */
 export const AREA_COBERTURA: readonly Ubicacion[] = [
-  { lat: -34.5426, lng: -58.7121 }, // norte: estación San Miguel
-  { lat: -34.559, lng: -58.6881 }, // este: hacia la estación Bella Vista, junto a las vías
-  { lat: -34.5747, lng: -58.7051 }, // sur: hacia Av. Gaspar Campos
-  { lat: -34.5577, lng: -58.7287 }, // oeste: hacia Gral. Las Heras
+  { lat: -34.532705, lng: -58.701625 }, // norte: terminal de ómnibus San Miguel
+  { lat: -34.554047, lng: -58.6723 }, // este: Av. Pres. Illia y Moine
+  { lat: -34.572896, lng: -58.692213 }, // sur: Av. Gaspar Campos, Bella Vista
+  { lat: -34.551329, lng: -58.721658 }, // oeste: Av. España y Fernando Fader
 ];
 
 /** true si el punto está dentro del polígono (algoritmo de cruce de rayos). */
@@ -33,7 +34,7 @@ export function geolocalizarProvisorio(direccion: string, zona: ZonaId): Ubicaci
   for (const c of direccion) h = (h * 31 + c.charCodeAt(0)) | 0;
   const desvio = (n: number) => (((n % 1000) + 1000) % 1000) / 1000 - 0.5;
   const centro = CENTRO_ZONA[zona];
-  for (let radio = 0.01; radio > 0.0005; radio /= 2) {
+  for (let radio = 0.012; radio > 0.0005; radio /= 2) {
     const p = { lat: centro.lat + desvio(h) * radio, lng: centro.lng + desvio(h >> 10) * radio };
     if (dentroDelArea(p)) return p;
   }
