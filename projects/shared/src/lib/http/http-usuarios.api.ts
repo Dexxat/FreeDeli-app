@@ -10,6 +10,7 @@ import { ESTADOS_ABIERTOS } from '../rules/pedido.rules.js';
 import { API_URL } from './api-url';
 import { EventosCliente } from './eventos';
 import { revivirPedido } from './revivir';
+import { EstrellaSumada } from '../rules/premios.rules.js';
 
 type MotivoCrear = Extract<ResultadoCrearPedido, { ok: false }>['motivo'];
 const MOTIVOS: readonly MotivoCrear[] = ['kiosco-cerrado', 'sin-productos', 'producto-inexistente', 'pedido-minimo', 'pedido-en-curso', 'fuera-de-horario', 'fuera-de-cobertura'];
@@ -107,5 +108,9 @@ export class HttpUsuariosApi extends UsuariosApi {
 
   cancelarPedido(pedidoId: string): Observable<Pedido> {
     return this.http.post<Pedido>(`${this.url}/pedidos/${pedidoId}/cancelar`, {}).pipe(map(revivirPedido));
+  }
+
+  sumarEstrella(pedidoId: string): Observable<EstrellaSumada> {
+    return this.http.post<EstrellaSumada>(`${this.url}/pedidos/${pedidoId}/estrella`, {});
   }
 }

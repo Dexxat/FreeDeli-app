@@ -60,6 +60,8 @@ enum TipoDocumento {
 enum TipoMovimientoSaldo {
   CARGA
   COMISION
+  /// FreeDeli le devuelve al kiosco el saldo a favor que usó el cliente.
+  PREMIO
 }
 
 model Cuenta {
@@ -88,6 +90,10 @@ model Usuario {
   zona        Zona
   lat         Float
   lng         Float
+  /// FREEDELI RUSH: estrellas hacia el próximo premio (0 a 4).
+  estrellas   Int      @default(0)
+  /// Saldo a favor en pesos: se descuenta solo del próximo pedido.
+  saldoFavor  Int      @default(0)
   pedidos     Pedido[]
 }
 
@@ -161,6 +167,8 @@ model Pedido {
   pago             EstadoPago    @default(PENDIENTE)
   aliasKiosco      String
   comisionFreeDeli Int
+  /// Saldo a favor del cliente usado en el pedido (premio de FREEDELI RUSH). Lo pone FreeDeli.
+  descuentoPremio  Int           @default(0)
   pin              String
   estado           EstadoPedido  @default(ESPERANDO)
   fase             FasePedido?   @default(STOCK)
@@ -171,7 +179,10 @@ model Pedido {
   rider            Rider?        @relation(fields: [riderId], references: [id])
   creadoEn         DateTime      @default(now())
   aceptadoEn       DateTime?
+  enCaminoEn       DateTime?
   entregadoEn      DateTime?
+  /// El cliente ya ganó la estrella de FREEDELI RUSH con este pedido.
+  estrellaGanada   Boolean       @default(false)
   items            ItemPedido[]
   ofertas          Oferta[]
 

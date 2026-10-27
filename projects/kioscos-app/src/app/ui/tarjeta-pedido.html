@@ -5,6 +5,9 @@
     <span class="paso">{{ paso() }}</span>
   </header>
   <p class="sutil">{{ hora() }} · {{ cantidad() }} productos · {{ total() | pesos }} · para {{ p.destino.nombre }}</p>
+  @if (p.descuentoPremio) {
+    <p class="sutil premio">El cliente usó {{ p.descuentoPremio | pesos }} de saldo a favor: te transfiere menos y FreeDeli te los acredita en tu saldo al entregar.</p>
+  }
   @if (aporteEnvio() > 0) {
     <p class="sutil aporte">Viaje largo: el cliente paga {{ p.costoEnvio | pesos }} de envío y vos ponés {{ aporteEnvio() | pesos }}. Al rider le pagás {{ envioRider() | pesos }}.</p>
   }

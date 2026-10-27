@@ -12,6 +12,7 @@ export const MINUTOS_DEMORA = 10;
  * El dinero de un pedido: el cliente transfiere productos + su parte del envío al kiosco,
  * y el kiosco transfiere el envío completo al rider y la comisión a FreeDeli.
  * Si el viaje supera el tope del cliente, la diferencia sale del kiosco.
+ * Si el cliente usó saldo a favor, paga menos y FreeDeli se lo devuelve al kiosco.
  * Un pedido cancelado no mueve dinero.
  */
 export function movimientoDePedido(p: Pedido): MovimientoKiosco {
@@ -19,6 +20,7 @@ export function movimientoDePedido(p: Pedido): MovimientoKiosco {
   const totalCliente = cancelado ? 0 : totalPedido(p);
   const envioRider = cancelado ? 0 : p.gananciaRider + p.propina;
   const comisionFreeDeli = cancelado ? 0 : p.comisionFreeDeli;
+  const descuentoPremio = cancelado ? 0 : (p.descuentoPremio ?? 0);
   return {
     pedidoId: p.id,
     numero: p.numero,
@@ -29,6 +31,7 @@ export function movimientoDePedido(p: Pedido): MovimientoKiosco {
     envioRider,
     aporteEnvio: cancelado ? 0 : aporteKioscoEnvio(p),
     comisionFreeDeli,
-    netoKiosco: totalCliente - envioRider - comisionFreeDeli,
+    descuentoPremio,
+    netoKiosco: totalCliente - envioRider - comisionFreeDeli + descuentoPremio,
   };
 }

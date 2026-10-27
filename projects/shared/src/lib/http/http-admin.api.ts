@@ -18,7 +18,7 @@ import { PeriodoHistorial } from '../models/rider.js';
 import { ZonaId } from '../models/zona.js';
 import { API_URL } from './api-url';
 import { EventosCliente } from './eventos';
-import { revivirFechas, revivirPedido } from './revivir';
+import { MovimientoSaldoJson, revivirFechas, revivirMovimiento, revivirPedido } from './revivir';
 import { DocumentosRider } from '../rules/documentos.rules.js';
 
 /** AdminApi (FreeDeli Dev) contra la API real. Los datos se refrescan con cada evento. */
@@ -61,10 +61,7 @@ export class HttpAdminApi extends AdminApi {
   }
 
   movimientosSaldo(kioscoId: string): Observable<MovimientoSaldo[]> {
-    type Json = Omit<MovimientoSaldo, 'tipo'> & { tipo: 'CARGA' | 'COMISION' };
-    return this.vivo(() => this.http.get<Json[]>(`${this.url}/admin/kioscos/${kioscoId}/saldo`)).pipe(
-      map((ms) => ms.map((m) => ({ ...revivirFechas(m, ['fecha']), tipo: m.tipo === 'CARGA' ? ('carga' as const) : ('comision' as const) }))),
-    );
+    return this.vivo(() => this.http.get<MovimientoSaldoJson[]>(`${this.url}/admin/kioscos/${kioscoId}/saldo`)).pipe(map((ms) => ms.map(revivirMovimiento)));
   }
 
   acreditarSaldo(kioscoId: string, monto: number, referencia: string): Observable<KioscoAdmin> {

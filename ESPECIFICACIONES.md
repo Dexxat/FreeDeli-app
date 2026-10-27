@@ -153,6 +153,15 @@ La acción principal es **PEDIR**: es el botón más grande de la pantalla de in
 - El usuario se lo da al rider recién cuando tiene el pedido en la mano.
 - En la pantalla "Vivo", el rider ingresa el PIN y toca **CONFIRMAR ENTREGA**. Si el PIN es correcto, el pedido pasa a **Entregado** en las dos apps.
 
+### FREEDELI RUSH
+
+- **Cuándo:** el minijuego aparece en el seguimiento mientras el rider está **en camino**. La moto avanza sola y se salta (con doble salto) tachos, arbustos, bolsas y pozos.
+- **Estrellas:** cada vez que el usuario juega **10 minutos seguidos** suma una estrella. Cuentan los reintentos después de chocar; si deja de jugar más de 20 segundos o sale de la pantalla, vuelve a empezar. Se gana como máximo una estrella por pedido.
+- **Control:** el servidor solo da la estrella si el pedido lleva al menos 10 minutos en camino. Se puede reclamar hasta 2 minutos después de la entrega.
+- **Premio:** con **5 estrellas** el usuario gana **$2.500 de saldo a favor**, y las estrellas vuelven a 0. Es la única recompensa.
+- **Cómo se usa:** el saldo a favor se descuenta solo del próximo pedido, sin pasarse del total. Si el usuario cancela ese pedido, lo recupera.
+- **Quién lo paga:** sale de la ganancia de FreeDeli, no del kiosco ni del rider. El cliente transfiere menos al kiosco, y al liberarse el pago FreeDeli le acredita esa diferencia en su saldo prepago.
+
 ### Un pedido a la vez
 
 El usuario puede tener un solo pedido abierto. Mientras tenga uno en curso, PEDIR lo lleva al seguimiento.

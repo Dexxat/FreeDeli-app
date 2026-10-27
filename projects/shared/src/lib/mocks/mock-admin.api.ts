@@ -15,6 +15,7 @@ import { enRango, inicioDelDia, rangoPeriodo, sumarDias } from '../rules/periodo
 import { MockDb } from './mock-db';
 import { LATENCIA_MOCK } from './mock-riders.api';
 import { DocumentosRider, SIN_DOCUMENTOS } from '../rules/documentos.rules';
+import { gananciaFreeDeli } from '../rules/premios.rules';
 
 @Injectable()
 export class MockAdminApi extends AdminApi {
@@ -55,7 +56,7 @@ export class MockAdminApi extends AdminApi {
       pedidosHoy: deHoy.length,
       entregadosHoy: deHoy.filter((p) => p.estado === 'entregado').length,
       enCurso: this.db.pedidos().filter((p) => ESTADOS_ABIERTOS.includes(p.estado)).length,
-      comisionesHoy: deHoy.filter((p) => p.estado === 'entregado').reduce((a, p) => a + p.comisionFreeDeli, 0),
+      comisionesHoy: deHoy.filter((p) => p.estado === 'entregado').reduce((a, p) => a + gananciaFreeDeli(p), 0),
       kioscosAbiertos: this.db.kioscos().filter((k) => puedeRecibirPedidos(k)).length,
       ridersActivos: this.db.riders().filter((r) => r.disponible && !r.pausado).length,
       alertas,

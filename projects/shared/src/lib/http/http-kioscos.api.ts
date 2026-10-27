@@ -10,9 +10,8 @@ import { RiderPublico } from '../models/usuario.js';
 import { ESTADOS_ABIERTOS } from '../rules/pedido.rules.js';
 import { API_URL } from './api-url';
 import { EventosCliente } from './eventos';
-import { revivirPedido } from './revivir';
+import { MovimientoSaldoJson, revivirMovimiento, revivirPedido } from './revivir';
 
-type MovimientoJson = Omit<MovimientoSaldo, 'fecha' | 'tipo'> & { fecha: string; tipo: 'CARGA' | 'COMISION' };
 
 /** KioscosApi contra la API real, con el tablero y el saldo al día por eventos. */
 @Injectable()
@@ -89,8 +88,8 @@ export class HttpKioscosApi extends KioscosApi {
   movimientosSaldo(): Observable<MovimientoSaldo[]> {
     return merge(this.entregas$, this.eventos.conexiones$).pipe(
       startWith(null),
-      switchMap(() => this.http.get<MovimientoJson[]>(`${this.url}/kiosco/saldo`)),
-      map((ms) => ms.map((m) => ({ ...m, fecha: new Date(m.fecha), tipo: m.tipo === 'CARGA' ? ('carga' as const) : ('comision' as const) }))),
+      switchMap(() => this.http.get<MovimientoSaldoJson[]>(`${this.url}/kiosco/saldo`)),
+      map((ms) => ms.map(revivirMovimiento)),
     );
   }
 

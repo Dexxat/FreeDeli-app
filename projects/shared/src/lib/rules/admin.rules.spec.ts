@@ -24,7 +24,14 @@ describe('movimientoDePedido', () => {
     expect(m.aporteEnvio).toBe(900);
     expect(m.netoKiosco).toBe(5600 + 2500 - 3400 - 1500);
   });
+  it('el saldo a favor: el cliente paga menos y FreeDeli se lo devuelve al kiosco', () => {
+    const m = movimientoDePedido({ ...base, propina: 0, descuentoPremio: 2500 });
+    expect(m.totalCliente).toBe(5600 + 1800 - 2500);
+    expect(m.descuentoPremio).toBe(2500);
+    // El kiosco queda igual que sin premio: cobra 2.500 menos y FreeDeli se los acredita.
+    expect(m.netoKiosco).toBe(movimientoDePedido({ ...base, propina: 0 }).netoKiosco);
+  });
   it('un cancelado no mueve dinero', () => {
-    expect(movimientoDePedido({ ...base, estado: 'cancelado' })).toMatchObject({ totalCliente: 0, envioRider: 0, aporteEnvio: 0, comisionFreeDeli: 0, netoKiosco: 0 });
+    expect(movimientoDePedido({ ...base, estado: 'cancelado' })).toMatchObject({ totalCliente: 0, envioRider: 0, aporteEnvio: 0, comisionFreeDeli: 0, descuentoPremio: 0, netoKiosco: 0 });
   });
 });

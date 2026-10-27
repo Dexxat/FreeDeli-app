@@ -94,7 +94,7 @@ export class MockSimulador {
         const r = paso(actual);
         if (!r.ok) return;
         this.db.guardarPedido(r.pedido);
-        if (r.pedido.estado === 'entregado') this.db.descontarComision(r.pedido);
+        if (r.pedido.estado === 'entregado') this.db.liquidar(r.pedido);
       }, this.demoras.paso);
       this.programados.set(clave, t);
     }
@@ -135,7 +135,7 @@ export class MockSimulador {
       if (rider && !p.retiro?.rider) return (x) => confirmarRetiro(x, 'rider', ahora());
       return null;
     }
-    if (p.estado === 'retirado') return rider ? salirEnCamino : null;
+    if (p.estado === 'retirado') return rider ? (x) => salirEnCamino(x, ahora()) : null;
     if (p.estado === 'en-camino') return rider ? (x) => entregarConPin(x, x.pin, ahora()) : null;
     return null;
   }

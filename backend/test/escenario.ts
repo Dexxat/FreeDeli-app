@@ -37,8 +37,8 @@ export async function armarEscenario(app: INestApplication, sufijo: string) {
     await api().post('/api/auth/registro/usuario').send({ email: `u-${sufijo}@test.local`, clave: 'claveUsuario1', nombre: 'Martina Rodríguez', dni: '40111444', telefono: '11 5555-0199', direccion: 'Belgrano 845', zona: 'san-miguel' }).expect(201)
   ).body.token as string;
 
-  /** Hace un pedido de 6 Coca-Cola y lo lleva hasta Entregado. */
-  async function pedidoEntregado() {
+  /** Hace un pedido de 6 Coca-Cola y lo lleva hasta En camino. */
+  async function pedidoEnCamino() {
     const p = (await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }] }).expect(201)).body;
     await api().post(`/api/kiosco/pedidos/${p.id}/stock`).set(auth(kiosco)).send({ faltantes: [] }).expect(200);
     await api().post(`/api/kiosco/pedidos/${p.id}/transferencia`).set(auth(kiosco)).expect(200);
@@ -48,8 +48,17 @@ export async function armarEscenario(app: INestApplication, sufijo: string) {
     await api().post(`/api/rider/pedidos/${p.id}/retiro`).set(auth(rider)).expect(200);
     await api().post(`/api/kiosco/pedidos/${p.id}/envio`).set(auth(kiosco)).expect(200);
     await api().post(`/api/rider/pedidos/${p.id}/en-camino`).set(auth(rider)).expect(200);
+    return p as { id: string; pin: string; numero: number; comisionFreeDeli: number; descuentoPremio: number };
+  }
+
+  async function entregar(p: { id: string; pin: string }) {
     return (await api().post(`/api/rider/pedidos/${p.id}/entregar`).set(auth(rider)).send({ pin: p.pin }).expect(200)).body;
   }
 
-  return { api, dev, kiosco, kioscoId, rider, riderId, usuario, coca, pedidoEntregado };
+  /** Hace un pedido de 6 Coca-Cola y lo lleva hasta Entregado. */
+  async function pedidoEntregado() {
+    return entregar(await pedidoEnCamino());
+  }
+
+  return { api, dev, kiosco, kioscoId, rider, riderId, usuario, coca, pedidoEnCamino, entregar, pedidoEntregado };
 }

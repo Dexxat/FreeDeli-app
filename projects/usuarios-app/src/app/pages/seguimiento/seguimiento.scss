@@ -66,3 +66,6 @@
   @include pixel.borde(var(--fd-amber-400), var(--fd-navy-900));
 }
 a:focus-visible { outline: 3px solid #fff; outline-offset: 6px; }
+
+.premios .fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.ganaste { margin: 0; padding: 12px; background: var(--fd-yellow-400); color: var(--fd-navy-900); font-family: var(--fd-font-pixel); font-size: 10px; line-height: 1.6; }

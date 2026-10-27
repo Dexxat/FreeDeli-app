@@ -165,12 +165,12 @@ export class RiderController {
 
   @Post('pedidos/:id/en-camino') @HttpCode(200)
   async enCamino(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string) {
-    return this.pedidos.transicionar(id, await this.propio(s), salirEnCamino);
+    return this.pedidos.transicionar(id, await this.propio(s), (p) => salirEnCamino(p, new Date()));
   }
 
-  /** Con el PIN correcto se entrega, se libera el pago y se descuenta la comisión del saldo del kiosco. */
+  /** Con el PIN correcto se entrega, se libera el pago y se liquida el saldo del kiosco (comisión y premio). */
   @Post('pedidos/:id/entregar') @HttpCode(200)
   async entregar(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string, @Body() dto: PinDto) {
-    return this.pedidos.transicionar(id, await this.propio(s), (p) => entregarConPin(p, dto.pin, new Date()), (tx, p) => this.pedidos.descontarComision(tx, p));
+    return this.pedidos.transicionar(id, await this.propio(s), (p) => entregarConPin(p, dto.pin, new Date()), (tx, p) => this.pedidos.liquidar(tx, p));
   }
 }

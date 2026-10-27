@@ -67,6 +67,11 @@ export interface Pedido {
   aliasKiosco: string;
   /** Lo que el kiosco le transfiere a FreeDeli al liberarse el pago. */
   comisionFreeDeli: number;
+  /**
+   * Saldo a favor del cliente (premio de FREEDELI RUSH) usado en este pedido. Se resta de lo que
+   * transfiere el cliente y FreeDeli se lo devuelve al kiosco en su saldo: sale de la ganancia de FreeDeli.
+   */
+  descuentoPremio?: number;
   /** PIN de 4 dígitos. Solo lo ve el usuario. */
   pin: string;
   estado: EstadoPedido;
@@ -81,6 +86,10 @@ export interface Pedido {
   riderId?: string;
   creadoEn: Date;
   aceptadoEn?: Date;
+  /** Cuando el rider salió en camino: desde ahí se puede jugar FREEDELI RUSH. */
+  enCaminoEn?: Date;
+  /** Si el cliente ya ganó la estrella de FREEDELI RUSH con este pedido (una por pedido). */
+  estrellaGanada?: boolean;
   entregadoEn?: Date;
 }
 
@@ -88,8 +97,9 @@ export function subtotalProductos(p: Pick<Pedido, 'items'>): number {
   return p.items.reduce((acc, i) => acc + i.cantidad * i.precioUnitario, 0);
 }
 
-export function totalPedido(p: Pick<Pedido, 'items' | 'costoEnvio'>): number {
-  return subtotalProductos(p) + p.costoEnvio;
+/** Lo que transfiere el cliente: productos + su parte del envío − saldo a favor usado. */
+export function totalPedido(p: Pick<Pedido, 'items' | 'costoEnvio' | 'descuentoPremio'>): number {
+  return subtotalProductos(p) + p.costoEnvio - (p.descuentoPremio ?? 0);
 }
 
 /** Código visible del pedido, por ejemplo "#A-1042". */

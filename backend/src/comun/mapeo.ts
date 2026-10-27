@@ -54,6 +54,7 @@ export function aDominio(p: PedidoConItems): PedidoDominio {
     pago: PAGOS[p.pago],
     aliasKiosco: p.aliasKiosco,
     comisionFreeDeli: p.comisionFreeDeli,
+    descuentoPremio: p.descuentoPremio,
     pin: p.pin,
     estado: ESTADOS[p.estado],
     fase: p.fase ? FASES[p.fase] : undefined,
@@ -62,6 +63,8 @@ export function aDominio(p: PedidoConItems): PedidoDominio {
     riderId: p.riderId ?? undefined,
     creadoEn: p.creadoEn,
     aceptadoEn: p.aceptadoEn ?? undefined,
+    enCaminoEn: p.enCaminoEn ?? undefined,
+    estrellaGanada: p.estrellaGanada,
     entregadoEn: p.entregadoEn ?? undefined,
   };
 }
@@ -78,6 +81,8 @@ export function cambiosDb(p: PedidoDominio): Prisma.PedidoUncheckedUpdateInput {
     retiroRider: p.retiro?.rider ?? null,
     riderId: p.riderId ?? null,
     aceptadoEn: p.aceptadoEn ?? null,
+    enCaminoEn: p.enCaminoEn ?? null,
+    estrellaGanada: p.estrellaGanada ?? false,
     entregadoEn: p.entregadoEn ?? null,
   };
 }

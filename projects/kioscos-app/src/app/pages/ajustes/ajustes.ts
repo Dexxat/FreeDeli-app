@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { API_URL, FREEDELI_CONFIG, KioscosApi, Producto, PesosPipe, SesionService } from '@freedeli/shared';
+import { API_URL, FREEDELI_CONFIG, KioscosApi, Producto, PesosPipe, SesionService, TEXTO_MOVIMIENTO } from '@freedeli/shared';
 import { Observable } from 'rxjs';
 
 const FECHA = new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
@@ -15,6 +15,7 @@ const FECHA = new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: '2-digit
   styleUrl: './ajustes.scss',
 })
 export default class Ajustes {
+  protected readonly textoMovimiento = TEXTO_MOVIMIENTO;
   private readonly api = inject(KioscosApi);
   private readonly aliasConfig = inject(FREEDELI_CONFIG).aliasFreeDeli;
   private readonly sesion = inject(SesionService);

@@ -136,7 +136,7 @@ export class MockPedidosApi extends PedidosApi {
       pedido.estado === 'aceptado'
         ? confirmarRetiro(pedido, 'rider', new Date())
         : pedido.estado === 'retirado'
-          ? salirEnCamino(pedido)
+          ? salirEnCamino(pedido, new Date())
           : { ok: false as const, error: 'No se puede avanzar este pedido.' };
     if (!r.ok) return throwError(() => new Error(r.error));
     this.guardar(r.pedido);
@@ -154,7 +154,7 @@ export class MockPedidosApi extends PedidosApi {
       const r = entregarConPin(pedido, pin, new Date());
       if (r.ok) {
         this.guardar(r.pedido);
-        this.db.descontarComision(r.pedido);
+        this.db.liquidar(r.pedido);
         resultado = { ok: true, pedido: r.pedido };
       } else {
         resultado = { ok: false, motivo: 'pin-incorrecto' };

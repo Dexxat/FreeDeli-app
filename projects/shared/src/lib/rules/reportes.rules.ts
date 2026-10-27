@@ -1,3 +1,4 @@
+import { gananciaFreeDeli } from './premios.rules.js';
 import { EntregaAdmin, FilaMain, GananciasAdmin, GananciasKiosco, PeriodoAdmin } from '../models/admin.js';
 import { Pedido } from '../models/pedido.js';
 import { ZONAS } from '../models/zona.js';
@@ -37,10 +38,10 @@ export function barrasPorPeriodo(
   return barras;
 }
 
-/** Comisiones de FreeDeli por pedidos entregados. `pedidos` puede traer de más: se filtra acá. */
+/** Ganancia de FreeDeli (comisiones menos premios) por pedidos entregados. `pedidos` puede traer de más: se filtra acá. */
 export function gananciasAdmin(pedidos: readonly Pedido[], periodo: PeriodoAdmin, ahora: Date): GananciasAdmin {
   const lista = entregadosEnPeriodo(pedidos, periodo, ahora);
-  const total = lista.reduce((a, p) => a + p.comisionFreeDeli, 0);
+  const total = lista.reduce((a, p) => a + gananciaFreeDeli(p), 0);
   return {
     periodo,
     total,
@@ -49,9 +50,9 @@ export function gananciasAdmin(pedidos: readonly Pedido[], periodo: PeriodoAdmin
     facturado: lista.reduce((a, p) => a + movimientoDePedido(p).totalCliente, 0),
     porZona: ZONAS.map(({ id }) => {
       const deZona = lista.filter((p) => p.zona === id);
-      return { zona: id, total: deZona.reduce((a, p) => a + p.comisionFreeDeli, 0), pedidos: deZona.length };
+      return { zona: id, total: deZona.reduce((a, p) => a + gananciaFreeDeli(p), 0), pedidos: deZona.length };
     }),
-    barras: barrasPorPeriodo(lista, periodo, ahora, (p) => p.comisionFreeDeli),
+    barras: barrasPorPeriodo(lista, periodo, ahora, gananciaFreeDeli),
   };
 }
 
@@ -66,6 +67,7 @@ export function gananciasKiosco(pedidos: readonly Pedido[], periodo: PeriodoAdmi
     cobrado: suma((m) => m.totalCliente),
     envios: suma((m) => m.envioRider),
     comisiones: suma((m) => m.comisionFreeDeli),
+    premios: suma((m) => m.descuentoPremio),
     neto: suma((m) => m.netoKiosco),
     barras: barrasPorPeriodo(lista, periodo, ahora, (p) => movimientoDePedido(p).netoKiosco),
   };

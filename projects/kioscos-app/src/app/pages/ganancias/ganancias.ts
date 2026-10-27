@@ -34,6 +34,9 @@ const PERIODOS: { id: PeriodoAdmin; etiqueta: string; leyenda: string }[] = [
         <div><span>Cobrado a clientes</span><strong>{{ g.cobrado | pesos }}</strong></div>
         <div><span>Envíos pagados a riders</span><strong>−{{ g.envios | pesos }}</strong></div>
         <div><span>Comisiones FreeDeli (del saldo)</span><strong>−{{ g.comisiones | pesos }}</strong></div>
+        @if (g.premios) {
+          <div><span>Saldo a favor de clientes (lo pone FreeDeli)</span><strong>+{{ g.premios | pesos }}</strong></div>
+        }
         <div class="final"><strong>Neto</strong><strong class="amarillo">{{ g.neto | pesos }}</strong></div>
       </section>
 

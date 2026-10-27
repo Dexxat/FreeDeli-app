@@ -33,6 +33,9 @@
       <span>{{ cantidad() }} {{ cantidad() === 1 ? 'producto' : 'productos' }} + envío {{ k.costoEnvio | pesos }}</span>
       <span class="total">{{ total() | pesos }}</span>
     </div>
+    @if (descuento(); as d) {
+      <p class="a-favor">Incluye {{ d | pesos }} de saldo a favor.</p>
+    }
     @if (faltante() > 0) {
       <p class="minimo">Pedido mínimo {{ minimo | pesos }} en productos. Te faltan {{ faltante() | pesos }}.</p>
     }

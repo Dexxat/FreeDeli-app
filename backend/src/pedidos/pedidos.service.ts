@@ -9,6 +9,10 @@ import {
   calcularComision,
   costoEnvio,
   dentroDelArea,
+  descuentoAplicable,
+  puedeGanarEstrella,
+  sumarEstrella,
+  type EstrellaSumada,
   distanciaKm,
   envioCliente,
   nombreCorto,
@@ -66,11 +70,38 @@ export class PedidosService {
     return pedido;
   }
 
-  /** Al liberarse el pago, la comisión se descuenta del saldo prepago del kiosco. */
-  async descontarComision(tx: Tx, p: Pedido): Promise<void> {
-    const k = await tx.kiosco.update({ where: { id: p.kioscoId }, data: { saldo: { decrement: p.comisionFreeDeli } } });
-    await tx.movimientoSaldo.create({
-      data: { kioscoId: p.kioscoId, tipo: TipoMovimientoSaldo.COMISION, monto: -p.comisionFreeDeli, referencia: `#A-${p.numero}`, saldoResultante: k.saldo },
+  /**
+   * Al liberarse el pago, la comisión se descuenta del saldo prepago del kiosco. Si el cliente usó
+   * saldo a favor, FreeDeli se lo devuelve al kiosco en el mismo saldo: sale de la ganancia de FreeDeli.
+   */
+  async liquidar(tx: Tx, p: Pedido): Promise<void> {
+    await this.moverSaldoKiosco(tx, p.kioscoId, TipoMovimientoSaldo.COMISION, -p.comisionFreeDeli, `#A-${p.numero}`);
+    if (p.descuentoPremio) await this.moverSaldoKiosco(tx, p.kioscoId, TipoMovimientoSaldo.PREMIO, p.descuentoPremio, `Premio #A-${p.numero}`);
+  }
+
+  private async moverSaldoKiosco(tx: Tx, kioscoId: string, tipo: TipoMovimientoSaldo, monto: number, referencia: string): Promise<void> {
+    const k = await tx.kiosco.update({ where: { id: kioscoId }, data: { saldo: { increment: monto } } });
+    await tx.movimientoSaldo.create({ data: { kioscoId, tipo, monto, referencia, saldoResultante: k.saldo } });
+  }
+
+  /** Si el cliente cancela, recupera el saldo a favor que había usado. */
+  async devolverPremio(tx: Tx, p: Pedido): Promise<void> {
+    if (p.descuentoPremio) await tx.usuario.update({ where: { id: p.usuarioId }, data: { saldoFavor: { increment: p.descuentoPremio } } });
+  }
+
+  /** FREEDELI RUSH: suma la estrella del pedido si el servidor confirma los 10 minutos en camino. */
+  async sumarEstrella(usuarioId: string, pedidoId: string): Promise<EstrellaSumada> {
+    return this.db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Pedido" WHERE id = ${pedidoId} FOR UPDATE`;
+      const fila = await tx.pedido.findFirst({ where: { id: pedidoId, usuarioId }, include: INCLUIR_PEDIDO });
+      if (!fila) throw new NotFoundException('No encontramos el pedido.');
+      const permitido = puedeGanarEstrella(aDominio(fila), new Date());
+      if (!permitido.ok) throw new ConflictException(permitido.error);
+      const usuario = await tx.usuario.findUniqueOrThrow({ where: { id: usuarioId } });
+      const resultado = sumarEstrella(usuario);
+      await tx.pedido.update({ where: { id: pedidoId }, data: { estrellaGanada: true } });
+      await tx.usuario.update({ where: { id: usuarioId }, data: { estrellas: resultado.estrellas, saldoFavor: resultado.saldoFavor } });
+      return resultado;
     });
   }
 
@@ -108,6 +139,10 @@ export class PedidosService {
       if (await tx.pedido.findFirst({ where: { usuarioId, estado: { in: ABIERTOS_DB } } })) {
         throw new ConflictException({ statusCode: 409, codigo: 'pedido-en-curso', message: 'Ya tenés un pedido en curso.' });
       }
+      // El saldo a favor se usa solo, y se reserva acá: si cancela, se devuelve.
+      const { saldoFavor } = await tx.usuario.findUniqueOrThrow({ where: { id: usuarioId }, select: { saldoFavor: true } });
+      const descuentoPremio = descuentoAplicable(saldoFavor, subtotal + envioCliente(viaje));
+      if (descuentoPremio) await tx.usuario.update({ where: { id: usuarioId }, data: { saldoFavor: { decrement: descuentoPremio } } });
       return tx.pedido.create({
         data: {
           zona: kiosco.zona,
@@ -121,6 +156,7 @@ export class PedidosService {
           gananciaRider: viaje,
           aliasKiosco: kiosco.aliasCobro,
           comisionFreeDeli: calcularComision(subtotal, this.reglas.comisionPorcentaje),
+          descuentoPremio,
           pin: randomInt(0, 10_000).toString().padStart(4, '0'),
           estado: EstadoPedido.ESPERANDO,
           fase: FasePedido.STOCK,

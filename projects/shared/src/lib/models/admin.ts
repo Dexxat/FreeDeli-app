@@ -28,6 +28,8 @@ export interface MovimientoKiosco {
   aporteEnvio: number;
   /** Lo que el kiosco le transfiere a FreeDeli. */
   comisionFreeDeli: number;
+  /** Saldo a favor del cliente que usó en el pedido. FreeDeli se lo devuelve al kiosco. */
+  descuentoPremio: number;
   /** Lo que le queda al kiosco. */
   netoKiosco: number;
 }
@@ -107,14 +109,24 @@ export interface MovimientoSaldo {
   id: string;
   kioscoId: string;
   fecha: Date;
-  /** Carga: el kiosco transfirió a FreeDeli. Comisión: se descontó al liberarse un pago. */
-  tipo: 'carga' | 'comision';
-  /** Positivo en cargas, negativo en comisiones. */
+  /**
+   * Carga: el kiosco transfirió a FreeDeli. Comisión: se descontó al liberarse un pago.
+   * Premio: FreeDeli le devuelve el saldo a favor que usó el cliente.
+   */
+  tipo: 'carga' | 'comision' | 'premio';
+  /** Positivo en cargas y premios, negativo en comisiones. */
   monto: number;
   /** Referencia de la transferencia o código del pedido. */
   referencia: string;
   saldoResultante: number;
 }
+
+/** Cómo se lee cada tipo de movimiento de saldo en las pantallas. */
+export const TEXTO_MOVIMIENTO: Record<MovimientoSaldo['tipo'], string> = {
+  carga: 'Carga',
+  comision: 'Comisión',
+  premio: 'Premio FREEDELI RUSH',
+};
 
 /** Ganancias del kiosco en un período: lo cobrado menos envíos y comisiones. */
 export interface GananciasKiosco {
@@ -126,6 +138,8 @@ export interface GananciasKiosco {
   envios: number;
   /** Lo que se descontó del saldo por comisiones. */
   comisiones: number;
+  /** Saldo a favor que usaron los clientes: FreeDeli se lo devolvió al saldo. */
+  premios: number;
   /** Lo que le queda al kiosco. */
   neto: number;
   /** Neto por hora (jornada) o por día (semana y mes). */

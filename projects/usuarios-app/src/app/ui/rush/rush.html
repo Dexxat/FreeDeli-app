@@ -1,0 +1,52 @@
+@let j = juego();
+<section class="rush" aria-labelledby="titulo-rush">
+  <div class="cabeza">
+    <h2 id="titulo-rush" class="titulo">FREEDELI RUSH</h2>
+    <span class="puntos">PTS {{ puntos() }} · MEJOR {{ textoMejor() }}</span>
+  </div>
+
+  <div class="escena" role="button" tabindex="0" aria-label="Saltar" (click)="saltar()" (keydown.space)="$event.preventDefault(); saltar()" (keydown.arrowup)="$event.preventDefault(); saltar()">
+    <span class="estrella-fondo" style="left: 40px; top: 18px"></span>
+    <span class="estrella-fondo" style="left: 150px; top: 34px"></span>
+    <span class="estrella-fondo amarilla" style="left: 260px; top: 14px"></span>
+    <span class="estrella-fondo" style="left: 310px; top: 46px"></span>
+    <div class="piso"></div>
+
+    @for (o of j.obstaculos; track o.id) {
+      @switch (o.tipo) {
+        @case ('pozo') {
+          <div class="pozo" [style.left.px]="o.x" [style.width.px]="o.ancho"></div>
+        }
+        @case ('tacho') {
+          <svg class="obstaculo" [style.left.px]="o.x" viewBox="0 0 9 12" width="18" height="24" shape-rendering="crispEdges" aria-hidden="true"><rect x="0" y="0" width="9" height="2" fill="#BFD3FF" /><rect x="3" y="0" width="3" height="1" fill="#9AA3B5" /><rect x="1" y="2" width="7" height="10" fill="#9AA3B5" /><rect x="2" y="3" width="1" height="8" fill="#5C677D" /><rect x="4" y="3" width="1" height="8" fill="#5C677D" /><rect x="6" y="3" width="1" height="8" fill="#5C677D" /></svg>
+        }
+        @case ('arbusto') {
+          <svg class="obstaculo" [style.left.px]="o.x" viewBox="0 0 13 9" width="26" height="18" shape-rendering="crispEdges" aria-hidden="true"><rect x="3" y="0" width="4" height="2" fill="#4CC07D" /><rect x="7" y="1" width="4" height="2" fill="#4CC07D" /><rect x="1" y="2" width="11" height="3" fill="#36A465" /><rect x="0" y="4" width="13" height="5" fill="#23704A" /><rect x="3" y="3" width="2" height="1" fill="#7EE0A1" /></svg>
+        }
+        @case ('bolsa') {
+          <svg class="obstaculo" [style.left.px]="o.x" viewBox="0 0 10 8" width="20" height="16" shape-rendering="crispEdges" aria-hidden="true"><rect x="4" y="0" width="2" height="2" fill="#FFB020" /><rect x="2" y="2" width="6" height="2" fill="#3B4252" /><rect x="0" y="4" width="10" height="4" fill="#3B4252" /><rect x="2" y="5" width="2" height="1" fill="#9AA3B5" /></svg>
+        }
+      }
+    }
+
+    <img class="moto fd-pixel" src="brand/juego-moto.svg" width="46" height="34" alt="" [style.bottom.px]="30 + j.altura" />
+
+    @if (j.modo !== 'jugando') {
+      <div class="mensaje">
+        <strong>{{ j.modo === 'choque' ? '¡CHOCASTE!' : 'FREEDELI RUSH' }}</strong>
+        <span>{{ j.modo === 'choque' ? 'Tocá SALTAR para reintentar' : 'Tocá SALTAR para empezar' }}</span>
+      </div>
+    }
+  </div>
+
+  <button type="button" class="saltar" (click)="saltar()">SALTAR</button>
+
+  @if (estrellaDisponible()) {
+    <div class="racha">
+      <span>Jugá {{ minutos }} minutos seguidos y sumá una estrella: {{ textoRacha() }}</span>
+      <span class="barra" role="progressbar" aria-label="Minutos jugados seguidos" [attr.aria-valuenow]="progreso() | number: '1.0-0'" aria-valuemin="0" aria-valuemax="100">
+        <span class="relleno" [style.width.%]="progreso()"></span>
+      </span>
+    </div>
+  }
+</section>

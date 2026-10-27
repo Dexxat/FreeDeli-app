@@ -103,6 +103,46 @@ describe('MockUsuariosApi', () => {
     expect(r.pedido).toMatchObject({ costoEnvio: 1800, gananciaRider: 1800 });
   });
 
+  describe('FREEDELI RUSH', () => {
+    const enCaminoHace = (minutos: number) => {
+      sinPedidoAbierto();
+      const p = db.pedidos().find((x) => x.usuarioId === USUARIO_ACTUAL_ID)!;
+      const enCamino = { ...p, estado: 'en-camino' as const, enCaminoEn: new Date(Date.now() - minutos * 60_000), estrellaGanada: false };
+      db.guardarPedido(enCamino);
+      return enCamino;
+    };
+
+    it('suma una estrella por pedido tras 10 minutos en camino', async () => {
+      configurar();
+      const p = enCaminoHace(11);
+      expect(await firstValueFrom(api.sumarEstrella(p.id))).toEqual({ estrellas: 4, saldoFavor: 0, premio: false });
+      await expect(firstValueFrom(api.sumarEstrella(p.id))).rejects.toThrow('Ya sumaste');
+    });
+
+    it('no la da antes de los 10 minutos', async () => {
+      configurar();
+      const p = enCaminoHace(4);
+      await expect(firstValueFrom(api.sumarEstrella(p.id))).rejects.toThrow('10 minutos');
+    });
+
+    it('con 5 estrellas gana $2.500 que se descuentan solos del próximo pedido, y vuelven si cancela', async () => {
+      configurar();
+      db.usuarios.update((us) => us.map((u) => ({ ...u, estrellas: 4 })));
+      const p = enCaminoHace(12);
+      expect(await firstValueFrom(api.sumarEstrella(p.id))).toEqual({ estrellas: 0, saldoFavor: 2500, premio: true });
+      db.guardarPedido({ ...p, estado: 'entregado', entregadoEn: new Date() });
+
+      const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
+      if (!r.ok) throw new Error('no se creó');
+      expect(r.pedido.descuentoPremio).toBe(2500);
+      expect(totalPedido(r.pedido)).toBe(6 * 2800 + 2500 - 2500);
+      expect((await firstValueFrom(api.perfil())).saldoFavor).toBe(0);
+
+      await firstValueFrom(api.cancelarPedido(r.pedido.id));
+      expect((await firstValueFrom(api.perfil())).saldoFavor).toBe(2500);
+    });
+  });
+
   it('crea el pedido con precios del catálogo, PIN y la dirección del usuario', async () => {
     configurar();
     sinPedidoAbierto();

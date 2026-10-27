@@ -21,6 +21,10 @@ export interface DatosPersonales {
 export interface Usuario extends DatosPersonales {
   id: string;
   direccion: DireccionEntrega;
+  /** Estrellas de FREEDELI RUSH hacia el próximo premio (0 a 4). */
+  estrellas: number;
+  /** Saldo a favor en pesos: se descuenta solo del próximo pedido. */
+  saldoFavor: number;
 }
 
 /** Lo que el usuario ve del rider que lleva su pedido. */

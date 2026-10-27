@@ -78,9 +78,9 @@ export function confirmarRetiro(p: Pedido, quien: 'kiosco' | 'rider', ahora: Dat
 }
 
 /** El rider sale hacia el cliente. */
-export function salirEnCamino(p: Pedido): Resultado {
+export function salirEnCamino(p: Pedido, ahora: Date): Resultado {
   if (p.estado !== 'retirado') return error('Primero tiene que estar retirado.');
-  return ok({ ...p, estado: 'en-camino' });
+  return ok({ ...p, estado: 'en-camino', enCaminoEn: ahora });
 }
 
 /** El rider ingresa el PIN del cliente. Si coincide, se entrega y se libera el pago. */

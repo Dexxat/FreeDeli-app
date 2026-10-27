@@ -2,7 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { MockDb, USUARIO_ACTUAL_ID, provideFreeDeliMocks } from '@freedeli/shared';
+import { By } from '@angular/platform-browser';
 import Seguimiento from './seguimiento';
+import { Rush } from '../../ui/rush/rush';
 
 const esperar = () => new Promise((r) => setTimeout(r, 5));
 
@@ -36,6 +38,47 @@ describe('Seguimiento (Usuarios)', () => {
   }
 
   const enCurso = () => db.pedidos().find((p) => p.usuarioId === USUARIO_ACTUAL_ID && p.estado === 'retirado')!;
+
+  describe('FREEDELI RUSH', () => {
+    const enCamino = (minutos: number) => (db: MockDb) => {
+      const p = db.pedidos().find((x) => x.usuarioId === USUARIO_ACTUAL_ID && x.estado === 'retirado')!;
+      db.guardarPedido({ ...p, estado: 'en-camino', enCaminoEn: new Date(Date.now() - minutos * 60_000) });
+    };
+
+    it('solo aparece con el rider en camino, con las estrellas del usuario', async () => {
+      let el = await abrir('/pedido');
+      expect(el.querySelector('fd-rush')).toBeNull();
+      TestBed.resetTestingModule();
+      el = await abrir('/pedido', enCamino(1));
+      expect(el.querySelector('fd-rush')).not.toBeNull();
+      expect(el.querySelector('fd-estrellas [role=img]')?.getAttribute('aria-label')).toBe('3 de 5 estrellas');
+    });
+
+    it('al jugar 10 minutos seguidos suma la estrella', async () => {
+      const el = await abrir('/pedido', enCamino(11));
+      h.fixture.debugElement.query(By.directive(Rush)).componentInstance.estrella.emit();
+      await estable();
+      expect(el.textContent).toContain('¡Sumaste una estrella!');
+      expect(el.querySelector('fd-estrellas [role=img]')?.getAttribute('aria-label')).toBe('4 de 5 estrellas');
+    });
+
+    it('con la quinta estrella avisa el premio', async () => {
+      const el = await abrir('/pedido', (db) => {
+        enCamino(12)(db);
+        db.usuarios.update((us) => us.map((u) => ({ ...u, estrellas: 4 })));
+      });
+      h.fixture.debugElement.query(By.directive(Rush)).componentInstance.estrella.emit();
+      await estable();
+      expect(el.textContent).toContain('¡GANASTE $2.500!');
+    });
+
+    it('si el servidor no la acepta, explica por qué', async () => {
+      const el = await abrir('/pedido', enCamino(3));
+      h.fixture.debugElement.query(By.directive(Rush)).componentInstance.estrella.emit();
+      await estable();
+      expect(el.querySelector('.premios [role=alert]')?.textContent).toContain('10 minutos');
+    });
+  });
 
   it('MI PEDIDO muestra el pedido en curso con PIN, rider y tiempo estimado', async () => {
     const el = await abrir('/pedido');

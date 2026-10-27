@@ -46,6 +46,9 @@
                     <li><span>Del envío, puso el kiosco</span><span>{{ e.aporteEnvio | pesos }}</span></li>
                   }
                   <li><span>Comisión FreeDeli</span><span class="amarillo">{{ e.comisionFreeDeli | pesos }}</span></li>
+                  @if (e.descuentoPremio) {
+                    <li><span>Premio FREEDELI RUSH (lo pone FreeDeli)</span><span>−{{ e.descuentoPremio | pesos }}</span></li>
+                  }
                   <li><span>Neto del kiosco</span><span>{{ e.netoKiosco | pesos }}</span></li>
                 </ul>
               </div>

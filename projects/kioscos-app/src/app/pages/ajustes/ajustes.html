@@ -44,7 +44,7 @@
           @for (m of saldo(); track m.id) {
             <tr>
               <td>{{ fecha(m.fecha) }}</td>
-              <td>{{ m.tipo === 'carga' ? 'Carga' : 'Comisión' }}</td>
+              <td>{{ textoMovimiento[m.tipo] }}</td>
               <td>{{ m.referencia }}</td>
               <td class="num">{{ m.monto | pesos }}</td>
               <td class="num">{{ m.saldoResultante | pesos }}</td>

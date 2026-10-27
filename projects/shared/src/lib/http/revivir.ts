@@ -1,3 +1,4 @@
+import { MovimientoSaldo } from '../models/admin.js';
 import { OfertaPedido, Pedido } from '../models/pedido.js';
 
 /** La API manda las fechas como texto: las convierte a Date. */
@@ -8,6 +9,7 @@ export function revivirPedido(p: Pedido): Pedido {
     ...p,
     creadoEn: new Date(p.creadoEn),
     aceptadoEn: fecha(p.aceptadoEn),
+    enCaminoEn: fecha(p.enCaminoEn),
     entregadoEn: fecha(p.entregadoEn),
     retiro: p.retiro ? { kiosco: fecha(p.retiro.kiosco), rider: fecha(p.retiro.rider) } : undefined,
   };
@@ -22,4 +24,11 @@ export function revivirFechas<T>(obj: T, campos: (keyof T)[]): T {
   const copia = { ...obj };
   for (const c of campos) if (copia[c]) (copia as Record<keyof T, unknown>)[c] = new Date(copia[c] as string);
   return copia;
+}
+
+/** Movimiento de saldo como lo manda la API: tipo en mayúsculas y fecha en texto. */
+export type MovimientoSaldoJson = Omit<MovimientoSaldo, 'tipo' | 'fecha'> & { tipo: 'CARGA' | 'COMISION' | 'PREMIO'; fecha: string };
+
+export function revivirMovimiento(m: MovimientoSaldoJson): MovimientoSaldo {
+  return { ...m, fecha: new Date(m.fecha), tipo: m.tipo.toLowerCase() as MovimientoSaldo['tipo'] };
 }

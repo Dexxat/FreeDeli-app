@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
-import { PEDIDO_MINIMO, PesosPipe, Producto, UsuariosApi, nombreZona, rangoTiempo } from '@freedeli/shared';
+import { PEDIDO_MINIMO, PesosPipe, Producto, UsuariosApi, descuentoAplicable, nombreZona, rangoTiempo } from '@freedeli/shared';
 import { combineLatest, distinctUntilChanged, filter, map, shareReplay, switchMap, take, tap } from 'rxjs';
 import { UsuarioStore } from '../../core/usuario.store';
 import { formatearKm } from '../kioscos/kioscos';
@@ -52,7 +52,11 @@ export default class Kiosco {
   protected readonly subtotal = computed(() =>
     this.productos().reduce((a, p) => a + (this.cantidades()[p.id] ?? 0) * p.precio, 0),
   );
-  protected readonly total = computed(() => this.subtotal() + (this.kiosco()?.costoEnvio ?? 0));
+  /** Saldo a favor de FREEDELI RUSH que se va a usar en este pedido. */
+  protected readonly descuento = computed(() =>
+    this.cantidad() ? descuentoAplicable(this.store.usuario()?.saldoFavor ?? 0, this.subtotal() + (this.kiosco()?.costoEnvio ?? 0)) : 0,
+  );
+  protected readonly total = computed(() => this.subtotal() + (this.kiosco()?.costoEnvio ?? 0) - this.descuento());
   /** Cuánto falta en productos para llegar al pedido mínimo. */
   protected readonly faltante = computed(() => Math.max(0, PEDIDO_MINIMO - this.subtotal()));
   protected readonly minimo = PEDIDO_MINIMO;

@@ -47,7 +47,8 @@ describe('flujo del pedido', () => {
     expect(quienDebeActuar(p)).toBe('kiosco');
     p = paso(confirmarRetiro(p, 'kiosco', ahora));
     expect(p.estado).toBe('retirado');
-    p = paso(salirEnCamino(p));
+    p = paso(salirEnCamino(p, ahora));
+    expect(p.enCaminoEn).toEqual(ahora);
     expect(entregarConPin(p, '0000', ahora)).toEqual({ ok: false, error: 'PIN incorrecto.' });
     p = paso(entregarConPin(p, '1234', ahora));
     expect(p).toMatchObject({ estado: 'entregado', pago: 'liberado' });

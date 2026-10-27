@@ -72,6 +72,8 @@ export class MockDb {
       telefono: '+54 9 11 5555-0199',
       email: 'martina@example.com',
       direccion: { direccion: 'Belgrano 845', notas: 'Depto 2B, tocar timbre', zona: 'san-miguel', ubicacion: { lat: -34.543, lng: -58.701 } },
+      estrellas: 3,
+      saldoFavor: 0,
     },
   ]);
   /** Fotos del seguro y la licencia, por id de rider. */
@@ -166,9 +168,13 @@ export class MockDb {
     return pedido;
   }
 
-  /** Al liberarse el pago, la comisión se descuenta del saldo prepago del kiosco. */
-  descontarComision(pedido: Pedido): void {
+  /**
+   * Al liberarse el pago, la comisión se descuenta del saldo prepago del kiosco.
+   * Si el cliente usó saldo a favor, FreeDeli se lo devuelve al kiosco en el mismo saldo.
+   */
+  liquidar(pedido: Pedido): void {
     this.moverSaldo(pedido.kioscoId, 'comision', -pedido.comisionFreeDeli, codigoPedido(pedido));
+    if (pedido.descuentoPremio) this.moverSaldo(pedido.kioscoId, 'premio', pedido.descuentoPremio, `Premio ${codigoPedido(pedido)}`);
   }
 
 

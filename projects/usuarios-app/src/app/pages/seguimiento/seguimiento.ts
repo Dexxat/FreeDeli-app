@@ -1,24 +1,29 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import {
   BarraEstado,
   FREEDELI_CONFIG,
+  PREMIO_SALDO,
   PesosPipe,
   UsuariosApi,
+  mensajeDeError,
   codigoPedido,
   linkWhatsApp,
   minutosParaLlegar,
   totalPedido,
 } from '@freedeli/shared';
 import { PasoActual } from '../../ui/paso-actual';
+import { Rush } from '../../ui/rush/rush';
+import { Estrellas } from '../../ui/estrellas';
+import { UsuarioStore } from '../../core/usuario.store';
 import { distinctUntilChanged, interval, map, of, startWith, switchMap } from 'rxjs';
 
 const HORA = new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
 
 @Component({
   selector: 'fd-seguimiento',
-  imports: [BarraEstado, PesosPipe, RouterLink, PasoActual],
+  imports: [BarraEstado, PesosPipe, RouterLink, PasoActual, Rush, Estrellas],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './seguimiento.html',
   styleUrl: './seguimiento.scss',
@@ -26,6 +31,10 @@ const HORA = new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digi
 export default class Seguimiento {
   private readonly api = inject(UsuariosApi);
   private readonly config = inject(FREEDELI_CONFIG);
+  protected readonly store = inject(UsuarioStore);
+  protected readonly premio = PREMIO_SALDO;
+  /** Resultado de reclamar la estrella de este pedido. */
+  protected readonly estrella = signal<{ sumada: boolean; premio: boolean; error?: string } | null>(null);
 
   /** Sin id (pestaña MI PEDIDO) se muestra el pedido en curso. */
   readonly pedidoId = input<string | undefined>(undefined);
@@ -72,6 +81,16 @@ export default class Seguimiento {
   protected readonly codigo = codigoPedido;
   protected readonly total = totalPedido;
   protected readonly hora = (d?: Date) => (d ? HORA.format(d) : '');
+
+  protected sumarEstrella(pedidoId: string): void {
+    this.api.sumarEstrella(pedidoId).subscribe({
+      next: (r) => {
+        this.store.actualizarPremios(r);
+        this.estrella.set({ sumada: true, premio: r.premio });
+      },
+      error: (e: unknown) => this.estrella.set({ sumada: false, premio: false, error: mensajeDeError(e, e instanceof Error ? e.message : undefined) }),
+    });
+  }
 
   protected readonly whatsapp = computed(() => {
     const p = this.pedido();

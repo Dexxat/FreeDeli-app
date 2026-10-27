@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { AdminApi, PeriodoHistorial, PesosPipe, codigoPedido, nombreZona } from '@freedeli/shared';
+import { AdminApi, PeriodoHistorial, PesosPipe, TEXTO_MOVIMIENTO, codigoPedido, nombreZona } from '@freedeli/shared';
 import { combineLatest, startWith, switchMap } from 'rxjs';
 import { estadoKiosco } from '../kioscos/kioscos';
 
@@ -26,6 +26,7 @@ const PAGOS: Record<string, string> = { pendiente: 'Pendiente', transferido: 'Re
   styleUrl: './kiosco.scss',
 })
 export default class Kiosco {
+  protected readonly textoMovimiento = TEXTO_MOVIMIENTO;
   private readonly api = inject(AdminApi);
   readonly kioscoId = input.required<string>();
 

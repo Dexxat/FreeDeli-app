@@ -25,6 +25,9 @@
     <div><span>Kiosco</span><strong>{{ p.kioscoNombre }}</strong></div>
     <div><span>Productos</span><strong>{{ cantidad(p) }}</strong></div>
     <div><span>Envío</span><strong>{{ p.costoEnvio | pesos }}</strong></div>
+    @if (p.descuentoPremio) {
+      <div><span>Saldo a favor</span><strong>−{{ p.descuentoPremio | pesos }}</strong></div>
+    }
     <div class="final"><strong>Total</strong><strong class="amarillo">{{ total(p) | pesos }}</strong></div>
   </section>
 

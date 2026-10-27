@@ -23,7 +23,7 @@ describe('MockKioscosApi', () => {
 
   it('ganancias: cobrado = envíos + comisiones + neto, y las barras suman el neto', async () => {
     const g = await firstValueFrom(api.ganancias('mes'));
-    expect(g.envios + g.comisiones + g.neto).toBe(g.cobrado);
+    expect(g.envios + g.comisiones + g.neto - g.premios).toBe(g.cobrado);
     expect(g.barras.reduce((a, b) => a + b.monto, 0)).toBe(g.neto);
   });
 

@@ -60,6 +60,27 @@
 
     <fd-paso-actual [pedido]="p" />
 
+    @if (p.estado === 'en-camino') {
+      <section class="bloque premios" aria-live="polite">
+        @if (store.usuario(); as u) {
+          <div class="fila">
+            <fd-estrellas [cantidad]="u.estrellas" />
+            <span class="sutil">Con 5 estrellas, {{ premio | pesos }} a favor</span>
+          </div>
+        }
+        @if (estrella(); as e) {
+          @if (e.premio) {
+            <p class="ganaste" role="status">¡GANASTE {{ premio | pesos }}! Se descuentan solos de tu próximo pedido.</p>
+          } @else if (e.sumada) {
+            <p class="texto" role="status">¡Sumaste una estrella!</p>
+          } @else {
+            <p class="sutil" role="alert">{{ e.error }}</p>
+          }
+        }
+        <fd-rush [estrellaDisponible]="!p.estrellaGanada && !estrella()?.sumada" (estrella)="sumarEstrella(p.id)" />
+      </section>
+    }
+
     <section class="bloque">
       <h2 class="subtitulo">TU RIDER</h2>
       @if (rider(); as r) {
@@ -77,6 +98,9 @@
       <div class="resumen">
         <div><span>Kiosco</span><strong>{{ p.kioscoNombre }}</strong></div>
         <div><span>Entrega</span><strong>{{ p.destino.direccion }}</strong></div>
+        @if (p.descuentoPremio) {
+          <div><span>Saldo a favor</span><strong>−{{ p.descuentoPremio | pesos }}</strong></div>
+        }
         <div class="final"><strong>Total</strong><strong class="amarillo">{{ total(p) | pesos }}</strong></div>
       </div>
     </section>

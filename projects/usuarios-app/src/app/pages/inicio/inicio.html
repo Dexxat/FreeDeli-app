@@ -38,6 +38,9 @@
 }
 
 <fd-aviso-horario />
+@if (store.usuario()?.saldoFavor; as saldo) {
+  <p class="a-favor" role="status">Tenés {{ saldo | pesos }} a favor de FREEDELI RUSH: se descuentan solos de tu próximo pedido.</p>
+}
 <a class="pedir" [routerLink]="destinoPedir()">
   <span class="pedir-textos">
     <span class="pedir-etiqueta">PEDIR</span>

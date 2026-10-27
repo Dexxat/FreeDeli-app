@@ -32,6 +32,8 @@ export class UsuarioController {
       nombre: u.nombre,
       dni: u.dni ?? '',
       telefono: u.telefono,
+      estrellas: u.estrellas,
+      saldoFavor: u.saldoFavor,
       email: u.cuenta.email,
       direccion: { direccion: u.direccion, notas: u.notas ?? undefined, zona: zonaApi(u.zona), ubicacion: { lat: u.lat, lng: u.lng } },
     };
@@ -140,6 +142,12 @@ export class UsuarioController {
   @Post('pedidos/:id/cancelar') @HttpCode(200)
   async cancelar(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string) {
     const usuarioId = await this.perfiles.usuarioId(s.sub);
-    return this.pedidos.transicionar(id, (f) => f.usuarioId === usuarioId, cancelarPorCliente);
+    return this.pedidos.transicionar(id, (f) => f.usuarioId === usuarioId, cancelarPorCliente, (tx, p) => this.pedidos.devolverPremio(tx, p));
+  }
+
+  /** FREEDELI RUSH: jugó 10 minutos seguidos mientras el rider estaba en camino. */
+  @Post('pedidos/:id/estrella') @HttpCode(200)
+  async estrella(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string) {
+    return this.pedidos.sumarEstrella(await this.perfiles.usuarioId(s.sub), id);
   }
 }

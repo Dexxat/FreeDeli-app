@@ -1,6 +1,6 @@
 import { Injectable, computed, inject } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { Observable, delay, distinctUntilChanged, map, of, throwError } from 'rxjs';
+import { Observable, delay, distinctUntilChanged, map, of, tap, throwError } from 'rxjs';
 import { ResultadoCrearPedido, UsuariosApi } from '../api/usuarios.api';
 import { Kiosco, Producto } from '../models/kiosco';
 import { Pedido, cantidadProductos, totalPedido } from '../models/pedido';
@@ -14,6 +14,7 @@ import { FREEDELI_CONFIG, HORARIO_LIBRE } from '../config/freedeli.config';
 import { MockDb, USUARIO_ACTUAL_ID } from './mock-db';
 import { Resultado, aceptarAjuste, cancelarPorCliente } from '../rules/flujo.rules';
 import { LATENCIA_MOCK } from './mock-riders.api';
+import { EstrellaSumada, descuentoAplicable, puedeGanarEstrella, sumarEstrella } from '../rules/premios.rules';
 
 @Injectable()
 export class MockUsuariosApi extends UsuariosApi {
@@ -41,7 +42,27 @@ export class MockUsuariosApi extends UsuariosApi {
   }
 
   cancelarPedido(pedidoId: string): Observable<Pedido> {
-    return this.transicion(pedidoId, cancelarPorCliente);
+    const antes = this.db.buscarPedido(pedidoId);
+    return this.transicion(pedidoId, cancelarPorCliente).pipe(tap(() => this.moverSaldoFavor(antes?.descuentoPremio ?? 0)));
+  }
+
+  sumarEstrella(pedidoId: string): Observable<EstrellaSumada> {
+    const p = this.db.buscarPedido(pedidoId);
+    if (!p || p.usuarioId !== USUARIO_ACTUAL_ID) return throwError(() => new Error('No encontramos el pedido.'));
+    const permitido = puedeGanarEstrella(p, new Date());
+    if (!permitido.ok) return throwError(() => new Error(permitido.error));
+    const resultado = sumarEstrella(this.usuario());
+    this.db.guardarPedido({ ...p, estrellaGanada: true });
+    this.actualizarUsuario({ estrellas: resultado.estrellas, saldoFavor: resultado.saldoFavor });
+    return this.responder(resultado);
+  }
+
+  private moverSaldoFavor(monto: number): void {
+    if (monto) this.actualizarUsuario({ saldoFavor: this.usuario().saldoFavor + monto });
+  }
+
+  private actualizarUsuario(cambios: Partial<Usuario>): void {
+    this.db.usuarios.update((us) => us.map((u) => (u.id === USUARIO_ACTUAL_ID ? { ...u, ...cambios } : u)));
   }
 
   private usuario(): Usuario {
@@ -58,13 +79,13 @@ export class MockUsuariosApi extends UsuariosApi {
 
   cambiarDireccion(direccion: DireccionEntrega): Observable<Usuario> {
     const ubicacion = this.db.geolocalizar(direccion.direccion, direccion.zona);
-    this.db.usuarios.update((us) => us.map((u) => (u.id === USUARIO_ACTUAL_ID ? { ...u, direccion: { ...direccion, ubicacion } } : u)));
+    this.actualizarUsuario({ direccion: { ...direccion, ubicacion } });
     return this.responder(this.usuario());
   }
 
   actualizarDatos(datos: DatosPersonales): Observable<Usuario> {
     const limpio = { nombre: datos.nombre.trim(), dni: normalizarDni(datos.dni), email: datos.email.trim().toLowerCase(), telefono: datos.telefono.trim() };
-    this.db.usuarios.update((us) => us.map((u) => (u.id === USUARIO_ACTUAL_ID ? { ...u, ...limpio } : u)));
+    this.actualizarUsuario(limpio);
     return this.responder(this.usuario());
   }
 
@@ -129,6 +150,7 @@ export class MockUsuariosApi extends UsuariosApi {
     } else {
       const u = this.usuario();
       const numero = Math.max(999, ...this.db.pedidos().map((p) => p.numero)) + 1;
+      const descuentoPremio = descuentoAplicable(u.saldoFavor, subtotal + kiosco.costoEnvio);
       const pedido: Pedido = {
         id: `ped-${numero}`,
         numero,
@@ -151,12 +173,14 @@ export class MockUsuariosApi extends UsuariosApi {
         pago: 'pendiente',
         aliasKiosco: kiosco.aliasCobro,
         comisionFreeDeli: calcularComision(subtotal, this.config.comisionPorcentaje),
+        descuentoPremio,
         pin: generarPin(),
         estado: 'esperando',
         fase: 'stock',
         creadoEn: new Date(),
       };
       this.db.pedidos.update((ps) => [...ps, pedido]);
+      this.moverSaldoFavor(-descuentoPremio);
       resultado = { ok: true, pedido };
     }
     return this.responder(resultado);

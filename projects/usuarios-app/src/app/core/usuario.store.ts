@@ -49,6 +49,11 @@ export class UsuarioStore {
     );
   }
 
+  /** Refleja las estrellas y el saldo a favor después de jugar FREEDELI RUSH. */
+  actualizarPremios(premios: Pick<Usuario, 'estrellas' | 'saldoFavor'>): void {
+    this.usuario.update((u) => (u ? { ...u, ...premios } : u));
+  }
+
   cerrarSesion(): void {
     this.sesion.cerrar();
     this.usuario.set(null);

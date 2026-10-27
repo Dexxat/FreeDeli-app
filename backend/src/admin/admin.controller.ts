@@ -8,6 +8,7 @@ import {
   SALDO_BAJO,
   entregaAdmin,
   filaMain,
+  gananciaFreeDeli,
   gananciasAdmin,
   inicioDelDia,
   movimientoDePedido,
@@ -151,7 +152,7 @@ export class AdminController {
     const ahora = new Date();
     const hoy = inicioDelDia(ahora);
     const [deHoy, enCurso, kioscos, ridersActivos, demorados] = await Promise.all([
-      this.db.pedido.findMany({ where: { creadoEn: { gte: hoy } }, select: { estado: true, comisionFreeDeli: true } }),
+      this.db.pedido.findMany({ where: { creadoEn: { gte: hoy } }, select: { estado: true, comisionFreeDeli: true, descuentoPremio: true } }),
       this.db.pedido.count({ where: { estado: { in: this.pedidos.abiertos() } } }),
       this.db.kiosco.findMany({ where: { cuenta: { estado: EstadoCuenta.APROBADA } } }),
       this.db.rider.count({ where: { disponible: true, pausado: false } }),
@@ -162,7 +163,7 @@ export class AdminController {
       pedidosHoy: deHoy.length,
       entregadosHoy: entregados.length,
       enCurso,
-      comisionesHoy: entregados.reduce((a, p) => a + p.comisionFreeDeli, 0),
+      comisionesHoy: entregados.reduce((a, p) => a + gananciaFreeDeli(p), 0),
       kioscosAbiertos: kioscos.filter((k) => puedeRecibirPedidos(k)).length,
       ridersActivos,
       alertas: [

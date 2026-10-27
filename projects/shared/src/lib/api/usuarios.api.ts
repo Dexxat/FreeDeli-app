@@ -3,6 +3,7 @@ import { Kiosco, Producto } from '../models/kiosco';
 import { Pedido } from '../models/pedido';
 import { DatosPersonales, DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } from '../models/usuario';
 import { ZonaId } from '../models/zona';
+import { EstrellaSumada } from '../rules/premios.rules';
 
 export type ResultadoCrearPedido =
   | { ok: true; pedido: Pedido }
@@ -31,4 +32,6 @@ export abstract class UsuariosApi {
   abstract aceptarAjuste(pedidoId: string): Observable<Pedido>;
   /** Cancela el pedido. Solo antes de que se busque rider. */
   abstract cancelarPedido(pedidoId: string): Observable<Pedido>;
+  /** FREEDELI RUSH: el cliente jugó 10 minutos seguidos mientras el rider estaba en camino. */
+  abstract sumarEstrella(pedidoId: string): Observable<EstrellaSumada>;
 }
