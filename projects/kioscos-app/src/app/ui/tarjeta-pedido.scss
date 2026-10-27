@@ -44,3 +44,5 @@ button:focus-visible, input:focus-visible { outline: 3px solid #fff; outline-off
 .botones { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
 .error { margin: 0; font-size: 13px; font-weight: 700; color: var(--fd-amber-400); }
 .aporte { color: var(--fd-amber-400); }
+.ayuda { align-self: flex-start; font-size: 12px; color: var(--fd-blue-300); }
+.ayuda:focus-visible { outline: 3px solid var(--fd-yellow-400); outline-offset: 2px; }

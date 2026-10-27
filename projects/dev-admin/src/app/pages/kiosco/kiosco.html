@@ -7,7 +7,7 @@
       <p class="sutil">{{ zona(k.zona) }} · {{ k.direccion }} · alias {{ k.aliasCobro }}</p>
     </div>
     <div class="acciones">
-      <span class="chip" [class.ok]="estado(k) === 'Abierto'" [class.alerta]="estado(k) === 'Pausado'">{{ estado(k) }}</span>
+      <span class="chip" [class.ok]="estado(k) === 'Activo'" [class.alerta]="estado(k) !== 'Activo'">{{ estado(k) }}</span>
       <button type="button" class="boton" [class.peligro]="!k.pausado" [disabled]="enviando()" (click)="alternarPausa()">
         {{ k.pausado ? 'Reactivar' : 'Pausar' }}
       </button>

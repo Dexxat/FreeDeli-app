@@ -102,38 +102,6 @@ export interface RiderAdmin extends Pick<Rider, 'id' | 'nombre' | 'telefono' | '
   enCurso: Pedido | null;
 }
 
-export type TipoConflicto = 'demora' | 'producto' | 'pago' | 'rider' | 'kiosco' | 'cliente' | 'otro';
-export type EstadoConflicto = 'abierto' | 'en-seguimiento' | 'resuelto';
-
-export const TIPOS_CONFLICTO: readonly { id: TipoConflicto; etiqueta: string }[] = [
-  { id: 'demora', etiqueta: 'Demora' },
-  { id: 'producto', etiqueta: 'Producto faltante o dañado' },
-  { id: 'pago', etiqueta: 'Pago o transferencia' },
-  { id: 'rider', etiqueta: 'Problema con el rider' },
-  { id: 'kiosco', etiqueta: 'Problema con el kiosco' },
-  { id: 'cliente', etiqueta: 'Problema con el cliente' },
-  { id: 'otro', etiqueta: 'Otro' },
-];
-
-/** Incidencia registrada por el dueño. La charla con las partes sigue por WhatsApp. */
-export interface Conflicto {
-  id: string;
-  pedidoId?: string;
-  numeroPedido?: number;
-  tipo: TipoConflicto;
-  descripcion: string;
-  estado: EstadoConflicto;
-  creadoEn: Date;
-  resueltoEn?: Date;
-  notas: { fecha: Date; texto: string }[];
-}
-
-export interface NuevoConflicto {
-  pedidoId?: string;
-  tipo: TipoConflicto;
-  descripcion: string;
-}
-
 /** Movimiento del saldo prepago de un kiosco. */
 export interface MovimientoSaldo {
   id: string;

@@ -66,7 +66,7 @@ export class UsuarioController {
     return this.db.producto.findMany({ where: { kioscoId: id, disponible: true }, orderBy: { nombre: 'asc' } });
   }
 
-  private paraUsuario(k: { id: string; nombre: string; zona: Parameters<typeof zonaApi>[0]; direccion: string; lat: number; lng: number; abierto: boolean; pausado: boolean; saldo: number; tiempoEstimadoMin: number }, u: { lat: number; lng: number }) {
+  private paraUsuario(k: { id: string; nombre: string; zona: Parameters<typeof zonaApi>[0]; direccion: string; lat: number; lng: number; pausado: boolean; saldo: number; tiempoEstimadoMin: number }, u: { lat: number; lng: number }) {
     const km = distanciaKm({ lat: k.lat, lng: k.lng }, { lat: u.lat, lng: u.lng });
     return {
       id: k.id,
@@ -74,7 +74,7 @@ export class UsuarioController {
       zona: zonaApi(k.zona),
       direccion: k.direccion,
       ubicacion: { lat: k.lat, lng: k.lng },
-      abierto: puedeRecibirPedidos(k),
+      recibePedidos: puedeRecibirPedidos(k),
       pausado: k.pausado,
       tiempoEstimadoMin: k.tiempoEstimadoMin,
       distanciaKm: km,

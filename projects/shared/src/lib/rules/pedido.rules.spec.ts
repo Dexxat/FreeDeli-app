@@ -81,10 +81,9 @@ describe('minutosParaLlegar', () => {
 
 describe('puedeRecibirPedidos', () => {
   it('necesita estar abierto, sin pausa y con saldo para la comisión mínima', () => {
-    expect(puedeRecibirPedidos({ abierto: true, pausado: false, saldo: 1500 })).toBe(true);
-    expect(puedeRecibirPedidos({ abierto: true, pausado: false, saldo: 1499 })).toBe(false);
-    expect(puedeRecibirPedidos({ abierto: true, pausado: true, saldo: 50000 })).toBe(false);
-    expect(puedeRecibirPedidos({ abierto: false, pausado: false, saldo: 50000 })).toBe(false);
+    expect(puedeRecibirPedidos({ pausado: false, saldo: 1500 })).toBe(true);
+    expect(puedeRecibirPedidos({ pausado: false, saldo: 1499 })).toBe(false);
+    expect(puedeRecibirPedidos({ pausado: true, saldo: 50000 })).toBe(false);
   });
   it('el pedido mínimo da justo la comisión mínima', () => {
     expect(calcularComision(PEDIDO_MINIMO, 10)).toBe(1500);

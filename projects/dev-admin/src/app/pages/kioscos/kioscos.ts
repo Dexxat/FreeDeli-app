@@ -3,10 +3,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { AdminApi, KioscoAdmin, PesosPipe, nombreZona } from '@freedeli/shared';
 
-/** "Abierto", "Cerrado" o "Pausado" (la pausa de FreeDeli manda sobre el horario). */
-export function estadoKiosco(k: Pick<KioscoAdmin, 'abierto' | 'pausado'>): 'Pausado' | 'Abierto' | 'Cerrado' {
+/** "Pausado" por FreeDeli, "Sin saldo" para la comisión mínima, o "Activo". */
+export function estadoKiosco(k: Pick<KioscoAdmin, 'pausado' | 'sinSaldo'>): 'Pausado' | 'Sin saldo' | 'Activo' {
   if (k.pausado) return 'Pausado';
-  return k.abierto ? 'Abierto' : 'Cerrado';
+  return k.sinSaldo ? 'Sin saldo' : 'Activo';
 }
 
 @Component({
@@ -33,7 +33,7 @@ export function estadoKiosco(k: Pick<KioscoAdmin, 'abierto' | 'pausado'>): 'Paus
             <tr>
               <td><a class="enlace" [routerLink]="['/kioscos', k.id]">{{ k.nombre }}</a></td>
               <td>{{ zona(k.zona) }}</td>
-              <td><span class="chip" [class.ok]="estado(k) === 'Abierto'" [class.alerta]="estado(k) === 'Pausado'">{{ estado(k) }}</span></td>
+              <td><span class="chip" [class.ok]="estado(k) === 'Activo'" [class.alerta]="estado(k) !== 'Activo'">{{ estado(k) }}</span></td>
               <td class="num" [class.alerta-texto]="k.saldoBajo">{{ k.saldo | pesos }}</td>
               <td class="num">{{ k.pedidosHoy }}</td>
               <td class="num">{{ k.comisionHoy | pesos }}</td>

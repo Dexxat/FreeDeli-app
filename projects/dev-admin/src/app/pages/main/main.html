@@ -18,8 +18,6 @@
 
 <fd-panel-altas />
 
-<fd-dialogo-conflicto #dialogo />
-<fd-panel-conflictos [dialogo]="dialogo" />
 
 <p class="sutil" aria-live="polite">
   {{ totales().pedidos }} pedidos · {{ totales().entregados }} entregados · {{ totales().enCurso }} en curso
@@ -42,7 +40,6 @@
           </div>
           <div class="centro">
             <span class="estado">{{ textoEstado[f.estado] }}</span>
-            <button type="button" class="reportar" [attr.aria-label]="'Reportar conflicto en ' + codigo(f.numero)" (click)="dialogo.abrir({ pedidoId: f.pedidoId, numero: f.numero })">Reportar</button>
           </div>
           <div class="lado derecha">
             @if (f.riderId) {

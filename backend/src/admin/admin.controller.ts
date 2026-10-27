@@ -15,15 +15,12 @@ import {
   rangoPeriodo,
 } from '../dominio.js';
 import type { Kiosco } from '../generated/prisma/client.js';
-import { EstadoConflicto, EstadoCuenta, EstadoPedido, Rol, TipoConflicto, TipoMovimientoSaldo } from '../generated/prisma/enums.js';
-import { CambioConflictoDto, CargaSaldoDto, NuevoConflictoDto, PausaDto } from '../pedidos/dto.js';
+import { EstadoCuenta, EstadoPedido, Rol, TipoMovimientoSaldo } from '../generated/prisma/enums.js';
+import { CargaSaldoDto, PausaDto } from '../pedidos/dto.js';
 import { PedidosService } from '../pedidos/pedidos.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 const EN_CURSO = [EstadoPedido.ACEPTADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO];
-const TIPO_DB: Record<string, TipoConflicto> = Object.fromEntries(Object.values(TipoConflicto).map((t) => [t.toLowerCase(), t]));
-const ESTADO_CONFLICTO_DB: Record<string, EstadoConflicto> = { abierto: 'ABIERTO', 'en-seguimiento': 'EN_SEGUIMIENTO', resuelto: 'RESUELTO' };
-const ESTADO_CONFLICTO_API = Object.fromEntries(Object.entries(ESTADO_CONFLICTO_DB).map(([k, v]) => [v, k]));
 
 /** FreeDeli Dev: una sola instancia, un solo usuario (el dueño). */
 @Roles(Rol.DEV)
@@ -195,57 +192,4 @@ export class AdminController {
     const ps = await this.pedidos.buscar({ estado: EstadoPedido.ENTREGADO, zona: { in: zonasDe(zonas) }, creadoEn: { gte: desde, lt: hasta } });
     return ps.map((p) => entregaAdmin(p, p.riderId ? nombres.get(p.riderId) : undefined));
   }
-
-  // ---------- Conflictos ----------
-
-  private conflictoApi(c: { id: string; pedidoId: string | null; pedido: { numero: number } | null; tipo: TipoConflicto; descripcion: string; estado: EstadoConflicto; creadoEn: Date; resueltoEn: Date | null; notas: { fecha: Date; texto: string }[] }) {
-    return {
-      id: c.id,
-      pedidoId: c.pedidoId ?? undefined,
-      numeroPedido: c.pedido?.numero,
-      tipo: c.tipo.toLowerCase(),
-      descripcion: c.descripcion,
-      estado: ESTADO_CONFLICTO_API[c.estado],
-      creadoEn: c.creadoEn,
-      resueltoEn: c.resueltoEn ?? undefined,
-      notas: c.notas.map((n) => ({ fecha: n.fecha, texto: n.texto })),
-    };
-  }
-
-  private readonly incluirConflicto = { pedido: { select: { numero: true } }, notas: { orderBy: { fecha: 'asc' as const } } };
-
-  @Get('conflictos')
-  async conflictos() {
-    const cs = await this.db.conflicto.findMany({ include: this.incluirConflicto, orderBy: { creadoEn: 'desc' } });
-    const orden = (e: EstadoConflicto) => (e === EstadoConflicto.RESUELTO ? 1 : 0);
-    return cs.sort((a, b) => orden(a.estado) - orden(b.estado)).map((c) => this.conflictoApi(c));
-  }
-
-  @Post('conflictos')
-  async registrar(@Body() dto: NuevoConflictoDto) {
-    if (dto.pedidoId && !(await this.db.pedido.findUnique({ where: { id: dto.pedidoId } }))) throw new NotFoundException('No encontramos el pedido.');
-    const c = await this.db.conflicto.create({
-      data: { pedidoId: dto.pedidoId, tipo: TIPO_DB[dto.tipo], descripcion: dto.descripcion.trim() },
-      include: this.incluirConflicto,
-    });
-    return this.conflictoApi(c);
-  }
-
-  @Patch('conflictos/:id')
-  async actualizar(@Param('id', ParseUUIDPipe) id: string, @Body() dto: CambioConflictoDto) {
-    const actual = await this.db.conflicto.findUnique({ where: { id } });
-    if (!actual) throw new NotFoundException('No existe ese conflicto.');
-    const estado = dto.estado ? ESTADO_CONFLICTO_DB[dto.estado] : actual.estado;
-    const c = await this.db.conflicto.update({
-      where: { id },
-      data: {
-        estado,
-        resueltoEn: estado === EstadoConflicto.RESUELTO ? (actual.resueltoEn ?? new Date()) : null,
-        notas: dto.nota?.trim() ? { create: { texto: dto.nota.trim() } } : undefined,
-      },
-      include: this.incluirConflicto,
-    });
-    return this.conflictoApi(c);
-  }
 }
-

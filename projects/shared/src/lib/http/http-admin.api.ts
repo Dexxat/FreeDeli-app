@@ -4,15 +4,12 @@ import { Observable, Subject, debounceTime, map, merge, startWith, switchMap, ta
 import { AdminApi } from '../api/admin.api.js';
 import {
   AltaPendiente,
-  Conflicto,
   EntregaAdmin,
-  EstadoConflicto,
   FilaMain,
   GananciasAdmin,
   KioscoAdmin,
   MovimientoKiosco,
   MovimientoSaldo,
-  NuevoConflicto,
   PeriodoAdmin,
   ResumenAdmin,
   RiderAdmin,
@@ -29,7 +26,7 @@ export class HttpAdminApi extends AdminApi {
   private readonly http = inject(HttpClient);
   private readonly url = inject(API_URL);
   private readonly eventos = inject(EventosCliente);
-  /** Cambios hechos desde el panel (pausas, cargas, altas, conflictos). */
+  /** Cambios hechos desde el panel (pausas, cargas y altas). */
   private readonly cambios$ = new Subject<void>();
   /** Cualquier novedad: conexión, pedido o cambio propio. Agrupa ráfagas de eventos. */
   private readonly novedades$ = merge(this.eventos.eventos$, this.cambios$).pipe(debounceTime(250), startWith(null));
@@ -104,20 +101,6 @@ export class HttpAdminApi extends AdminApi {
 
   pausarRider(id: string, pausado: boolean): Observable<RiderAdmin> {
     return this.http.post<RiderAdmin>(`${this.url}/admin/riders/${id}/pausa`, { pausado }).pipe(tap(this.avisar));
-  }
-
-  conflictos(): Observable<Conflicto[]> {
-    return this.vivo(() => this.http.get<Conflicto[]>(`${this.url}/admin/conflictos`)).pipe(
-      map((cs) => cs.map((c) => ({ ...revivirFechas(c, ['creadoEn', 'resueltoEn']), notas: c.notas.map((n) => revivirFechas(n, ['fecha'])) }))),
-    );
-  }
-
-  registrarConflicto(nuevo: NuevoConflicto): Observable<Conflicto> {
-    return this.http.post<Conflicto>(`${this.url}/admin/conflictos`, nuevo).pipe(tap(this.avisar));
-  }
-
-  actualizarConflicto(id: string, cambios: { estado?: EstadoConflicto; nota?: string }): Observable<Conflicto> {
-    return this.http.patch<Conflicto>(`${this.url}/admin/conflictos/${id}`, { estado: cambios.estado, nota: cambios.nota || undefined }).pipe(tap(this.avisar));
   }
 
   altasPendientes(): Observable<AltaPendiente[]> {

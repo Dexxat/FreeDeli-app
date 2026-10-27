@@ -83,13 +83,4 @@ describe('Perfiles, reportes y panel Dev', () => {
     await e.api().post(`/api/admin/riders/${e.riderId}/pausa`).set(auth(e.dev)).send({ pausado: false }).expect(200);
   });
 
-  it('Dev: conflictos con notas y resolución', async () => {
-    const c = (await e.api().post('/api/admin/conflictos').set(auth(e.dev)).send({ pedidoId: pedido.id, tipo: 'producto', descripcion: 'Faltó una gaseosa' }).expect(201)).body;
-    expect(c).toMatchObject({ estado: 'abierto', tipo: 'producto', numeroPedido: pedido.numero });
-    await e.api().patch(`/api/admin/conflictos/${c.id}`).set(auth(e.dev)).send({ estado: 'en-seguimiento', nota: 'Hablé con el kiosco' }).expect(200);
-    const r = (await e.api().patch(`/api/admin/conflictos/${c.id}`).set(auth(e.dev)).send({ estado: 'resuelto' }).expect(200)).body;
-    expect(r.notas.map((n: { texto: string }) => n.texto)).toEqual(['Hablé con el kiosco']);
-    expect(r.resueltoEn).toBeTruthy();
-    await e.api().post('/api/admin/conflictos').set(auth(e.dev)).send({ tipo: 'inventado', descripcion: 'x' }).expect(400);
-  });
 });

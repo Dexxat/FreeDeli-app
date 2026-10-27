@@ -69,7 +69,7 @@ describe('Flujo completo del pedido', () => {
   it('el usuario ve el kiosco con distancia y envío, y su catálogo', async () => {
     const ks = await api().get('/api/kioscos?zona=san-miguel').set(auth(usuario)).expect(200);
     const k = ks.body.find((x: { id: string }) => x.id === kioscoId);
-    expect(k).toMatchObject({ nombre: 'Kiosco Flujo', zona: 'san-miguel', abierto: true });
+    expect(k).toMatchObject({ nombre: 'Kiosco Flujo', zona: 'san-miguel', recibePedidos: true });
     // El viaje más barato ($3.000) ya supera el tope: el cliente paga $2.500.
     expect(k.costoEnvio).toBe(2500);
     expect(k.saldo).toBeUndefined();

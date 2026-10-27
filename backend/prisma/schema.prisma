@@ -57,22 +57,6 @@ enum TipoMovimientoSaldo {
   COMISION
 }
 
-enum TipoConflicto {
-  DEMORA
-  PRODUCTO
-  PAGO
-  RIDER
-  KIOSCO
-  CLIENTE
-  OTRO
-}
-
-enum EstadoConflicto {
-  ABIERTO
-  EN_SEGUIMIENTO
-  RESUELTO
-}
-
 model Cuenta {
   id        String       @id @default(uuid())
   email     String       @unique
@@ -110,7 +94,6 @@ model Kiosco {
   direccion         String
   lat               Float
   lng               Float
-  abierto           Boolean           @default(true)
   pausado           Boolean           @default(false)
   /// Saldo prepago en pesos. De acá se descuentan las comisiones.
   saldo             Int               @default(0)
@@ -184,7 +167,6 @@ model Pedido {
   entregadoEn      DateTime?
   items            ItemPedido[]
   ofertas          Oferta[]
-  conflictos       Conflicto[]
 
   @@index([kioscoId, estado])
   @@index([usuarioId, estado])
@@ -230,26 +212,6 @@ model MovimientoSaldo {
   saldoResultante Int
 
   @@index([kioscoId, fecha])
-}
-
-model Conflicto {
-  id          String           @id @default(uuid())
-  pedidoId    String?
-  pedido      Pedido?          @relation(fields: [pedidoId], references: [id])
-  tipo        TipoConflicto
-  descripcion String
-  estado      EstadoConflicto  @default(ABIERTO)
-  creadoEn    DateTime         @default(now())
-  resueltoEn  DateTime?
-  notas       NotaConflicto[]
-}
-
-model NotaConflicto {
-  id          String    @id @default(uuid())
-  conflictoId String
-  conflicto   Conflicto @relation(fields: [conflictoId], references: [id], onDelete: Cascade)
-  fecha       DateTime  @default(now())
-  texto       String
 }
 
 /// Tramo en que el rider estuvo ON. Sirve para las horas online de Ganancias.

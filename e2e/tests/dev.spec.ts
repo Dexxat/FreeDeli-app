@@ -34,7 +34,7 @@ test.describe('panel Dev', () => {
     expect((await api.llamar('GET', '/kiosco', undefined, k.token)).saldo).toBe(0);
   });
 
-  test('las ganancias suman la comisión de cada entrega y se registra un conflicto', async ({ api, abrir }) => {
+  test('las ganancias suman la comisión de cada entrega', async ({ api, abrir }) => {
     const dev = await api.dev();
     const antes = (await api.llamar('GET', '/admin/ganancias?periodo=jornada', undefined, dev)).total;
     const k = await api.kiosco({ zona: 'muniz' });
@@ -55,11 +55,6 @@ test.describe('panel Dev', () => {
     await ingresar(panel, DEV.email, DEV.clave, /\/main$/);
     const fila = panel.locator('.filas li', { hasText: `#A-${p.numero}` });
     await expect(fila).toHaveClass(/estado-entregado/);
-    await fila.getByRole('button', { name: `Reportar conflicto en #A-${p.numero}` }).click();
-    const dialogo = panel.locator('dialog[open]');
-    await dialogo.locator('textarea').fill('La clienta reclama una gaseosa caliente.');
-    await boton(dialogo, 'Registrar').click();
-    await expect(panel.getByText('La clienta reclama una gaseosa caliente.')).toBeVisible();
 
     await panel.getByRole('link', { name: 'GANANCIAS' }).click();
     await expect(panel.locator('.total-monto')).toHaveText(pesos(despues));

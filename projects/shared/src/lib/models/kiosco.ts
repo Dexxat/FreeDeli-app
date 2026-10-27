@@ -6,7 +6,11 @@ export interface Kiosco {
   zona: ZonaId;
   direccion: string;
   ubicacion: Ubicacion;
-  abierto: boolean;
+  /**
+   * Si recibe pedidos ahora (no está pausado y tiene saldo). Lo calcula el servidor
+   * solo para la app de usuarios. Todos los kioscos operan en el horario de FreeDeli.
+   */
+  recibePedidos?: boolean;
   /** Pausado desde FreeDeli Dev. */
   pausado: boolean;
   /** Saldo en pesos que le queda para seguir operando. */

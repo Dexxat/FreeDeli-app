@@ -3,7 +3,7 @@ import { Kiosco, Producto } from '../models/kiosco';
 import { OfertaPedido, Pedido } from '../models/pedido';
 import { Rider } from '../models/rider';
 import { Usuario } from '../models/usuario';
-import { Conflicto, MovimientoSaldo } from '../models/admin';
+import { MovimientoSaldo } from '../models/admin';
 import { codigoPedido } from '../models/pedido';
 import { DemandaZona, Ubicacion, ZONAS, ZonaId } from '../models/zona';
 import { PEDIDO_MINIMO, calcularComision, costoEnvio, envioCliente, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
@@ -27,11 +27,11 @@ export const USUARIO_ACTUAL_ID = 'u1';
 export const KIOSCO_ACTUAL_ID = 'k1';
 
 const KIOSCOS: Kiosco[] = [
-  { id: 'k1', nombre: 'Kiosco El Faro', zona: 'san-miguel', direccion: 'Av. Pres. Perón 1420', ubicacion: { lat: -34.5415, lng: -58.7025 }, abierto: true, pausado: false, saldo: 48000, tiempoEstimadoMin: 25, costoEnvio: 0, aliasCobro: 'elfaro.kiosco' },
-  { id: 'k2', nombre: 'Maxikiosco 24', zona: 'san-miguel', direccion: 'Belgrano 980', ubicacion: { lat: -34.545, lng: -58.697 }, abierto: true, pausado: false, saldo: 12500, tiempoEstimadoMin: 20, costoEnvio: 0, aliasCobro: 'maxi24.sm' },
-  { id: 'k3', nombre: 'Kiosco La Estación', zona: 'muniz', direccion: 'Av. Ricchieri 455', ubicacion: { lat: -34.55, lng: -58.703 }, abierto: true, pausado: false, saldo: 30200, tiempoEstimadoMin: 30, costoEnvio: 0, aliasCobro: 'laestacion.muniz' },
-  { id: 'k4', nombre: 'Drugstore Bella', zona: 'bella-vista', direccion: 'Senador Morón 1210', ubicacion: { lat: -34.561, lng: -58.688 }, abierto: true, pausado: false, saldo: 61000, tiempoEstimadoMin: 35, costoEnvio: 0, aliasCobro: 'drugstore.bella' },
-  { id: 'k5', nombre: 'Kiosco Pixel', zona: 'bella-vista', direccion: 'Av. Gaspar Campos 3300', ubicacion: { lat: -34.566, lng: -58.698 }, abierto: false, pausado: false, saldo: 5000, tiempoEstimadoMin: 30, costoEnvio: 0, aliasCobro: 'kiosco.pixel' },
+  { id: 'k1', nombre: 'Kiosco El Faro', zona: 'san-miguel', direccion: 'Av. Pres. Perón 1420', ubicacion: { lat: -34.5415, lng: -58.7025 }, pausado: false, saldo: 48000, tiempoEstimadoMin: 25, costoEnvio: 0, aliasCobro: 'elfaro.kiosco' },
+  { id: 'k2', nombre: 'Maxikiosco 24', zona: 'san-miguel', direccion: 'Belgrano 980', ubicacion: { lat: -34.545, lng: -58.697 }, pausado: false, saldo: 12500, tiempoEstimadoMin: 20, costoEnvio: 0, aliasCobro: 'maxi24.sm' },
+  { id: 'k3', nombre: 'Kiosco La Estación', zona: 'muniz', direccion: 'Av. Ricchieri 455', ubicacion: { lat: -34.55, lng: -58.703 }, pausado: false, saldo: 30200, tiempoEstimadoMin: 30, costoEnvio: 0, aliasCobro: 'laestacion.muniz' },
+  { id: 'k4', nombre: 'Drugstore Bella', zona: 'bella-vista', direccion: 'Senador Morón 1210', ubicacion: { lat: -34.561, lng: -58.688 }, pausado: false, saldo: 61000, tiempoEstimadoMin: 35, costoEnvio: 0, aliasCobro: 'drugstore.bella' },
+  { id: 'k5', nombre: 'Kiosco Pixel', zona: 'bella-vista', direccion: 'Av. Gaspar Campos 3300', ubicacion: { lat: -34.566, lng: -58.698 }, pausado: true, saldo: 5000, tiempoEstimadoMin: 30, costoEnvio: 0, aliasCobro: 'kiosco.pixel' },
 ];
 
 const PRODUCTOS = [
@@ -45,7 +45,7 @@ const PRODUCTOS = [
   { id: 'p8', nombre: 'Galletitas rellenas', precio: 1600 },
 ];
 
-/** Catálogo: cada kiosco abierto vende todos los productos. */
+/** Catálogo: cada kiosco vende todos los productos. */
 const CATALOGO: Producto[] = KIOSCOS.flatMap((k) => PRODUCTOS.map((p) => ({ ...p, id: `${k.id}-${p.id}`, kioscoId: k.id, disponible: true })));
 
 const NOMBRES = ['Martina R.', 'Joaquín P.', 'Sofía G.', 'Tomás L.', 'Valentina M.', 'Nicolás F.'];
@@ -161,8 +161,6 @@ export class MockDb {
     this.moverSaldo(pedido.kioscoId, 'comision', -pedido.comisionFreeDeli, codigoPedido(pedido));
   }
 
-  /** Conflictos registrados desde FreeDeli Dev. */
-  readonly conflictos = signal<Conflicto[]>([]);
 
   /** Oferta vigente por rider. */
   readonly ofertas = signal<Record<string, OfertaPedido>>({});
@@ -257,7 +255,7 @@ export class MockDb {
   private generarPedidos(ahora: Date): Pedido[] {
     const random = crearRandom(42);
     const pedidos: Pedido[] = [];
-    const abiertos = KIOSCOS.filter((k) => k.abierto);
+    const abiertos = KIOSCOS.filter((k) => !k.pausado);
 
     const nuevo = (creadoEn: Date, riderId: string | undefined, estado: Pedido['estado']) =>
       this.armarPedido(random, abiertos, creadoEn, riderId, estado);

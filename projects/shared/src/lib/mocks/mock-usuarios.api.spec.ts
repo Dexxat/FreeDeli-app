@@ -34,7 +34,7 @@ describe('MockUsuariosApi', () => {
   it('lista solo kioscos abiertos y filtra por zona', async () => {
     configurar();
     const todos = await firstValueFrom(api.kioscosAbiertos());
-    expect(todos.every((k) => k.abierto && !k.pausado)).toBe(true);
+    expect(todos.every((k) => k.recibePedidos)).toBe(true);
     expect(todos.map((k) => k.id)).not.toContain('k5');
     const muniz = await firstValueFrom(api.kioscosAbiertos('muniz'));
     expect(muniz.map((k) => k.id)).toEqual(['k3']);

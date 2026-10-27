@@ -32,14 +32,13 @@ Dentro de MAIN también están:
 
 - **Fichas:** tocar un kiosco abre su ficha con saldo, movimientos y pausa. Tocar el id de un rider abre la suya con el seguimiento del envío en curso, sus envíos y la pausa.
 - **Kioscos y saldos:** enlace a la lista de kioscos con su saldo prepago.
-- **Conflictos:** se reportan desde cada pedido o como nuevo conflicto. Tienen tipo, descripción, estado (abierto, en seguimiento, resuelto) y notas de seguimiento.
 
 ### Además
 - **Kioscos:** ver los activos, sus movimientos y el saldo que les queda para seguir operando.
 - **Riders:** ver los activos, sus movimientos y el seguimiento de cada envío.
 - **Ganancias:** monitorear las ganancias de la plataforma.
 - **Pausar actividad:** poder pausar (y reactivar) a un kiosco o a un rider puntual.
-- **Conflictos e inconvenientes:** registro y seguimiento de incidencias.
+- **Conflictos:** todos, de kioscos y de riders, se resuelven por **WhatsApp** con la asistencia, que atiende el número de la empresa durante el horario de FreeDeli. La plataforma no los registra: cada app tiene el botón de WhatsApp FreeDeli.
 - **Sin chat interno:** la comunicación con kioscos y riders se hace por el **WhatsApp de la empresa**, no desde la plataforma. A lo sumo, un botón o link que abra ese WhatsApp.
 
 ---
@@ -94,7 +93,7 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 - **Comisión:** el 10 % del subtotal de productos, nunca menos de $1.500.
 - **Pedido mínimo:** $15.000 en productos. Con el 10 % da justo la comisión mínima de $1.500.
 - **Saldo prepago del kiosco:** el kiosco carga crédito en FreeDeli. Al liberarse cada pago, la comisión se descuenta de ese saldo. Si no le alcanza para la comisión mínima, no recibe pedidos.
-- **Horario:** FreeDeli toma pedidos de **00 a 08 hs**, hora de Argentina. Fuera de ese horario la app de usuarios avisa que está cerrado y no deja pedir.
+- **Horario:** FreeDeli toma pedidos de **00 a 08 hs**, hora de Argentina. Fuera de ese horario la app de usuarios avisa que está cerrado y no deja pedir. Los kioscos no tienen horario propio: solo se suman kioscos abiertos en ese horario, y reciben pedidos mientras no estén pausados y tengan saldo.
 - **Costo de envío por anillos:** lo que cobra el rider es un monto fijo según la distancia en línea recta entre el kiosco y la entrega. De madrugada no hay tráfico, así que no se mide el tiempo ni se usan APIs de mapas pagas.
   - Menos de 1,5 km: $3.000.
   - De 1,5 a 3 km: $4.000.

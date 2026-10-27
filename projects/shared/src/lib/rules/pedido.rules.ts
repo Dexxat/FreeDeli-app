@@ -95,11 +95,11 @@ export function aporteKioscoEnvio(p: { costoEnvio: number; gananciaRider: number
 export const PEDIDO_MINIMO = 15_000;
 
 /**
- * Un kiosco recibe pedidos si está abierto, no está pausado y tiene saldo prepago
- * para pagar al menos la comisión mínima.
+ * Un kiosco recibe pedidos si no está pausado y tiene saldo prepago para pagar
+ * al menos la comisión mínima. El horario es el de FreeDeli para todos.
  */
-export function puedeRecibirPedidos(k: Pick<Kiosco, 'abierto' | 'pausado' | 'saldo'>): boolean {
-  return k.abierto && !k.pausado && k.saldo >= COMISION_MINIMA;
+export function puedeRecibirPedidos(k: Pick<Kiosco, 'pausado' | 'saldo'>): boolean {
+  return !k.pausado && k.saldo >= COMISION_MINIMA;
 }
 
 /** Comisión mínima de FreeDeli por pedido, en pesos. */

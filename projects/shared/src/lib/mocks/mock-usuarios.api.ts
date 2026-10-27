@@ -22,7 +22,7 @@ export class MockUsuariosApi extends UsuariosApi {
   private readonly horarioLibre = inject(HORARIO_LIBRE);
   private readonly pedidos$ = toObservable(this.db.pedidos);
 
-  private readonly abierto = computed(
+  private readonly pedidoAbierto = computed(
     () => this.db.pedidos().find((p) => p.usuarioId === USUARIO_ACTUAL_ID && ESTADOS_ABIERTOS.includes(p.estado)) ?? null,
   );
 
@@ -76,7 +76,7 @@ export class MockUsuariosApi extends UsuariosApi {
   /** El kiosco con distancia y la parte del envío que paga el usuario. */
   private paraUsuario(k: Kiosco): Kiosco {
     const { km, costo } = this.viaje(k);
-    return { ...k, distanciaKm: km, costoEnvio: envioCliente(costo) };
+    return { ...k, distanciaKm: km, costoEnvio: envioCliente(costo), recibePedidos: puedeRecibirPedidos(k) };
   }
 
   kioscosAbiertos(zona?: ZonaId): Observable<Kiosco[]> {
@@ -117,7 +117,7 @@ export class MockUsuariosApi extends UsuariosApi {
       resultado = { ok: false, motivo: 'producto-inexistente' };
     } else if (subtotal < PEDIDO_MINIMO) {
       resultado = { ok: false, motivo: 'pedido-minimo' };
-    } else if (this.abierto()) {
+    } else if (this.pedidoAbierto()) {
       resultado = { ok: false, motivo: 'pedido-en-curso' };
     } else {
       const u = this.usuario();

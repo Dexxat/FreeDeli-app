@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { KioscosApi, Pedido, PesosPipe, aporteKioscoEnvio, cantidadProductos, codigoPedido, subtotalProductos, totalPedido } from '@freedeli/shared';
+import { FREEDELI_CONFIG, KioscosApi, Pedido, PesosPipe, aporteKioscoEnvio, linkWhatsApp, cantidadProductos, codigoPedido, subtotalProductos, totalPedido } from '@freedeli/shared';
 import { Observable, of, switchMap } from 'rxjs';
 
 /** Etiqueta del paso en el que está el pedido, desde el punto de vista del kiosco. */
@@ -48,6 +48,9 @@ export class TarjetaPedido {
   );
 
   protected readonly codigo = computed(() => codigoPedido(this.pedido()));
+  private readonly whatsapp = inject(FREEDELI_CONFIG).whatsapp;
+  /** Cualquier problema con el pedido se resuelve por WhatsApp con la asistencia. */
+  protected readonly ayuda = computed(() => linkWhatsApp(this.whatsapp, `Hola FreeDeli, te escribo por el pedido ${this.codigo()}.`));
   protected readonly paso = computed(() => pasoKiosco(this.pedido()));
   protected readonly hora = computed(() => HORA.format(this.pedido().creadoEn));
   protected readonly cantidad = computed(() => cantidadProductos(this.pedido()));

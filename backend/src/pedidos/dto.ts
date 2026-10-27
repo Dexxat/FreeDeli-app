@@ -63,17 +63,6 @@ export class PerfilRiderDto {
   @IsOptional() @IsBoolean() sonidos8bit?: boolean;
 }
 
-export class NuevoConflictoDto {
-  @IsOptional() @IsUUID() pedidoId?: string;
-  @IsIn(['demora', 'producto', 'pago', 'rider', 'kiosco', 'cliente', 'otro']) tipo!: string;
-  @IsString() @MinLength(3, { message: 'Describí el conflicto.' }) @MaxLength(500) descripcion!: string;
-}
-
-export class CambioConflictoDto {
-  @IsOptional() @IsIn(['abierto', 'en-seguimiento', 'resuelto']) estado?: string;
-  @IsOptional() @IsString() @MaxLength(500) nota?: string;
-}
-
 export class CargaSaldoDto {
   @IsInt() @Min(1) monto!: number;
   @IsOptional() @IsString() @MaxLength(80) referencia?: string;

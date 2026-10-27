@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
-import { ICONOS, ItemNav } from '@freedeli/shared';
+import { FREEDELI_CONFIG, ICONOS, ItemNav, linkWhatsApp } from '@freedeli/shared';
 
 const SECCIONES: readonly ItemNav[] = [
   { ruta: '/inicio', etiqueta: 'INICIO', icono: ICONOS.vivo },
@@ -38,6 +38,7 @@ const SECCIONES: readonly ItemNav[] = [
             </a>
           }
         </nav>
+        <a class="whatsapp" [href]="whatsapp" target="_blank" rel="noopener">Asistencia por WhatsApp</a>
       </aside>
       <main class="contenido">
         <router-outlet />
@@ -67,6 +68,7 @@ const SECCIONES: readonly ItemNav[] = [
       font-family: var(--fd-font-pixel); font-size: 10px;
     }
     nav a.activo { background: var(--fd-navy-700); color: var(--fd-yellow-400); box-shadow: inset 4px 0 0 var(--fd-yellow-400); }
+    .whatsapp { margin-top: auto; padding: 12px; background: var(--fd-navy-700); color: #fff; font-size: 13px; font-weight: 600; text-align: center; text-decoration: none; }
     a:focus-visible { outline: 3px solid var(--fd-yellow-400); outline-offset: 2px; }
     .contenido { min-width: 0; padding: 28px 32px 40px; }
 
@@ -77,7 +79,7 @@ const SECCIONES: readonly ItemNav[] = [
         padding: 0 0 env(safe-area-inset-bottom); gap: 0;
         border-right: none; border-top: 4px solid var(--fd-navy-700);
       }
-      .marca { display: none; }
+      .marca, .whatsapp { display: none; }
       nav { flex-direction: row; }
       nav a { flex: 1 1 0; min-height: 64px; flex-direction: column; justify-content: center; gap: 7px; font-size: 7px; }
       nav a.activo { box-shadow: none; background: none; }
@@ -87,6 +89,8 @@ const SECCIONES: readonly ItemNav[] = [
 })
 export class App {
   protected readonly secciones = SECCIONES;
+  /** Los conflictos se resuelven por WhatsApp con la asistencia de FreeDeli. */
+  protected readonly whatsapp = linkWhatsApp(inject(FREEDELI_CONFIG).whatsapp, 'Hola FreeDeli, te escribo desde el kiosco.');
   private readonly router = inject(Router);
 
   /** Ingreso, alta y espera de aprobación van sin menú. */

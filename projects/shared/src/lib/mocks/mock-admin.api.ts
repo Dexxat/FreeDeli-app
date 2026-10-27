@@ -2,7 +2,7 @@ import { Injectable, Injector, computed, inject, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Observable, delay, distinctUntilChanged, map, of, throwError } from 'rxjs';
 import { AdminApi } from '../api/admin.api';
-import { AlertaAdmin, AltaPendiente, Conflicto, MovimientoSaldo, EntregaAdmin, EstadoConflicto, FilaMain, NuevoConflicto, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
+import { AlertaAdmin, AltaPendiente, MovimientoSaldo, EntregaAdmin, FilaMain, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
 import { ZONAS, ZonaId } from '../models/zona';
 import { Pedido } from '../models/pedido';
 import { codigoPedido } from '../models/pedido';
@@ -169,50 +169,6 @@ export class MockAdminApi extends AdminApi {
   entregas(periodo: PeriodoAdmin, zonas: ZonaId[]): Observable<EntregaAdmin[]> {
     const lista = this.entregados(periodo, zonas).map((p) => entregaAdmin(p, this.nombreRider(p.riderId)));
     return of(lista).pipe(delay(this.latencia));
-  }
-
-  private readonly conflictos$ = toObservable(
-    computed(() => {
-      const orden: Record<EstadoConflicto, number> = { abierto: 0, 'en-seguimiento': 0, resuelto: 1 };
-      return [...this.db.conflictos()].sort((a, b) => orden[a.estado] - orden[b.estado] || b.creadoEn.getTime() - a.creadoEn.getTime());
-    }),
-  );
-
-  conflictos(): Observable<Conflicto[]> {
-    return this.conflictos$;
-  }
-
-  registrarConflicto(nuevo: NuevoConflicto): Observable<Conflicto> {
-    const descripcion = nuevo.descripcion.trim();
-    if (!descripcion) return throwError(() => new Error('Describí el conflicto.'));
-    const pedido = nuevo.pedidoId ? this.db.pedidos().find((p) => p.id === nuevo.pedidoId) : undefined;
-    const conflicto: Conflicto = {
-      id: `c-${Date.now()}-${this.db.conflictos().length + 1}`,
-      pedidoId: pedido?.id,
-      numeroPedido: pedido?.numero,
-      tipo: nuevo.tipo,
-      descripcion,
-      estado: 'abierto',
-      creadoEn: new Date(),
-      notas: [],
-    };
-    this.db.conflictos.update((cs) => [...cs, conflicto]);
-    return of(conflicto).pipe(delay(this.latencia));
-  }
-
-  actualizarConflicto(id: string, cambios: { estado?: EstadoConflicto; nota?: string }): Observable<Conflicto> {
-    const actual = this.db.conflictos().find((c) => c.id === id);
-    if (!actual) return throwError(() => new Error('Conflicto inexistente.'));
-    const nota = cambios.nota?.trim();
-    const estado = cambios.estado ?? actual.estado;
-    const actualizado: Conflicto = {
-      ...actual,
-      estado,
-      resueltoEn: estado === 'resuelto' ? (actual.resueltoEn ?? new Date()) : undefined,
-      notas: nota ? [...actual.notas, { fecha: new Date(), texto: nota }] : actual.notas,
-    };
-    this.db.conflictos.update((cs) => cs.map((c) => (c.id === id ? actualizado : c)));
-    return of(actualizado).pipe(delay(this.latencia));
   }
 
   movimientosSaldo(kioscoId: string): Observable<MovimientoSaldo[]> {
