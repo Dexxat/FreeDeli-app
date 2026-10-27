@@ -3,6 +3,7 @@ import request from 'supertest';
 import { DespachoService } from '../src/pedidos/despacho.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { crearApp } from './app.js';
+import { DOCUMENTOS } from './fotos.js';
 
 describe('Flujo completo del pedido', () => {
   let app: INestApplication;
@@ -29,7 +30,7 @@ describe('Flujo completo del pedido', () => {
   async function registrarRider(email: string, dni: string) {
     await api()
       .post('/api/auth/registro/rider')
-      .send({ email, clave: 'claveRider1', nombre: 'Rider Prueba', telefono: '11 5555-0142', dni, vehiculoModelo: 'Honda Wave 110', patente: 'A123BCD', aliasCbu: 'rider.alias.fd' })
+      .send({ email, clave: 'claveRider1', nombre: 'Rider Prueba', telefono: '11 5555-0142', dni, vehiculoModelo: 'Honda Wave 110', patente: 'A123BCD', aliasCbu: 'rider.alias.fd', ...DOCUMENTOS })
       .expect(201);
     await aprobar(email);
     return ingresar(email, 'claveRider1');

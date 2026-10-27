@@ -9,6 +9,7 @@ import { DemandaZona, Ubicacion, ZONAS, ZonaId } from '../models/zona';
 import { PEDIDO_MINIMO, calcularComision, costoEnvio, envioCliente, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
 import { TARIFA_ENVIO_PROVISORIA } from '../config/freedeli.config';
 import { geolocalizarProvisorio } from '../rules/cobertura.rules';
+import { DocumentosRider } from '../rules/documentos.rules';
 
 /** Generador pseudoaleatorio con semilla, para que los datos simulados sean siempre los mismos. */
 function crearRandom(semilla: number): () => number {
@@ -22,6 +23,9 @@ function crearRandom(semilla: number): () => number {
 export const RIDER_ACTUAL_ID = 'r1';
 /** Otro rider, que toma los pedidos que el rider actual no toma. */
 export const OTRO_RIDER_ID = 'r2';
+
+/** Foto de ejemplo (PNG de 1×1) para los documentos simulados. */
+export const FOTO_DE_EJEMPLO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 export const USUARIO_ACTUAL_ID = 'u1';
 /** El kiosco con sesión iniciada en la app de Kioscos. */
 export const KIOSCO_ACTUAL_ID = 'k1';
@@ -70,6 +74,12 @@ export class MockDb {
       direccion: { direccion: 'Belgrano 845', notas: 'Depto 2B, tocar timbre', zona: 'san-miguel', ubicacion: { lat: -34.543, lng: -58.701 } },
     },
   ]);
+  /** Fotos del seguro y la licencia, por id de rider. */
+  readonly documentos = signal<Record<string, DocumentosRider>>({
+    [RIDER_ACTUAL_ID]: { seguro: FOTO_DE_EJEMPLO, licencia: FOTO_DE_EJEMPLO },
+    'r-alta-2': { seguro: FOTO_DE_EJEMPLO, licencia: FOTO_DE_EJEMPLO },
+  });
+
   readonly riders = signal<Rider[]>([
     {
       id: RIDER_ACTUAL_ID,

@@ -1,9 +1,9 @@
-import type { INestApplication } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { inject } from 'vitest';
 
 /** Crea la app de Nest contra la base de test. */
-export async function crearApp(): Promise<INestApplication> {
+export async function crearApp(): Promise<NestExpressApplication> {
   process.env.DATABASE_URL = inject('databaseUrl');
   process.env.JWT_SECRET = 'secreto-de-test';
   process.env.DEV_EMAIL = 'dev@test.local';
@@ -14,7 +14,7 @@ export async function crearApp(): Promise<INestApplication> {
   const { AppModule } = await import('../src/app.module.js');
   const { configurarApp } = await import('../src/configurar.js');
   const modulo = await Test.createTestingModule({ imports: [AppModule] }).compile();
-  const app = modulo.createNestApplication();
+  const app = modulo.createNestApplication<NestExpressApplication>();
   configurarApp(app);
   await app.init();
   return app;

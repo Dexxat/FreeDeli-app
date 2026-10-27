@@ -25,6 +25,11 @@
   </section>
 
   <section class="bloque">
+    <h2 class="subtitulo">DOCUMENTOS</h2>
+    <fd-documentos-rider [riderId]="r.id" />
+  </section>
+
+  <section class="bloque">
     <h2 class="subtitulo">SEGUIMIENTO</h2>
     @if (r.enCurso; as p) {
       <div class="seguimiento">

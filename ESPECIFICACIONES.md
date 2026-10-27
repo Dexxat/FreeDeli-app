@@ -45,6 +45,7 @@ Dentro de MAIN también están:
 
 ## FreeDeli Riders
 
+- **Alta:** el rider carga nombre y apellido, DNI, teléfono, email, moto, patente, alias de cobro y las **fotos del seguro y de la licencia**, que son obligatorias. Dev ve las fotos antes de aprobar. La app las comprime antes de subirlas, y el rider las puede actualizar desde su perfil.
 - **Botón ON / OFF para activarse:** el rider se pone disponible o no disponible con un interruptor grande, con estética de juego 8 bit, tipo "PRESS START".
 - **Selección de zonas:** el rider elige una o más zonas a la vez, entre San Miguel, Muñiz y Bella Vista. Siempre tiene que quedar al menos una elegida.
 - **Probabilidad de asignación:** el 100 % de las chances se reparte en partes iguales entre las zonas elegidas.
@@ -72,7 +73,7 @@ Dentro de MAIN también están:
 
 ### Perfil: qué puede editar el rider
 
-- Puede editar nombre y apellido, DNI, teléfono, email, moto, patente y alias/CBU.
+- Puede editar nombre y apellido, DNI, teléfono, email, moto, patente, alias/CBU y las fotos del seguro y la licencia.
 - No puede cerrar sesión con un pedido en curso.
 
 Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).

@@ -3,3 +3,4 @@ export * from './pesos.pipe';
 export * from './nav-inferior';
 export * from './ingreso';
 export * from './cuenta-pendiente';
+export * from './campo-foto';

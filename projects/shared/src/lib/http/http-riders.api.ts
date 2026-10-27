@@ -5,6 +5,7 @@ import { CambiosPerfilRider, RidersApi } from '../api/riders.api.js';
 import { Pedido } from '../models/pedido.js';
 import { PeriodoGanancias, PeriodoHistorial, ResumenGanancias, Rider } from '../models/rider.js';
 import { DemandaZona, ZonaId } from '../models/zona.js';
+import { DocumentosRider, TipoDocumento } from '../rules/documentos.rules.js';
 import { API_URL } from './api-url';
 import { revivirPedido } from './revivir';
 
@@ -46,6 +47,14 @@ export class HttpRidersApi extends RidersApi {
         sonidos8bit: c.preferencias?.sonidos8bit,
       })
       .pipe(map((r) => ({ ...r, riderDesde: new Date(r.riderDesde) })));
+  }
+
+  documentos(): Observable<DocumentosRider> {
+    return this.http.get<DocumentosRider>(`${this.url}/rider/documentos`);
+  }
+
+  actualizarDocumento(tipo: TipoDocumento, imagen: string): Observable<DocumentosRider> {
+    return this.http.put<DocumentosRider>(`${this.url}/rider/documentos/${tipo}`, { imagen });
   }
 
   demanda(): Observable<DemandaZona[]> {

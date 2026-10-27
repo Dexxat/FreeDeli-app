@@ -3,8 +3,14 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
+  CampoFoto,
+  DocumentosRider,
   FREEDELI_CONFIG,
   PedidosApi,
+  RidersApi,
+  TIPOS_DOCUMENTO,
+  TipoDocumento,
+  mensajeDeError,
   aliasCbuValido,
   dniValido,
   emailValido,
@@ -26,7 +32,7 @@ function regla(valida: (v: string) => boolean, clave: string): ValidatorFn {
 
 @Component({
   selector: 'fd-perfil',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, CampoFoto],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './perfil.html',
   styleUrl: './perfil.scss',
@@ -37,6 +43,11 @@ export default class Perfil {
   private readonly router = inject(Router);
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly pedidoEnCurso = toSignal(inject(PedidosApi).enCursoDelRider());
+  private readonly api = inject(RidersApi);
+
+  protected readonly tiposDocumento = TIPOS_DOCUMENTO;
+  protected readonly documentos = signal<DocumentosRider | null>(null);
+  protected readonly errorDocumento = signal<string | null>(null);
 
   protected readonly editando = signal<Seccion | null>(null);
   protected readonly confirmarSalida = signal(false);
@@ -63,6 +74,19 @@ export default class Perfil {
   protected readonly whatsapp = computed(() =>
     linkWhatsApp(this.config.whatsapp, `Hola FreeDeli, soy ${this.store.rider()?.nombre ?? 'rider'}.`),
   );
+
+  constructor() {
+    this.api.documentos().subscribe((d) => this.documentos.set(d));
+  }
+
+  protected actualizarDocumento(tipo: TipoDocumento, imagen: string | null): void {
+    if (!imagen) return;
+    this.errorDocumento.set(null);
+    this.api.actualizarDocumento(tipo, imagen).subscribe({
+      next: (d) => this.documentos.set(d),
+      error: (e: unknown) => this.errorDocumento.set(mensajeDeError(e, e instanceof Error ? e.message : undefined)),
+    });
+  }
 
   protected editar(seccion: Seccion): void {
     const r = this.store.rider();

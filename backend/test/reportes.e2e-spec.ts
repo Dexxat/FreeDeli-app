@@ -1,6 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import { crearApp } from './app.js';
 import { armarEscenario, auth } from './escenario.js';
+import { FOTO } from './fotos.js';
 
 describe('Perfiles, reportes y panel Dev', () => {
   let app: INestApplication;
@@ -35,6 +36,20 @@ describe('Perfiles, reportes y panel Dev', () => {
     await e.api().patch('/api/usuario/datos').set(auth(e.usuario)).send({ ...datos, email: otra }).expect(409);
     const malo = await e.api().patch('/api/usuario/datos').set(auth(e.usuario)).send({ ...datos, nombre: 'Martina', dni: '12' }).expect(400);
     expect(malo.body.message).toEqual(expect.arrayContaining(['Ingresá tu nombre y apellido.', 'DNI inválido.']));
+  });
+
+  it('rider: documentos del alta, actualización y vista de Dev', async () => {
+    const docs = (await e.api().get('/api/rider/documentos').set(auth(e.rider)).expect(200)).body;
+    expect(docs).toEqual({ seguro: FOTO, licencia: FOTO });
+    const nueva = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ==';
+    const r = (await e.api().put('/api/rider/documentos/seguro').set(auth(e.rider)).send({ imagen: nueva }).expect(200)).body;
+    expect(r.seguro).toBe(nueva);
+    await e.api().put('/api/rider/documentos/seguro').set(auth(e.rider)).send({ imagen: 'no-es-una-foto' }).expect(400);
+    await e.api().put('/api/rider/documentos/dni').set(auth(e.rider)).send({ imagen: FOTO }).expect(404);
+    // Dev las ve; un usuario no.
+    expect((await e.api().get(`/api/admin/riders/${e.riderId}/documentos`).set(auth(e.dev)).expect(200)).body).toEqual({ seguro: nueva, licencia: FOTO });
+    await e.api().get(`/api/admin/riders/${e.riderId}/documentos`).set(auth(e.usuario)).expect(403);
+    await e.api().get('/api/rider/documentos').set(auth(e.usuario)).expect(403);
   });
 
   it('rider: historial, ganancias, demanda y perfil', async () => {

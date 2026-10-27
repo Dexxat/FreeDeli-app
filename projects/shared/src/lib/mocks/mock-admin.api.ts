@@ -14,6 +14,7 @@ import { COMISION_MINIMA, ESTADOS_ABIERTOS, puedeRecibirPedidos } from '../rules
 import { enRango, inicioDelDia, rangoPeriodo, sumarDias } from '../rules/periodos.rules';
 import { MockDb } from './mock-db';
 import { LATENCIA_MOCK } from './mock-riders.api';
+import { DocumentosRider, SIN_DOCUMENTOS } from '../rules/documentos.rules';
 
 @Injectable()
 export class MockAdminApi extends AdminApi {
@@ -198,10 +199,14 @@ export class MockAdminApi extends AdminApi {
       email: 'rider.nuevo@example.com',
       rol: 'RIDER',
       creadaEn: new Date(Date.now() - 40 * 60_000),
-      rider: { nombre: 'Julieta Sosa', telefono: '11 5555-0777', dni: '41222333', vehiculoModelo: 'Honda CG 150', patente: 'A321JKL' },
+      rider: { id: 'r-alta-2', nombre: 'Julieta Sosa', telefono: '11 5555-0777', dni: '41222333', vehiculoModelo: 'Honda CG 150', patente: 'A321JKL' },
     },
   ]);
   private readonly altas$ = toObservable(this.altas);
+
+  documentosRider(riderId: string): Observable<DocumentosRider> {
+    return of(this.db.documentos()[riderId] ?? SIN_DOCUMENTOS).pipe(delay(this.latencia));
+  }
 
   altasPendientes(): Observable<AltaPendiente[]> {
     return this.altas$;

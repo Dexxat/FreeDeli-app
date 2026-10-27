@@ -81,6 +81,11 @@ describe('Perfil (Riders)', () => {
     expect(el.querySelector('form')).toBeNull();
   });
 
+  it('muestra las fotos del seguro y la licencia', () => {
+    const fotos = el.querySelectorAll<HTMLImageElement>('#titulo-documentos ~ fd-campo-foto img');
+    expect([...fotos].map((f) => f.alt)).toEqual(['Foto: Seguro de la moto', 'Foto: Licencia de conducir']);
+  });
+
   it('cambia la preferencia de sonidos', async () => {
     const check = [...el.querySelectorAll<HTMLInputElement>('.preferencias input')][1];
     check.click();

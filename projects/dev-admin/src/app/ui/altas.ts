@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AdminApi, AltaPendiente, nombreZona } from '@freedeli/shared';
+import { DocumentosRider } from './documentos-rider';
 
 const FECHA = new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
 
 /** Kioscos y riders que se registraron y esperan la aprobación del dueño. */
 @Component({
   selector: 'fd-panel-altas',
+  imports: [DocumentosRider],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (altas().length > 0) {
@@ -24,6 +26,7 @@ const FECHA = new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: '2-digit
                 @if (a.rider; as r) {
                   <strong>{{ r.nombre }}</strong>
                   <span class="sutil">DNI {{ r.dni }} · {{ r.telefono }} · {{ r.vehiculoModelo }} {{ r.patente }} · {{ a.email }}</span>
+                  <fd-documentos-rider [riderId]="r.id" />
                 }
                 <span class="sutil">Pedida el {{ fecha(a.creadaEn) }}</span>
               </div>

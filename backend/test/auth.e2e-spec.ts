@@ -1,6 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { crearApp } from './app.js';
+import { DOCUMENTOS } from './fotos.js';
 
 describe('Auth y altas', () => {
   let app: INestApplication;
@@ -78,11 +79,21 @@ describe('Auth y altas', () => {
   it('un rider pendiente no puede operar', async () => {
     const reg = await api()
       .post('/api/auth/registro/rider')
-      .send({ email: 'lucas@test.local', clave: 'claveRider1', nombre: 'Lucas Romero', telefono: '11 5555-0142', dni: '38456123', vehiculoModelo: 'Honda Wave 110', patente: 'a123bcd', aliasCbu: 'lucas.rider.fd' })
+      .send({ email: 'lucas@test.local', clave: 'claveRider1', nombre: 'Lucas Romero', telefono: '11 5555-0142', dni: '38456123', vehiculoModelo: 'Honda Wave 110', patente: 'a123bcd', aliasCbu: 'lucas.rider.fd', ...DOCUMENTOS })
       .expect(201);
     expect(reg.body.cuenta).toMatchObject({ rol: 'RIDER', estado: 'PENDIENTE' });
     const r = await api().get('/api/cuentas/pendientes').set('Authorization', `Bearer ${reg.body.token}`).expect(403);
     expect(r.body.message).toBe('Tu cuenta está esperando la aprobación de FreeDeli.');
+  });
+
+  it('el alta de rider exige las fotos del seguro y la licencia', async () => {
+    const base = { email: 'sin-fotos@test.local', clave: 'claveRider1', nombre: 'Rider Sinfotos', telefono: '11 5555-0142', dni: '38456124', vehiculoModelo: 'Honda Wave 110', patente: 'A123BCD', aliasCbu: 'rider.sin.fotos' };
+    const sin = await api().post('/api/auth/registro/rider').send(base).expect(400);
+    expect(sin.body.message).toEqual(expect.arrayContaining([expect.stringContaining('Seguro:'), expect.stringContaining('Licencia:')]));
+    await api().post('/api/auth/registro/rider').send({ ...base, seguro: 'data:application/pdf;base64,JVBERi0=', licencia: DOCUMENTOS.licencia }).expect(400);
+    // Más de 2 MB por foto no entra, aunque el cuerpo total esté dentro del límite.
+    const grande = `data:image/jpeg;base64,${'A'.repeat(2_800_000)}`;
+    await api().post('/api/auth/registro/rider').send({ ...base, seguro: grande, licencia: DOCUMENTOS.licencia }).expect(400);
   });
 
   it('la salud responde sin sesión', async () => {

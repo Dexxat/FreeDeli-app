@@ -35,6 +35,9 @@ export interface RegistroRider {
   vehiculoModelo: string;
   patente: string;
   aliasCbu: string;
+  /** Fotos del seguro y la licencia, comprimidas (data URL). */
+  seguro: string;
+  licencia: string;
 }
 
 /** Registro e ingreso. Al responder, guarda la sesión. */

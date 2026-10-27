@@ -141,5 +141,5 @@ export interface AltaPendiente {
   rol: 'KIOSCO' | 'RIDER';
   creadaEn: Date;
   kiosco?: { nombre: string; direccion: string; zona: ZonaId; aliasCobro: string };
-  rider?: { nombre: string; telefono: string; dni: string; vehiculoModelo: string; patente: string };
+  rider?: { id: string; nombre: string; telefono: string; dni: string; vehiculoModelo: string; patente: string };
 }

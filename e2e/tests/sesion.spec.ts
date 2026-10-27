@@ -1,5 +1,5 @@
 import { boton, expect, ingresar, test, urlApp } from './soporte/fixtures.js';
-import { unico } from './soporte/api.js';
+import { archivoFoto, unico } from './soporte/api.js';
 import { DEV } from '../entorno/config.mjs';
 
 test.describe('cuentas y sesiones', () => {
@@ -116,10 +116,20 @@ test.describe('cuentas y sesiones', () => {
     for (const [n, v] of [['nombre', nombre], ['telefono', '11 5555-0333'], ['dni', '40111222'], ['email', email], ['clave', 'claveRider1'], ['vehiculoModelo', 'Honda Wave 110'], ['patente', 'A777BCD'], ['aliasCbu', 'rider.rechazado']]) {
       await rider.locator(`input[name=${n}]`).fill(v);
     }
+    // Sin las fotos no deja pedir el alta.
+    await boton(rider, 'PEDIR ALTA').click();
+    await expect(rider.getByRole('alert')).toHaveText('Subí la foto del seguro y la de la licencia.');
+    await rider.getByLabel('Foto: Seguro de la moto').setInputFiles(archivoFoto('seguro.png'));
+    await rider.getByLabel('Foto: Licencia de conducir').setInputFiles(archivoFoto('licencia.png'));
+    await expect(rider.getByRole('img', { name: 'Foto: Seguro de la moto' })).toBeVisible();
+    await expect(rider.getByRole('img', { name: 'Foto: Licencia de conducir' })).toBeVisible();
     await boton(rider, 'PEDIR ALTA').click();
     await expect(rider.getByText('ESPERANDO APROBACIÓN')).toBeVisible();
 
     const alta = dev.getByRole('region', { name: /ALTAS PENDIENTES/ }).locator('li', { hasText: nombre });
+    // Dev ve las dos fotos antes de decidir, comprimidas a JPEG por la app.
+    await expect(alta.getByRole('img', { name: 'Seguro de la moto' })).toHaveAttribute('src', /^data:image\/jpeg;base64,/);
+    await expect(alta.getByRole('img', { name: 'Licencia de conducir' })).toBeVisible();
     await boton(alta, 'Rechazar').click();
     await expect(alta).toHaveCount(0);
     await boton(rider, 'YA ME APROBARON').click();

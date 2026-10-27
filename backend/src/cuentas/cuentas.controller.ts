@@ -20,7 +20,7 @@ export class CuentasController {
         rol: true,
         creadaEn: true,
         kiosco: { select: { nombre: true, direccion: true, zona: true, aliasCobro: true } },
-        rider: { select: { nombre: true, telefono: true, dni: true, vehiculoModelo: true, patente: true } },
+        rider: { select: { id: true, nombre: true, telefono: true, dni: true, vehiculoModelo: true, patente: true } },
       },
     });
   }

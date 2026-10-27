@@ -1,7 +1,7 @@
 import { IsEmail, IsIn, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 import { Cumple } from '../comun/validar.js';
 import { ZONAS_API, type ZonaApi } from '../comun/zonas.js';
-import { aliasCbuValido, dniValido, nombreCompletoValido, patenteValida, telefonoValido } from '../dominio.js';
+import { aliasCbuValido, dniValido, imagenValida, nombreCompletoValido, patenteValida, telefonoValido } from '../dominio.js';
 
 /** Mensajes de validación compartidos por los formularios de alta y de ajustes. */
 export const MENSAJES = {
@@ -13,6 +13,7 @@ export const MENSAJES = {
   aliasCbu: 'Alias de 6 a 20 caracteres o CBU de 22 dígitos.',
   direccion: 'Ingresá la calle y la altura.',
   zona: 'Zona inválida.',
+  foto: 'Subí una foto JPEG, PNG o WebP de hasta 2 MB.',
 } as const;
 
 export class CredencialesDto {
@@ -92,4 +93,17 @@ export class RegistroRiderDto extends CredencialesDto {
 
   @Cumple(aliasCbuValido, MENSAJES.aliasCbu)
   aliasCbu!: string;
+
+  /** Foto del seguro de la moto, como data URL. */
+  @Cumple(imagenValida, `Seguro: ${MENSAJES.foto}`)
+  seguro!: string;
+
+  /** Foto de la licencia de conducir, como data URL. */
+  @Cumple(imagenValida, `Licencia: ${MENSAJES.foto}`)
+  licencia!: string;
+}
+
+export class DocumentoDto {
+  @Cumple(imagenValida, MENSAJES.foto)
+  imagen!: string;
 }

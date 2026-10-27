@@ -8,6 +8,7 @@ import { resumirGanancias } from '../rules/ganancias.rules';
 import { enRango, rangoPeriodo } from '../rules/periodos.rules';
 import { normalizarDni } from '../rules/validaciones.rules';
 import { MockDb, RIDER_ACTUAL_ID } from './mock-db';
+import { DocumentosRider, SIN_DOCUMENTOS, TipoDocumento, imagenValida } from '../rules/documentos.rules';
 
 /** Latencia simulada de red, en ms. En tests conviene 0. */
 export const LATENCIA_MOCK = new InjectionToken<number>('LATENCIA_MOCK', { factory: () => 150 });
@@ -46,6 +47,16 @@ export class MockRidersApi extends RidersApi {
 
   actualizarPerfil(cambios: CambiosPerfilRider): Observable<Rider> {
     return this.actualizar({ ...cambios, ...(cambios.dni && { dni: normalizarDni(cambios.dni) }) });
+  }
+
+  documentos(): Observable<DocumentosRider> {
+    return of(this.db.documentos()[RIDER_ACTUAL_ID] ?? SIN_DOCUMENTOS).pipe(delay(this.latencia));
+  }
+
+  actualizarDocumento(tipo: TipoDocumento, imagen: string): Observable<DocumentosRider> {
+    if (!imagenValida(imagen)) return throwError(() => new Error('Subí una foto JPEG, PNG o WebP de hasta 2 MB.'));
+    this.db.documentos.update((ds) => ({ ...ds, [RIDER_ACTUAL_ID]: { ...(ds[RIDER_ACTUAL_ID] ?? SIN_DOCUMENTOS), [tipo]: imagen } }));
+    return this.documentos();
   }
 
   demanda(): Observable<DemandaZona[]> {

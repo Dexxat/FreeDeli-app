@@ -1,6 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { DespachoService } from '../src/pedidos/despacho.service.js';
+import { DOCUMENTOS } from './fotos.js';
 
 export const auth = (t: string) => ({ Authorization: `Bearer ${t}` });
 
@@ -26,7 +27,7 @@ export async function armarEscenario(app: INestApplication, sufijo: string) {
   const coca = (await api().post('/api/kiosco/productos').set(auth(kiosco)).send({ nombre: 'Coca-Cola 1,5 L', precio: 2800 }).expect(201)).body;
 
   const emailR = `r-${sufijo}@test.local`;
-  await api().post('/api/auth/registro/rider').send({ email: emailR, clave: 'claveRider1', nombre: 'Lucas Romero', telefono: '11 5555-0142', dni: '38456123', vehiculoModelo: 'Honda Wave 110', patente: 'A123BCD', aliasCbu: 'lucas.rider.fd' }).expect(201);
+  await api().post('/api/auth/registro/rider').send({ email: emailR, clave: 'claveRider1', nombre: 'Lucas Romero', telefono: '11 5555-0142', dni: '38456123', vehiculoModelo: 'Honda Wave 110', patente: 'A123BCD', aliasCbu: 'lucas.rider.fd', ...DOCUMENTOS }).expect(201);
   await aprobar(emailR);
   const rider = await ingresar(emailR, 'claveRider1');
   const riderId = (await api().get('/api/rider').set(auth(rider))).body.id as string;

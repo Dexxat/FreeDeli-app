@@ -17,6 +17,14 @@ export interface Pedido {
   items: { productoId: string; cantidad: number; precioUnitario: number; nombre: string }[];
 }
 
+/** Foto mínima válida (PNG de 1×1), para altas de riders por API. */
+export const FOTO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+/** La misma foto como archivo, para subirla desde el navegador. */
+export function archivoFoto(nombre: string) {
+  return { name: nombre, mimeType: 'image/png', buffer: Buffer.from(FOTO.split(',')[1], 'base64') };
+}
+
 /** Sufijo único por llamada, para emails y nombres que no choquen entre pruebas. */
 export function unico(): string {
   return `${Date.now().toString(36)}${Math.floor(Math.random() * 1e4).toString(36)}`;
@@ -97,7 +105,7 @@ export class Api {
     const nombre = opciones.nombre ?? `Rider ${id.slice(-5).toUpperCase()}`;
     await this.llamar('POST', '/auth/registro/rider', {
       email, clave, nombre, telefono: '11 5555-0100', dni: String(30_000_000 + Math.floor(Math.random() * 9_999_999)),
-      vehiculoModelo: 'Honda Wave 110', patente: 'A123BCD', aliasCbu: `rider.${id}`,
+      vehiculoModelo: 'Honda Wave 110', patente: 'A123BCD', aliasCbu: `rider.${id}`, seguro: FOTO, licencia: FOTO,
     });
     await this.aprobar(email);
     const token = await this.ingresar(email, clave);

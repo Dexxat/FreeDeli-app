@@ -5,12 +5,13 @@ import { AdminApi, BarraEstado, PeriodoAdmin, PesosPipe, codigoPedido, codigoRid
 import { combineLatest, startWith, switchMap } from 'rxjs';
 import { SelectorPeriodo } from '../../ui/zonas';
 import { TEXTO_ESTADO } from '../main/main';
+import { DocumentosRider } from '../../ui/documentos-rider';
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
 @Component({
   selector: 'fd-rider',
-  imports: [PesosPipe, RouterLink, BarraEstado, SelectorPeriodo],
+  imports: [PesosPipe, RouterLink, BarraEstado, SelectorPeriodo, DocumentosRider],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './rider.html',
   styleUrl: './rider.scss',

@@ -9,6 +9,7 @@ import { hashearClave, verificarClave } from './clave.js';
 import type { RegistroKioscoDto, RegistroRiderDto, RegistroUsuarioDto } from './dto.js';
 import type { Sesion } from './sesion.js';
 import { EventosService } from '../eventos/eventos.service.js';
+import { documentoParaGuardar } from '../rider/documentos.service.js';
 
 export interface RespuestaSesion {
   token: string;
@@ -114,6 +115,7 @@ export class AuthService implements OnApplicationBootstrap {
             patente: normalizarPatente(dto.patente),
             aliasCbu: dto.aliasCbu,
             zonas: [],
+            documentos: { create: [documentoParaGuardar('seguro', dto.seguro), documentoParaGuardar('licencia', dto.licencia)] },
           },
         },
       },

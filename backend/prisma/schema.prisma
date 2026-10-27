@@ -52,6 +52,11 @@ enum EstadoPago {
   LIBERADO
 }
 
+enum TipoDocumento {
+  SEGURO
+  LICENCIA
+}
+
 enum TipoMovimientoSaldo {
   CARGA
   COMISION
@@ -135,6 +140,7 @@ model Rider {
   pedidos        Pedido[]
   ofertas        Oferta[]
   sesionesOnline SesionOnline[]
+  documentos     DocumentoRider[]
 }
 
 model Pedido {
@@ -224,4 +230,17 @@ model SesionOnline {
   hasta   DateTime?
 
   @@index([riderId, desde])
+}
+
+/// Foto del seguro o de la licencia del rider. Se cargan en el alta.
+model DocumentoRider {
+  id            String        @id @default(uuid())
+  riderId       String
+  rider         Rider         @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  tipo          TipoDocumento
+  mime          String
+  datos         Bytes
+  actualizadoEn DateTime      @updatedAt
+
+  @@unique([riderId, tipo])
 }

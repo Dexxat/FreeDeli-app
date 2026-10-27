@@ -19,6 +19,7 @@ import { ZonaId } from '../models/zona.js';
 import { API_URL } from './api-url';
 import { EventosCliente } from './eventos';
 import { revivirFechas, revivirPedido } from './revivir';
+import { DocumentosRider } from '../rules/documentos.rules.js';
 
 /** AdminApi (FreeDeli Dev) contra la API real. Los datos se refrescan con cada evento. */
 @Injectable()
@@ -101,6 +102,10 @@ export class HttpAdminApi extends AdminApi {
 
   pausarRider(id: string, pausado: boolean): Observable<RiderAdmin> {
     return this.http.post<RiderAdmin>(`${this.url}/admin/riders/${id}/pausa`, { pausado }).pipe(tap(this.avisar));
+  }
+
+  documentosRider(riderId: string): Observable<DocumentosRider> {
+    return this.http.get<DocumentosRider>(`${this.url}/admin/riders/${riderId}/documentos`);
   }
 
   altasPendientes(): Observable<AltaPendiente[]> {

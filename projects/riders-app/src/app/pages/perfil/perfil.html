@@ -95,6 +95,17 @@
     <p class="aviso" role="alert">{{ error }}</p>
   }
 
+  <!-- Documentos -->
+  <section class="bloque" aria-labelledby="titulo-documentos">
+    <h2 id="titulo-documentos" class="subtitulo">DOCUMENTOS</h2>
+    @if (documentos(); as docs) {
+      @for (t of tiposDocumento; track t.id) {
+        <fd-campo-foto [etiqueta]="t.nombre" [valor]="docs[t.id]" (valorChange)="actualizarDocumento(t.id, $event)" />
+      }
+    }
+    @if (errorDocumento(); as e) { <p class="error" role="alert">{{ e }}</p> }
+  </section>
+
   <!-- Preferencias -->
   <section class="bloque">
     <h2 class="subtitulo">PREFERENCIAS</h2>

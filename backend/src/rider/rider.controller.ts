@@ -1,10 +1,12 @@
-import { Body, Controller, ForbiddenException, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import { PERIODOS_HISTORIAL, PERIODOS_RIDER, periodoDe } from '../comun/consultas.js';
 import { Roles, SesionActual, type Sesion } from '../auth/sesion.js';
 import { Perfiles } from '../comun/perfiles.js';
 import { CuentasService } from '../cuentas/cuentas.service.js';
+import { DocumentoDto } from '../auth/dto.js';
+import { DocumentosService, TipoDocumentoPipe } from './documentos.service.js';
 import { ZONAS_API, zonaApi, zonaDb } from '../comun/zonas.js';
-import { confirmarRetiro, entregarConPin, inicioDelDia, normalizarDni, normalizarPatente, rangoPeriodo, resumirGanancias, salirEnCamino } from '../dominio.js';
+import { confirmarRetiro, entregarConPin, inicioDelDia, normalizarDni, normalizarPatente, rangoPeriodo, resumirGanancias, salirEnCamino, type TipoDocumento } from '../dominio.js';
 import { EstadoCuenta, EstadoPedido, FasePedido, Rol } from '../generated/prisma/enums.js';
 import { DespachoService } from '../pedidos/despacho.service.js';
 import { EstadoRiderDto, PerfilRiderDto, PinDto } from '../pedidos/dto.js';
@@ -19,6 +21,7 @@ export class RiderController {
     private readonly db: PrismaService,
     private readonly perfiles: Perfiles,
     private readonly cuentas: CuentasService,
+    private readonly documentosRider: DocumentosService,
     private readonly pedidos: PedidosService,
     private readonly despacho: DespachoService,
   ) {}
@@ -67,6 +70,16 @@ export class RiderController {
       },
     });
     return this.perfil(s);
+  }
+
+  @Get('documentos')
+  async documentos(@SesionActual() s: Sesion) {
+    return this.documentosRider.leer(await this.perfiles.riderId(s.sub));
+  }
+
+  @Put('documentos/:tipo')
+  async actualizarDocumento(@SesionActual() s: Sesion, @Param('tipo', TipoDocumentoPipe) tipo: TipoDocumento, @Body() dto: DocumentoDto) {
+    return this.documentosRider.guardar(await this.perfiles.riderId(s.sub), tipo, dto.imagen);
   }
 
   /** Pedidos de la jornada y riders activos por zona, para elegir dónde ponerse en cola. */

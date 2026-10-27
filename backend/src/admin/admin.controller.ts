@@ -19,6 +19,7 @@ import { EstadoCuenta, EstadoPedido, Rol, TipoMovimientoSaldo } from '../generat
 import { CargaSaldoDto, PausaDto } from '../pedidos/dto.js';
 import { PedidosService } from '../pedidos/pedidos.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { DocumentosService } from '../rider/documentos.service.js';
 
 const EN_CURSO = [EstadoPedido.ACEPTADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO];
 
@@ -29,6 +30,7 @@ export class AdminController {
   constructor(
     private readonly db: PrismaService,
     private readonly pedidos: PedidosService,
+    private readonly documentos: DocumentosService,
   ) {}
 
   // ---------- Kioscos ----------
@@ -115,6 +117,11 @@ export class AdminController {
       ganadoHoy: entregadosHoy.reduce((a, p) => a + p.gananciaRider + p.propina, 0),
       enCurso: enCurso ?? null,
     };
+  }
+
+  @Get('riders/:id/documentos')
+  documentosRider(@Param('id', ParseUUIDPipe) id: string) {
+    return this.documentos.deRider(id);
   }
 
   @Get('riders/:id/envios')
