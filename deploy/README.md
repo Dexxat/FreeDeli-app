@@ -95,10 +95,19 @@ Todos los avisos a los riders salen por WhatsApp, con la API oficial de Meta (Cl
 
 Sin token, la API sigue funcionando y deja cada aviso en el log. El rider puede apagar los avisos desde su perfil.
 
+## Mail
+
+Usuarios, kioscos y riders recuperan la contraseña con un link por mail: vence en 30 minutos y sirve una sola vez. Sirve cualquier proveedor SMTP (el del dominio, Gmail con contraseña de aplicación, Brevo, etc.). En `deploy/.env` completar `SMTP_HOST`, `SMTP_PUERTO` (587, o 465 con TLS directo), `SMTP_USUARIO`, `SMTP_CLAVE` y `SMTP_DESDE`.
+
+Para que los mails no caigan en spam, el dominio de `SMTP_DESDE` necesita los registros SPF y DKIM que indique el proveedor.
+
+Sin `SMTP_HOST`, la API deja el mail con el link en el log. La clave de Dev no se recupera por mail.
+
 ## Pendiente antes de abrir al público
 
 - Definir la tarifa de envío real (`TARIFA_CERCA`, `TARIFA_MEDIA`, `TARIFA_LEJOS`) y el alias de FreeDeli (`ALIAS_FREEDELI`).
 - Dejar `HORARIO_LIBRE=false` para que solo se pida de 00 a 08 hs.
 - Configurar WhatsApp y que Meta apruebe las plantillas (ver arriba).
+- Configurar el SMTP para recuperar contraseñas (ver "Mail").
 - Cargar el WhatsApp real de la empresa en `projects/shared/src/lib/config/freedeli.config.ts`.
-- La ubicación de las direcciones es aproximada (centro de la zona). Para distancias reales hace falta un servicio de mapas.
+- La ubicación de los kioscos es aproximada (centro de la zona según la dirección). La del cliente sale del GPS del celular.

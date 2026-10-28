@@ -15,6 +15,7 @@ export const MENSAJES = {
   direccion: 'Ingresá la calle y la altura.',
   zona: 'Zona inválida.',
   foto: 'Subí una foto JPEG, PNG o WebP de hasta 2 MB.',
+  clave: 'La contraseña tiene que tener al menos 8 caracteres.',
 } as const;
 
 export class CredencialesDto {
@@ -22,7 +23,21 @@ export class CredencialesDto {
   email!: string;
 
   @IsString()
-  @MinLength(8, { message: 'La contraseña tiene que tener al menos 8 caracteres.' })
+  @MinLength(8, { message: MENSAJES.clave })
+  @MaxLength(100)
+  clave!: string;
+}
+
+export class RecuperarDto {
+  @IsEmail({}, { message: MENSAJES.email })
+  email!: string;
+}
+
+export class RestablecerDto {
+  @IsString() @MaxLength(2000) token!: string;
+
+  @IsString()
+  @MinLength(8, { message: MENSAJES.clave })
   @MaxLength(100)
   clave!: string;
 }

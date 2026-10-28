@@ -6,6 +6,6 @@ import { Ingreso } from '@freedeli/shared';
   selector: 'fd-ingresar',
   imports: [Ingreso],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<fd-ingreso logo="brand/freedeli-piramide.svg" subtitulo="DEV" rol="DEV" destino="/main" [rutaRegistro]="null" />`,
+  template: `<fd-ingreso logo="brand/freedeli-piramide.svg" subtitulo="DEV" rol="DEV" destino="/main" [rutaRegistro]="null" [rutaRecuperar]="null" />`,
 })
 export default class Ingresar {}

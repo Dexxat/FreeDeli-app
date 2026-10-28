@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger, OnApplicationBootstrap, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, OnApplicationBootstrap, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { geolocalizar, zonaDb } from '../comun/zonas.js';
@@ -10,6 +10,18 @@ import type { RegistroKioscoDto, RegistroRiderDto, RegistroUsuarioDto } from './
 import type { Sesion } from './sesion.js';
 import { EventosService } from '../eventos/eventos.service.js';
 import { documentoParaGuardar } from '../rider/documentos.service.js';
+import { CorreoService } from '../avisos/correo.service.js';
+
+/** Lo que dura el link para elegir una contraseña nueva. */
+export const MINUTOS_RECUPERACION = 30;
+const LINK_VENCIDO = 'El link venció o ya se usó. Pedí uno nuevo.';
+
+/** App donde cada rol elige la contraseña nueva. Dev no recupera por mail: su clave se maneja desde el servidor. */
+const APP_DEL_ROL: Partial<Record<Rol, { variable: string; local: string }>> = {
+  USUARIO: { variable: 'URL_APP_USUARIOS', local: 'http://localhost:4301' },
+  KIOSCO: { variable: 'URL_APP_KIOSCOS', local: 'http://localhost:4303' },
+  RIDER: { variable: 'URL_APP_RIDERS', local: 'http://localhost:4300' },
+};
 
 export interface RespuestaSesion {
   token: string;
@@ -25,6 +37,7 @@ export class AuthService implements OnApplicationBootstrap {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly eventos: EventosService,
+    private readonly correo: CorreoService,
   ) {}
 
   /** Crea la cuenta del dueño (única instancia de FreeDeli Dev) si no existe. */
@@ -126,6 +139,53 @@ export class AuthService implements OnApplicationBootstrap {
     // Mismo mensaje si no existe o si la clave no coincide.
     if (!cuenta || !(await verificarClave(clave, cuenta.clave))) throw new UnauthorizedException('Email o contraseña incorrectos.');
     return this.sesion(cuenta);
+  }
+
+  /**
+   * El link de recuperación se firma con el secreto y el hash de la clave actual:
+   * vence a los MINUTOS_RECUPERACION y deja de servir apenas se cambia la clave (un solo uso).
+   */
+  private secretoRecuperacion(claveGuardada: string): string {
+    return `${this.config.getOrThrow<string>('JWT_SECRET')}:${claveGuardada}`;
+  }
+
+  /**
+   * Manda por mail el link para elegir una contraseña nueva. Responde igual exista o no la cuenta,
+   * para no revelar qué emails están registrados; el mail sale sin esperar.
+   */
+  async pedirRecuperacion(email: string): Promise<void> {
+    const cuenta = await this.db.cuenta.findUnique({ where: { email: email.toLowerCase() } });
+    const app = cuenta && APP_DEL_ROL[cuenta.rol];
+    if (!cuenta || !app) return;
+    const token = await this.jwt.signAsync({ sub: cuenta.id }, { secret: this.secretoRecuperacion(cuenta.clave), expiresIn: `${MINUTOS_RECUPERACION}m` });
+    const link = `${this.config.get<string>(app.variable) ?? app.local}/restablecer?token=${encodeURIComponent(token)}`;
+    void this.correo.enviar(
+      cuenta.email,
+      'Elegí una contraseña nueva para FreeDeli',
+      [
+        'Hola,',
+        '',
+        'Pediste cambiar la contraseña de tu cuenta de FreeDeli. Entrá a este link para elegir una nueva:',
+        link,
+        '',
+        `El link vence en ${MINUTOS_RECUPERACION} minutos y sirve una sola vez.`,
+        'Si no lo pediste, ignorá este mail: tu contraseña no cambia.',
+      ].join('\n'),
+    );
+  }
+
+  /** Cambia la contraseña con el link del mail y deja la sesión iniciada. */
+  async restablecer(token: string, clave: string): Promise<RespuestaSesion> {
+    const sub = this.jwt.decode<{ sub?: string } | null>(token)?.sub;
+    const cuenta = sub ? await this.db.cuenta.findUnique({ where: { id: sub } }) : null;
+    if (!cuenta || !APP_DEL_ROL[cuenta.rol]) throw new BadRequestException(LINK_VENCIDO);
+    try {
+      await this.jwt.verifyAsync(token, { secret: this.secretoRecuperacion(cuenta.clave) });
+    } catch {
+      throw new BadRequestException(LINK_VENCIDO);
+    }
+    const actualizada = await this.db.cuenta.update({ where: { id: cuenta.id }, data: { clave: await hashearClave(clave) } });
+    return this.sesion(actualizada);
   }
 
   /** Estado actual de la cuenta con un token nuevo (por ejemplo, recién aprobada). */

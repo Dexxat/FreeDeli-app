@@ -4,3 +4,6 @@ export * from './nav-inferior';
 export * from './ingreso';
 export * from './cuenta-pendiente';
 export * from './campo-foto';
+export * from './marca';
+export * from './recuperar';
+export * from './restablecer';

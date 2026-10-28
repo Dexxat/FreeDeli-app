@@ -7,4 +7,6 @@ export const APPS = [
   { nombre: 'riders', proyecto: 'riders-app', puerto: 4402 },
   { nombre: 'dev', proyecto: 'dev-admin', puerto: 4403 },
 ];
+/** Firma de las sesiones de la API de pruebas. */
+export const JWT_SECRET = 'secreto-e2e';
 export const DEV = { email: 'dev@e2e.local', clave: 'clave-dev-e2e' };

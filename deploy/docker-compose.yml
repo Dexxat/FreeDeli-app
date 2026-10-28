@@ -44,6 +44,14 @@ services:
       # Avisos a los riders por WhatsApp (Cloud API de Meta). Sin token no se envían.
       WHATSAPP_TOKEN: ${WHATSAPP_TOKEN:-}
       WHATSAPP_NUMERO_ID: ${WHATSAPP_NUMERO_ID:-}
+      # Mail para recuperar la contraseña. Sin SMTP_HOST el link queda en el log.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PUERTO: ${SMTP_PUERTO:-587}
+      SMTP_USUARIO: ${SMTP_USUARIO:-}
+      SMTP_CLAVE: ${SMTP_CLAVE:-}
+      SMTP_DESDE: ${SMTP_DESDE:-FreeDeli <no-responder@freedeli.com.ar>}
+      URL_APP_USUARIOS: https://${DOMINIO}
+      URL_APP_KIOSCOS: https://kioscos.${DOMINIO}
       URL_APP_RIDERS: https://riders.${DOMINIO}
       TZ: America/Argentina/Buenos_Aires
 

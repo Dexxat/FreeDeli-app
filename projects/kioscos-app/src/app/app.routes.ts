@@ -19,6 +19,20 @@ export const routes: Routes = [
     data: SIN_SHELL,
     loadComponent: () => import('./pages/registro/registro'),
   },
+  {
+    path: 'recuperar',
+    title: 'FreeDeli Kioscos · Recuperar contraseña',
+    canActivate: [soloSinSesion('/inicio')],
+    data: SIN_SHELL,
+    loadComponent: () => import('./pages/recuperar/recuperar'),
+  },
+  {
+    // Sin guard: el link del mail tiene que funcionar aunque haya otra sesión abierta en el celular.
+    path: 'restablecer',
+    title: 'FreeDeli Kioscos · Contraseña nueva',
+    data: SIN_SHELL,
+    loadComponent: () => import('./pages/restablecer/restablecer'),
+  },
   { path: 'pendiente', title: 'FreeDeli Kioscos · Alta en revisión', data: SIN_SHELL, loadComponent: () => import('./pages/pendiente/pendiente') },
   {
     path: '',

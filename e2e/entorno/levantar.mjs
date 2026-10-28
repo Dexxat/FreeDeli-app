@@ -7,7 +7,7 @@ import { createReadStream, existsSync, mkdirSync, rmSync, statSync, writeFileSyn
 import { createServer, request } from 'node:http';
 import { extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { APPS, PUERTO_API, PUERTO_PG, DEV } from './config.mjs';
+import { APPS, PUERTO_API, PUERTO_PG, DEV, JWT_SECRET } from './config.mjs';
 
 const RAIZ = fileURLToPath(new URL('../../', import.meta.url));
 const BACKEND = join(RAIZ, 'backend');
@@ -59,7 +59,7 @@ try {
       ...process.env,
       DATABASE_URL: url,
       PORT: String(PUERTO_API),
-      JWT_SECRET: 'secreto-e2e',
+      JWT_SECRET,
       DEV_EMAIL: DEV.email,
       DEV_CLAVE: DEV.clave,
       HORARIO_LIBRE: 'true',

@@ -65,6 +65,16 @@ export class AuthApi {
     return this.http.post<RespuestaSesion>(`${this.url}/auth/registro/rider`, datos).pipe(tap(this.guardar));
   }
 
+  /** Pide el link para elegir una contraseña nueva. Responde lo mismo exista o no la cuenta. */
+  recuperar(email: string): Observable<void> {
+    return this.http.post<void>(`${this.url}/auth/recuperar`, { email });
+  }
+
+  /** Contraseña nueva con el link del mail: deja la sesión iniciada. */
+  restablecer(token: string, clave: string): Observable<RespuestaSesion> {
+    return this.http.post<RespuestaSesion>(`${this.url}/auth/restablecer`, { token, clave }).pipe(tap(this.guardar));
+  }
+
   /** Estado actual de la cuenta con un token nuevo (sirve para seguir cuando Dev la aprueba). */
   yo(): Observable<Cuenta> {
     return this.http.get<RespuestaSesion>(`${this.url}/auth/yo`).pipe(

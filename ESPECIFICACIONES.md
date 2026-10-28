@@ -15,6 +15,8 @@ FreeDeli conecta **kioscos 24 hs** del barrio con **riders** (repartidores) para
 
 Zonas de operación: **San Miguel**, **Muñiz** y **Bella Vista**.
 
+**Contraseña olvidada:** en Usuarios, Kioscos y Riders, "¿Olvidaste tu contraseña?" manda un link por mail para elegir una nueva, sin intervención de Dev. Vence en 30 minutos y sirve una sola vez. Al guardarla entra directo a su app. La respuesta es la misma exista o no la cuenta. La clave de Dev no se recupera por mail.
+
 ---
 
 ## FreeDeli Dev (panel de administración)

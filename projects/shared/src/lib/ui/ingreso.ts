@@ -3,19 +3,16 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthApi, mensajeDeError } from '../http/auth.api';
 import { RolCuenta, SesionService } from '../http/sesion';
+import { Marca } from './marca';
 
 /** Pantalla de ingreso con email y contraseña, igual en las cuatro apps. */
 @Component({
   selector: 'fd-ingreso',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, Marca],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <main class="pantalla">
-      <div class="marca">
-        <span class="logo"><img [src]="logo()" width="88" height="60" alt="" class="fd-pixel" /></span>
-        <span class="nombre">Free<span class="deli">Deli</span></span>
-        @if (subtitulo()) { <span class="sub">{{ subtitulo() }}</span> }
-      </div>
+      <fd-marca [logo]="logo()" [subtitulo]="subtitulo()" />
 
       <form class="caja" (ngSubmit)="ingresar()" novalidate>
         <h1 class="titulo">INGRESAR</h1>
@@ -23,6 +20,9 @@ import { RolCuenta, SesionService } from '../http/sesion';
         <label class="campo">Contraseña<input name="clave" type="password" autocomplete="current-password" [(ngModel)]="clave" required /></label>
         @if (error(); as e) { <p class="error" role="alert">{{ e }}</p> }
         <button type="submit" class="boton" [disabled]="enviando()">{{ enviando() ? 'INGRESANDO…' : 'INGRESAR' }}</button>
+        @if (rutaRecuperar()) {
+          <p class="pie"><a [routerLink]="rutaRecuperar()">¿Olvidaste tu contraseña?</a></p>
+        }
         @if (rutaRegistro()) {
           <p class="pie">¿No tenés cuenta? <a [routerLink]="rutaRegistro()">Crear cuenta</a></p>
         }
@@ -42,6 +42,8 @@ export class Ingreso {
   readonly rol = input.required<RolCuenta>();
   readonly destino = input('/');
   readonly rutaRegistro = input<string | null>('/registro');
+  /** Dev no recupera la contraseña por mail. */
+  readonly rutaRecuperar = input<string | null>('/recuperar');
 
   protected email = '';
   protected clave = '';

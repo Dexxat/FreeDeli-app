@@ -2,6 +2,7 @@ import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { crearApp } from './app.js';
 import { DOCUMENTOS } from './fotos.js';
+import { CorreoService } from '../src/avisos/correo.service.js';
 
 describe('Auth y altas', () => {
   let app: INestApplication;
@@ -103,5 +104,47 @@ describe('Auth y altas', () => {
   it('sin token no hay acceso', async () => {
     await api().get('/api/auth/yo').expect(401);
     await api().get('/api/auth/yo').set('Authorization', 'Bearer cualquiera').expect(401);
+  });
+
+  describe('recuperar la contraseña', () => {
+    /** Pide el link y lo saca del mail que se mandó. */
+    async function pedirLink(email: string): Promise<string | null> {
+      const enviar = vi.spyOn(app.get(CorreoService), 'enviar');
+      await api().post('/api/auth/recuperar').send({ email }).expect(204);
+      const texto = enviar.mock.calls[0]?.[2];
+      enviar.mockRestore();
+      return texto?.match(/\/restablecer\?token=(\S+)/)?.[1] ?? null;
+    }
+
+    it('manda un link de un solo uso que deja la sesión iniciada con la clave nueva', async () => {
+      const token = decodeURIComponent((await pedirLink('Martina@test.local'))!);
+      const r = await api().post('/api/auth/restablecer').send({ token, clave: 'claveNueva22' }).expect(200);
+      expect(r.body.cuenta).toMatchObject({ email: usuario.email, rol: 'USUARIO' });
+      await api().get('/api/auth/yo').set('Authorization', `Bearer ${r.body.token}`).expect(200);
+
+      await api().post('/api/auth/ingresar').send({ email: usuario.email, clave: usuario.clave }).expect(401);
+      await api().post('/api/auth/ingresar').send({ email: usuario.email, clave: 'claveNueva22' }).expect(200);
+      const repetido = await api().post('/api/auth/restablecer').send({ token, clave: 'otraClave33' }).expect(400);
+      expect(repetido.body.message).toBe('El link venció o ya se usó. Pedí uno nuevo.');
+    });
+
+    it('vence a los 30 minutos', async () => {
+      const token = decodeURIComponent((await pedirLink(usuario.email))!);
+      vi.useFakeTimers({ now: Date.now() + 31 * 60_000, toFake: ['Date'] });
+      try {
+        await api().post('/api/auth/restablecer').send({ token, clave: 'claveNueva44' }).expect(400);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('no revela si el email existe, no sirve para Dev y el link no es una sesión', async () => {
+      expect(await pedirLink('nadie@test.local')).toBeNull();
+      expect(await pedirLink('dev@test.local')).toBeNull();
+      const token = decodeURIComponent((await pedirLink(usuario.email))!);
+      await api().get('/api/auth/yo').set('Authorization', `Bearer ${token}`).expect(401);
+      await api().post('/api/auth/restablecer').send({ token: 'cualquiera', clave: 'claveNueva55' }).expect(400);
+      await api().post('/api/auth/restablecer').send({ token, clave: 'corta' }).expect(400);
+    });
   });
 });

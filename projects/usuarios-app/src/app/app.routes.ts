@@ -18,6 +18,20 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/registro/registro'),
   },
   {
+    path: 'recuperar',
+    title: 'FreeDeli · Recuperar contraseña',
+    canActivate: [soloSinSesion('/inicio')],
+    data: { sinNav: true, sinHeader: true } satisfies DatosShell,
+    loadComponent: () => import('./pages/recuperar/recuperar'),
+  },
+  {
+    // Sin guard: el link del mail tiene que funcionar aunque haya otra sesión abierta en el celular.
+    path: 'restablecer',
+    title: 'FreeDeli · Contraseña nueva',
+    data: { sinNav: true, sinHeader: true } satisfies DatosShell,
+    loadComponent: () => import('./pages/restablecer/restablecer'),
+  },
+  {
     path: '',
     canActivateChild: [requiereSesion('USUARIO')],
     children: [
