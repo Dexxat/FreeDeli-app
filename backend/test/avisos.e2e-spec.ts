@@ -56,7 +56,7 @@ describe('avisos por WhatsApp (e2e)', () => {
     await e.api().post(`/api/kiosco/pedidos/${p.id}/transferencia`).set(auth(e.kiosco)).expect(200);
     await app.get(DespachoService).barrer();
     const [nuevo] = await avisos();
-    expect(nuevo).toEqual({ telefono: '11 5555-0142', plantilla: 'freedeli_pedido_nuevo', parametros: ['Kiosco avisos', 'San Miguel', '$3.000', '30', 'https://riders.freedeli.com.ar'] });
+    expect(nuevo).toEqual({ telefono: '11 5555-0142', plantilla: 'freedeli_pedido_nuevo', parametros: ['Kiosco avisos', 'San Miguel', '$3.000', '60', 'https://riders.freedeli.com.ar'] });
 
     await e.api().post(`/api/rider/ofertas/${p.id}/aceptar`).set(auth(e.rider)).expect(200);
     enviar.mockClear();

@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { Pedido, PesosPipe, UsuariosApi, totalPedido } from '@freedeli/shared';
+import { MINUTOS_SIN_RIDER, Pedido, PesosPipe, UsuariosApi, esperaSinRider, mensajeDeError, totalPedido } from '@freedeli/shared';
+import { Reloj } from '../core/reloj';
 
 /**
  * Qué está pasando con el pedido antes de que el rider lo retire, y qué tiene que hacer el cliente.
  * Solo se muestra mientras el pedido espera (fases stock, ajuste, transferencia, rider y aprobación).
+ * A los 10 minutos sin rider le pregunta al cliente si sigue esperando.
  */
 @Component({
   selector: 'fd-paso-actual',
@@ -12,7 +14,7 @@ import { Pedido, PesosPipe, UsuariosApi, totalPedido } from '@freedeli/shared';
   template: `
     @let p = pedido();
     @if (p.estado === 'esperando') {
-      <section class="paso" [class.accion]="p.fase === 'ajuste' || p.fase === 'transferencia'" aria-live="polite">
+      <section class="paso" [class.accion]="p.fase === 'ajuste' || p.fase === 'transferencia' || sinRider()" aria-live="polite">
         @switch (p.fase) {
           @case ('stock') {
             <h2 class="titulo">REVISANDO STOCK</h2>
@@ -41,12 +43,18 @@ import { Pedido, PesosPipe, UsuariosApi, totalPedido } from '@freedeli/shared';
               <button type="button" (click)="copiar(p.aliasKiosco)">{{ copiado() ? 'COPIADO' : 'COPIAR' }}</button>
             </div>
             <p class="sutil">Cuando el kiosco confirme que la recibió, buscamos rider. El kiosco retiene el pago hasta que le des tu PIN al rider.</p>
-            @if (error(); as e) { <p class="error" role="alert">{{ e }}</p> }
-            <button type="button" class="enlace" [disabled]="enviando()" (click)="cancelar()">Cancelar pedido</button>
           }
           @case ('rider') {
-            <h2 class="titulo">BUSCANDO RIDER</h2>
-            <p class="texto">El kiosco confirmó tu transferencia. Le avisamos a los riders de la zona.</p>
+            @if (sinRider()) {
+              <h2 class="titulo">TODAVÍA NO HAY RIDER</h2>
+              <p class="texto">Pasaron {{ minutosSinRider }} minutos y ningún rider tomó tu pedido. ¿Querés seguir esperando?</p>
+              <p class="sutil">Si cancelás, el kiosco te devuelve todo y no te cuenta como cancelación.</p>
+              @if (error(); as e) { <p class="error" role="alert">{{ e }}</p> }
+              <button type="button" class="primario" [disabled]="enviando()" (click)="seguirEsperando()">SEGUIR ESPERANDO</button>
+            } @else {
+              <h2 class="titulo">BUSCANDO RIDER</h2>
+              <p class="texto">El kiosco confirmó tu transferencia. Le avisamos a los riders de la zona.</p>
+            }
           }
           @case ('aprobacion') {
             <h2 class="titulo">RIDER ENCONTRADO</h2>
@@ -72,7 +80,6 @@ import { Pedido, PesosPipe, UsuariosApi, totalPedido } from '@freedeli/shared';
     .botones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .secundario { min-height: 48px; background: var(--fd-navy-700); color: #fff; font-weight: 600; }
     .primario { min-height: 48px; background: var(--fd-yellow-400); color: var(--fd-navy-900); font-family: var(--fd-font-pixel); font-size: 11px; }
-    .enlace { align-self: flex-start; min-height: 44px; background: none; color: var(--fd-blue-300); font-size: 14px; font-weight: 600; text-decoration: underline; }
     .alias {
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
       padding: 8px 8px 8px 12px;
@@ -86,25 +93,34 @@ export class PasoActual {
   private readonly api = inject(UsuariosApi);
   readonly pedido = input.required<Pedido>();
 
+  private readonly reloj = inject(Reloj);
+
   protected readonly total = computed(() => totalPedido(this.pedido()));
+  /** Lleva 10 minutos sin rider: se le pregunta si sigue esperando. */
+  readonly sinRider = computed(() => esperaSinRider(this.pedido(), this.reloj.ahora()));
+  protected readonly minutosSinRider = MINUTOS_SIN_RIDER;
   protected readonly enviando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly copiado = signal(false);
 
-  private hacer(accion: 'aceptarAjuste' | 'cancelarPedido'): void {
+  private hacer(accion: 'aceptarAjuste' | 'cancelarPedido' | 'seguirEsperando'): void {
     this.enviando.set(true);
     this.error.set(null);
     this.api[accion](this.pedido().id).subscribe({
       next: () => this.enviando.set(false),
-      error: (e: Error) => {
+      error: (e: unknown) => {
         this.enviando.set(false);
-        this.error.set(e.message);
+        this.error.set(mensajeDeError(e, e instanceof Error ? e.message : undefined));
       },
     });
   }
 
   protected aceptar(): void {
     this.hacer('aceptarAjuste');
+  }
+
+  protected seguirEsperando(): void {
+    this.hacer('seguirEsperando');
   }
 
   protected cancelar(): void {

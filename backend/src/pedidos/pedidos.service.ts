@@ -4,7 +4,10 @@ import { ReglasConfig } from '../comun/reglas.config.js';
 import { INCLUIR_PEDIDO, aDominio, estadoDb, cambiosDb, type PedidoConItems } from '../comun/mapeo.js';
 import { zonaApi } from '../comun/zonas.js';
 import {
+  ABANDONOS_PARA_PAUSA,
+  CANCELACIONES_PARA_PAUSA,
   ESTADOS_ABIERTOS,
+  inicioConteoCancelaciones,
   PEDIDO_MINIMO,
   calcularComision,
   costoEnvio,
@@ -23,7 +26,7 @@ import {
   type Resultado,
 } from '../dominio.js';
 import type { Prisma } from '../generated/prisma/client.js';
-import { EstadoPedido, FasePedido, TipoMovimientoSaldo } from '../generated/prisma/enums.js';
+import { EstadoPedido, FasePedido, MotivoCancelacion, TipoMovimientoSaldo } from '../generated/prisma/enums.js';
 import { EventosService } from '../eventos/eventos.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -46,7 +49,8 @@ export class PedidosService {
 
   /**
    * Aplica una transición del dominio con la fila bloqueada (SELECT … FOR UPDATE),
-   * así dos acciones simultáneas sobre el mismo pedido no se pisan.
+   * así dos acciones simultáneas sobre el mismo pedido no se pisan. Si la transición cancela el pedido,
+   * aplica lo que sigue a toda cancelación.
    */
   async transicionar(
     pedidoId: string,
@@ -63,6 +67,7 @@ export class PedidosService {
       const quitados = r.pedido.itemsQuitados?.map((i) => i.productoId) ?? [];
       if (quitados.length) await tx.itemPedido.updateMany({ where: { pedidoId, productoId: { in: quitados } }, data: { quitado: true } });
       const guardado = await tx.pedido.update({ where: { id: pedidoId }, data: cambiosDb(r.pedido), include: INCLUIR_PEDIDO });
+      if (r.pedido.estado === 'cancelado' && fila.estado !== EstadoPedido.CANCELADO) await this.alCancelar(tx, r.pedido);
       await despues?.(tx, r.pedido);
       return aDominio(guardado);
     });
@@ -84,9 +89,45 @@ export class PedidosService {
     await tx.movimientoSaldo.create({ data: { kioscoId, tipo, monto, referencia, saldoResultante: k.saldo } });
   }
 
-  /** Si el cliente cancela, recupera el saldo a favor que había usado. */
-  async devolverPremio(tx: Tx, p: Pedido): Promise<void> {
+  /**
+   * El cliente recupera el saldo a favor usado. Si canceló el cliente y ya suma 3 en la semana, se pausa
+   * su cuenta; si el rider decidió no ir y ya suma 3 abandonos, se pausa al rider hasta que Dev lo evalúe.
+   */
+  private async alCancelar(tx: Tx, p: Pedido): Promise<void> {
+    await this.retirarOfertas(tx, p.id);
     if (p.descuentoPremio) await tx.usuario.update({ where: { id: p.usuarioId }, data: { saldoFavor: { increment: p.descuentoPremio } } });
+    const motivo = p.cancelacion?.motivo;
+    if (motivo === 'cliente') {
+      const { habilitadoEn } = await tx.usuario.findUniqueOrThrow({ where: { id: p.usuarioId }, select: { habilitadoEn: true } });
+      const cancelados = await tx.pedido.count({
+        where: { usuarioId: p.usuarioId, motivoCancelacion: MotivoCancelacion.CLIENTE, creadoEn: { gte: inicioConteoCancelaciones(new Date(), habilitadoEn) } },
+      });
+      if (cancelados >= CANCELACIONES_PARA_PAUSA) await tx.usuario.update({ where: { id: p.usuarioId }, data: { pausado: true } });
+    }
+    if (motivo === 'rider' && p.riderId && (await this.abandonos(p.riderId, tx)) >= ABANDONOS_PARA_PAUSA) {
+      await this.pausarRider(tx, p.riderId);
+    }
+  }
+
+  /** Vence las ofertas vigentes del pedido: el rider deja de verlo y puede recibir otro. */
+  private async retirarOfertas(tx: Tx, pedidoId: string): Promise<void> {
+    const ahora = new Date();
+    const vigentes = await tx.oferta.findMany({ where: { pedidoId, expiraEn: { gt: ahora } }, select: { riderId: true } });
+    if (vigentes.length === 0) return;
+    await tx.oferta.updateMany({ where: { pedidoId, expiraEn: { gt: ahora } }, data: { expiraEn: ahora } });
+    for (const { riderId } of vigentes) this.eventos.emitir({ tipo: 'oferta', riderId, oferta: null });
+  }
+
+  /** Pedidos que el rider aceptó y decidió no hacer, desde que Dev lo habilitó. */
+  async abandonos(riderId: string, tx: Tx = this.db): Promise<number> {
+    const { habilitadoEn } = await tx.rider.findUniqueOrThrow({ where: { id: riderId }, select: { habilitadoEn: true } });
+    return tx.pedido.count({ where: { riderId, motivoCancelacion: MotivoCancelacion.RIDER, creadoEn: { gte: habilitadoEn } } });
+  }
+
+  /** Pausado, el rider pasa a OFF y no puede volver a conectarse. */
+  async pausarRider(tx: Tx, riderId: string): Promise<void> {
+    await tx.rider.update({ where: { id: riderId }, data: { pausado: true, disponible: false } });
+    await tx.sesionOnline.updateMany({ where: { riderId, hasta: null }, data: { hasta: new Date() } });
   }
 
   /** FREEDELI RUSH: suma la estrella del pedido si el servidor confirma los 10 minutos en camino. */
@@ -110,6 +151,9 @@ export class PedidosService {
       throw new ConflictException({ statusCode: 409, codigo: 'fuera-de-horario', message: `FreeDeli toma pedidos de ${textoHorario()}.` });
     }
     const usuario = await this.db.usuario.findUniqueOrThrow({ where: { id: usuarioId } });
+    if (usuario.pausado) {
+      throw new ConflictException({ statusCode: 409, codigo: 'cuenta-pausada', message: 'Tu cuenta está pausada por cancelaciones. Escribinos por WhatsApp.' });
+    }
     const kiosco = await this.db.kiosco.findUnique({ where: { id: nuevo.kioscoId }, include: { cuenta: true } });
     if (!kiosco || kiosco.cuenta?.estado !== 'APROBADA' || !puedeRecibirPedidos(kiosco)) {
       throw new ConflictException({ statusCode: 409, codigo: 'kiosco-cerrado', message: 'El kiosco no está recibiendo pedidos.' });

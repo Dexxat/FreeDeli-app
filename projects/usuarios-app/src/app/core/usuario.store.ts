@@ -49,6 +49,11 @@ export class UsuarioStore {
     );
   }
 
+  /** Vuelve a traer el perfil: después de cancelar, la cuenta puede quedar pausada. */
+  recargarPerfil(): void {
+    this.api.perfil().subscribe({ next: (u) => this.usuario.set(u), error: () => undefined });
+  }
+
   /** Refleja las estrellas y el saldo a favor después de jugar FREEDELI RUSH. */
   actualizarPremios(premios: Pick<Usuario, 'estrellas' | 'saldoFavor'>): void {
     this.usuario.update((u) => (u ? { ...u, ...premios } : u));

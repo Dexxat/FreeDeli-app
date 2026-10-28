@@ -11,7 +11,7 @@ export type ResultadoEntrega =
 
 /** Pedidos compartidos entre las apps. El estado se ve igual en Usuarios y Riders. */
 export abstract class PedidosApi {
-  /** Emite cada vez que el pedido cambia. */
+  /** Emite cada vez que el pedido cambia. Empieza por el último estado conocido. */
   abstract observar(pedidoId: string): Observable<Pedido | null>;
   /** Pedido del rider con sesión iniciada (esperando aprobación del kiosco o en curso), o null. Emite en cada cambio. */
   abstract enCursoDelRider(): Observable<Pedido | null>;

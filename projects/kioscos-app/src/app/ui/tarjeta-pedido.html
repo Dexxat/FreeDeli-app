@@ -69,6 +69,17 @@
     }
   }
 
+  @if (p.estado === 'cancelado' && p.cancelacion; as c) {
+    <p class="dato">El pedido se canceló. Devolvele <strong>{{ c.reintegro | pesos }}</strong> al cliente, a la cuenta desde la que te transfirió.</p>
+    @if (c.riderCobra) {
+      <p class="dato">El rider ya había hecho más de la mitad del viaje: pagale el envío, <strong>{{ envioRider() | pesos }}</strong>.</p>
+    }
+    @if (p.retiro?.kiosco) {
+      <p class="sutil">El rider te devuelve los productos.</p>
+    }
+    <button type="button" class="primario" [disabled]="enviando()" (click)="marcarReintegrado()">YA LO DEVOLVÍ</button>
+  }
+
   @if (error(); as e) {
     <p class="error" role="alert">{{ e }}</p>
   }

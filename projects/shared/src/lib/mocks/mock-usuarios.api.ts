@@ -1,6 +1,6 @@
 import { Injectable, computed, inject } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { Observable, delay, distinctUntilChanged, map, of, tap, throwError } from 'rxjs';
+import { Observable, delay, distinctUntilChanged, map, of, throwError } from 'rxjs';
 import { ResultadoCrearPedido, UsuariosApi } from '../api/usuarios.api';
 import { Kiosco, Producto } from '../models/kiosco';
 import { Pedido, cantidadProductos, totalPedido } from '../models/pedido';
@@ -12,7 +12,7 @@ import { servicioAbierto } from '../rules/horario.rules';
 import { dentroDelArea } from '../rules/cobertura.rules';
 import { FREEDELI_CONFIG, HORARIO_LIBRE } from '../config/freedeli.config';
 import { MockDb, USUARIO_ACTUAL_ID } from './mock-db';
-import { Resultado, aceptarAjuste, cancelarPorCliente } from '../rules/flujo.rules';
+import { Resultado, aceptarAjuste, cancelarPorCliente, seguirEsperandoRider } from '../rules/flujo.rules';
 import { LATENCIA_MOCK } from './mock-riders.api';
 import { EstrellaSumada, descuentoAplicable, puedeGanarEstrella, sumarEstrella } from '../rules/premios.rules';
 
@@ -42,8 +42,11 @@ export class MockUsuariosApi extends UsuariosApi {
   }
 
   cancelarPedido(pedidoId: string): Observable<Pedido> {
-    const antes = this.db.buscarPedido(pedidoId);
-    return this.transicion(pedidoId, cancelarPorCliente).pipe(tap(() => this.moverSaldoFavor(antes?.descuentoPremio ?? 0)));
+    return this.transicion(pedidoId, (p) => cancelarPorCliente(p, new Date()));
+  }
+
+  seguirEsperando(pedidoId: string): Observable<Pedido> {
+    return this.transicion(pedidoId, (p) => seguirEsperandoRider(p, new Date()));
   }
 
   sumarEstrella(pedidoId: string): Observable<EstrellaSumada> {
@@ -133,7 +136,9 @@ export class MockUsuariosApi extends UsuariosApi {
 
     let resultado: ResultadoCrearPedido;
     const subtotal = lineas.reduce((a, i) => a + i.cantidad * (catalogo.find((p) => p.id === i.productoId)?.precio ?? 0), 0);
-    if (!this.horarioLibre && !servicioAbierto(new Date())) {
+    if (this.usuario().pausado) {
+      resultado = { ok: false, motivo: 'cuenta-pausada' };
+    } else if (!this.horarioLibre && !servicioAbierto(new Date())) {
       resultado = { ok: false, motivo: 'fuera-de-horario' };
     } else if (!dentroDelArea(this.destino())) {
       resultado = { ok: false, motivo: 'fuera-de-cobertura' };

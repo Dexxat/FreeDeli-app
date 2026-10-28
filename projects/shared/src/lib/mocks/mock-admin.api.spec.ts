@@ -2,7 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { AdminApi } from '../api/admin.api';
 import { UsuariosApi } from '../api/usuarios.api';
-import { MockDb } from './mock-db';
+import { MockDb, RIDER_ACTUAL_ID, USUARIO_ACTUAL_ID } from './mock-db';
+import { Pedido } from '../models/pedido';
 import { provideFreeDeliMocks } from './provide-mocks';
 
 describe('MockAdminApi', () => {
@@ -86,5 +87,45 @@ describe('MockAdminApi', () => {
     const ms = await firstValueFrom(admin.movimientosSaldo('k5'));
     expect(ms[0]).toMatchObject({ tipo: 'carga', monto: 20000, referencia: 'Transf. 123', saldoResultante: antes + 20000 });
     await expect(firstValueFrom(admin.acreditarSaldo('k5', 0, ''))).rejects.toThrow('mayor a cero');
+  });
+
+  describe('incidentes', () => {
+    /** Un pedido del cliente actual, pagado y en el estado pedido, con el rider actual. */
+    function pedido(estado: Pedido['estado'], cambios: Partial<Pedido> = {}): Pedido {
+      const base = db.crearPedidoEsperando(['san-miguel'])!;
+      const p: Pedido = { ...base, usuarioId: USUARIO_ACTUAL_ID, estado, fase: estado === 'esperando' ? 'rider' : undefined, riderId: RIDER_ACTUAL_ID, ...cambios };
+      db.guardarPedido(p);
+      return p;
+    }
+
+    it('marca entregado sin PIN y liquida la comisión', async () => {
+      const p = pedido('en-camino');
+      const saldo = db.kioscos().find((k) => k.id === p.kioscoId)!.saldo;
+      expect((await firstValueFrom(admin.entregarPedido(p.id))).estado).toBe('entregado');
+      expect(db.kioscos().find((k) => k.id === p.kioscoId)!.saldo).toBe(saldo - p.comisionFreeDeli);
+    });
+
+    it('al tercer abandono pausa al rider y avisa; reactivarlo reinicia la cuenta', async () => {
+      for (let i = 0; i < 3; i++) await firstValueFrom(admin.cancelarPedido(pedido('aceptado').id, 'rider'));
+      const r = await firstValueFrom(admin.rider(RIDER_ACTUAL_ID));
+      expect(r).toMatchObject({ pausado: true, abandonos: 3 });
+      expect((await firstValueFrom(admin.resumen())).alertas).toContainEqual(expect.objectContaining({ tipo: 'rider-pausado', ruta: `/riders/${RIDER_ACTUAL_ID}` }));
+      await firstValueFrom(admin.pausarRider(RIDER_ACTUAL_ID, false));
+      expect(await firstValueFrom(admin.rider(RIDER_ACTUAL_ID))).toMatchObject({ pausado: false, abandonos: 0 });
+    });
+
+    it('al tercer pedido cancelado en la semana pausa al cliente hasta que Dev lo reactive', async () => {
+      const usuarios = TestBed.inject(UsuariosApi);
+      for (let i = 0; i < 3; i++) await firstValueFrom(usuarios.cancelarPedido(pedido('esperando', { riderId: undefined }).id));
+      expect(db.usuarios()[0].pausado).toBe(true);
+      const alerta = (await firstValueFrom(admin.resumen())).alertas.find((a) => a.tipo === 'cliente-pausado');
+      await firstValueFrom(admin.reactivarUsuario(alerta!.usuarioId!));
+      expect(db.usuarios()[0].pausado).toBe(false);
+    });
+
+    it('no da de baja a un rider con un pedido en curso', async () => {
+      pedido('en-camino');
+      await expect(firstValueFrom(admin.darDeBajaRider(RIDER_ACTUAL_ID))).rejects.toThrow('pedido en curso');
+    });
   });
 });

@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { MockDb, USUARIO_ACTUAL_ID, provideFreeDeliMocks } from '@freedeli/shared';
+import { MockDb, USUARIO_ACTUAL_ID, provideFreeDeliMocks, totalPedido } from '@freedeli/shared';
 import { By } from '@angular/platform-browser';
 import Seguimiento from './seguimiento';
 import { Rush } from '../../ui/rush/rush';
@@ -146,5 +146,37 @@ describe('Seguimiento (Usuarios)', () => {
     expect(el.querySelector('.eta')).toBeNull();
     expect(el.textContent).toContain('Todavía ningún rider aceptó');
     expect(el.textContent).toContain('PAGO POR TRANSFERENCIA');
+  });
+
+  describe('cancelaciones', () => {
+    const boton = (el: HTMLElement, texto: string) => [...el.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.trim() === texto)!;
+
+    it('con el pedido pagado avisa cuánto devuelve el kiosco y lo muestra al cancelar', async () => {
+      const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const el = await abrir('/pedido');
+      const total = totalPedido(enCurso()).toLocaleString('es-AR');
+      boton(el, 'Cancelar pedido').click();
+      await estable();
+      expect(confirmar.mock.calls[0][0]).toContain(`te devuelve $${total}`);
+      expect(confirmar.mock.calls[0][0]).toContain('3 pedidos en una semana');
+      expect(el.textContent).toContain('CANCELADO');
+      expect(el.textContent).toContain(`El kiosco te devuelve $${total} a la cuenta desde la que transferiste.`);
+    });
+
+    it('a los 10 minutos sin rider pregunta si sigue esperando', async () => {
+      const el = await abrir('/pedido', (db) =>
+        db.pedidos.update((ps) =>
+          ps.map((p) =>
+            p.usuarioId === USUARIO_ACTUAL_ID && p.estado === 'retirado'
+              ? { ...p, estado: 'esperando', fase: 'rider', riderId: undefined, aceptadoEn: undefined, retiro: undefined, buscandoRiderDesde: new Date(Date.now() - 11 * 60_000) }
+              : p,
+          ),
+        ),
+      );
+      expect(el.textContent).toContain('TODAVÍA NO HAY RIDER');
+      boton(el, 'SEGUIR ESPERANDO').click();
+      await estable();
+      expect(el.textContent).toContain('BUSCANDO RIDER');
+    });
   });
 });

@@ -14,6 +14,7 @@ import {
   ResumenAdmin,
   RiderAdmin,
 } from '../models/admin.js';
+import { Pedido } from '../models/pedido.js';
 import { PeriodoHistorial } from '../models/rider.js';
 import { ZonaId } from '../models/zona.js';
 import { API_URL } from './api-url';
@@ -99,6 +100,25 @@ export class HttpAdminApi extends AdminApi {
 
   pausarRider(id: string, pausado: boolean): Observable<RiderAdmin> {
     return this.http.post<RiderAdmin>(`${this.url}/admin/riders/${id}/pausa`, { pausado }).pipe(tap(this.avisar));
+  }
+
+  darDeBajaRider(id: string): Observable<RiderAdmin> {
+    return this.http.post<RiderAdmin>(`${this.url}/admin/riders/${id}/baja`, {}).pipe(tap(this.avisar));
+  }
+
+  reactivarUsuario(id: string): Observable<void> {
+    return this.http.post(`${this.url}/admin/usuarios/${id}/reactivar`, {}).pipe(
+      tap(this.avisar),
+      map(() => undefined),
+    );
+  }
+
+  entregarPedido(pedidoId: string): Observable<Pedido> {
+    return this.http.post<Pedido>(`${this.url}/admin/pedidos/${pedidoId}/entregar`, {}).pipe(map(revivirPedido), tap(this.avisar));
+  }
+
+  cancelarPedido(pedidoId: string, motivo: 'rider' | 'dev'): Observable<Pedido> {
+    return this.http.post<Pedido>(`${this.url}/admin/pedidos/${pedidoId}/cancelar`, { motivo }).pipe(map(revivirPedido), tap(this.avisar));
   }
 
   documentosRider(riderId: string): Observable<DocumentosRider> {

@@ -9,7 +9,7 @@ import { RiderPublico } from '../models/usuario';
 export abstract class KioscosApi {
   /** El kiosco, con su saldo prepago. Emite en cada cambio. */
   abstract kiosco(): Observable<Kiosco>;
-  /** Pedidos abiertos del kiosco, del más viejo al más nuevo. Emite en cada cambio. */
+  /** Pedidos abiertos del kiosco y cancelados con dinero por devolver, del más viejo al más nuevo. Emite en cada cambio. */
   abstract pedidosEnVivo(): Observable<Pedido[]>;
   /** Datos del rider que aceptó o lleva el pedido. */
   abstract rider(riderId: string): Observable<RiderPublico | null>;
@@ -21,6 +21,8 @@ export abstract class KioscosApi {
   abstract aprobarRider(pedidoId: string, aprobado: boolean): Observable<Pedido>;
   /** El kiosco le entregó el pedido al rider ("Confirmar envío"). */
   abstract confirmarEnvio(pedidoId: string): Observable<Pedido>;
+  /** El kiosco le devolvió al cliente el dinero de un pedido cancelado. */
+  abstract marcarReintegrado(pedidoId: string): Observable<Pedido>;
 
   /** Pedidos terminados (entregados y cancelados), del más nuevo al más viejo. */
   abstract historial(periodo: PeriodoHistorial): Observable<Pedido[]>;

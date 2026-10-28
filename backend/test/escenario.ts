@@ -37,18 +37,32 @@ export async function armarEscenario(app: INestApplication, sufijo: string) {
     await api().post('/api/auth/registro/usuario').send({ email: `u-${sufijo}@test.local`, clave: 'claveUsuario1', nombre: 'Martina Rodríguez', dni: '40111444', telefono: '11 5555-0199', direccion: 'Belgrano 845', zona: 'san-miguel' }).expect(201)
   ).body.token as string;
 
-  /** Hace un pedido de 6 Coca-Cola y lo lleva hasta En camino. */
-  async function pedidoEnCamino() {
+  type PedidoCreado = { id: string; pin: string; numero: number; comisionFreeDeli: number; descuentoPremio: number };
+
+  /** Hace un pedido de 6 Coca-Cola ($16.800) y lo lleva hasta que el cliente transfirió y se busca rider. */
+  async function pedidoPagado(): Promise<PedidoCreado> {
     const p = (await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }] }).expect(201)).body;
     await api().post(`/api/kiosco/pedidos/${p.id}/stock`).set(auth(kiosco)).send({ faltantes: [] }).expect(200);
     await api().post(`/api/kiosco/pedidos/${p.id}/transferencia`).set(auth(kiosco)).expect(200);
+    return p;
+  }
+
+  /** Lo lleva hasta Aceptado: el rider aceptó y el kiosco lo aprobó. */
+  async function pedidoAceptado(): Promise<PedidoCreado> {
+    const p = await pedidoPagado();
     await app.get(DespachoService).barrer();
     await api().post(`/api/rider/ofertas/${p.id}/aceptar`).set(auth(rider)).expect(200);
     await api().post(`/api/kiosco/pedidos/${p.id}/aprobar-rider`).set(auth(kiosco)).send({ aprobado: true }).expect(200);
+    return p;
+  }
+
+  /** Lo lleva hasta En camino. */
+  async function pedidoEnCamino(): Promise<PedidoCreado> {
+    const p = await pedidoAceptado();
     await api().post(`/api/rider/pedidos/${p.id}/retiro`).set(auth(rider)).expect(200);
     await api().post(`/api/kiosco/pedidos/${p.id}/envio`).set(auth(kiosco)).expect(200);
     await api().post(`/api/rider/pedidos/${p.id}/en-camino`).set(auth(rider)).expect(200);
-    return p as { id: string; pin: string; numero: number; comisionFreeDeli: number; descuentoPremio: number };
+    return p;
   }
 
   async function entregar(p: { id: string; pin: string }) {
@@ -60,5 +74,5 @@ export async function armarEscenario(app: INestApplication, sufijo: string) {
     return entregar(await pedidoEnCamino());
   }
 
-  return { api, dev, kiosco, kioscoId, rider, riderId, usuario, coca, pedidoEnCamino, entregar, pedidoEntregado };
+  return { api, dev, kiosco, kioscoId, rider, riderId, usuario, coca, pedidoPagado, pedidoAceptado, pedidoEnCamino, entregar, pedidoEntregado };
 }

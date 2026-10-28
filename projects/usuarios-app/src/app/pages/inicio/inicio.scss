@@ -65,3 +65,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .reciente-nombre { font-size: 15px; font-weight: 700; }
 .flecha { font-family: var(--fd-font-pixel); font-size: 12px; color: var(--fd-yellow-400); }
 .a-favor { margin: 0; padding: 12px; background: var(--fd-yellow-400); color: var(--fd-navy-900); font-size: 14px; font-weight: 700; }
+.pausada {
+  margin: 0; padding: 12px; display: flex; flex-direction: column; gap: 4px;
+  background: var(--fd-amber-400); color: var(--fd-navy-900); font-size: 13px; line-height: 1.4;
+  strong { font-family: var(--fd-font-pixel); font-size: 10px; }
+  a { color: inherit; font-weight: 700; }
+}

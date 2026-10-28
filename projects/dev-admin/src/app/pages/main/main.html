@@ -10,7 +10,14 @@
   @if (r.alertas.length > 0) {
     <ul class="alertas" aria-label="Alertas">
       @for (a of r.alertas; track a.texto) {
-        <li><span class="chip alerta">{{ a.tipo === 'saldo-bajo' ? 'SALDO' : 'DEMORA' }}</span> {{ a.texto }} <a class="enlace" [routerLink]="a.ruta">Ver</a></li>
+        <li>
+          <span class="chip alerta">{{ etiquetaAlerta[a.tipo] }}</span> {{ a.texto }}
+          @if (a.usuarioId) {
+            <button type="button" class="boton" [disabled]="reactivando()" (click)="reactivar(a.usuarioId)">Reactivar</button>
+          } @else if (a.ruta) {
+            <a class="enlace" [routerLink]="a.ruta">Ver</a>
+          }
+        </li>
       }
     </ul>
   }
@@ -40,6 +47,7 @@
           </div>
           <div class="centro">
             <span class="estado">{{ textoEstado[f.estado] }}</span>
+            <fd-incidente [pedidoId]="f.pedidoId" [numero]="f.numero" [estado]="f.estado" [riderId]="f.riderId" />
           </div>
           <div class="lado derecha">
             @if (f.riderId) {

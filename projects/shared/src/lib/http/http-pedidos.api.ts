@@ -44,8 +44,10 @@ export class HttpPedidosApi extends PedidosApi {
         this.eventos.pedidos$.pipe(
           scan((actual: Pedido | null, p: Pedido) => {
             if (esDelRider(p, this.riderId)) return p;
-            // Se entregó, se canceló o el kiosco eligió otro rider.
-            return actual?.id === p.id ? null : actual;
+            if (actual?.id !== p.id) return actual;
+            // Se entregó, se canceló o el kiosco eligió otro rider: observar() da el estado final.
+            this.recordar(p);
+            return null;
           }, inicial),
           startWith(inicial),
         ),

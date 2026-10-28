@@ -1,5 +1,6 @@
 import { Observable } from 'rxjs';
 import { AltaPendiente, MovimientoSaldo, EntregaAdmin, FilaMain, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
+import { Pedido } from '../models/pedido';
 import { ZonaId } from '../models/zona';
 import { PeriodoHistorial } from '../models/rider';
 import { DocumentosRider } from '../rules/documentos.rules';
@@ -23,8 +24,16 @@ export abstract class AdminApi {
   abstract rider(id: string): Observable<RiderAdmin | null>;
   /** Envíos del rider en el período, del más nuevo al más viejo. */
   abstract enviosRider(id: string, periodo: PeriodoAdmin): Observable<FilaMain[]>;
-  /** Pausa o reactiva un rider. Pausado, pasa a OFF y no puede volver a conectarse. */
+  /** Pausa o reactiva un rider. Pausado, pasa a OFF y no puede volver a conectarse. Reactivarlo reinicia sus abandonos. */
   abstract pausarRider(id: string, pausado: boolean): Observable<RiderAdmin>;
+  /** Da de baja al rider: ya no puede ingresar. */
+  abstract darDeBajaRider(id: string): Observable<RiderAdmin>;
+  /** Reactiva a un cliente pausado por cancelaciones. */
+  abstract reactivarUsuario(id: string): Observable<void>;
+  /** Cierra como entregado un pedido que el rider entregó sin poder ingresar el PIN. */
+  abstract entregarPedido(pedidoId: string): Observable<Pedido>;
+  /** Cancela un pedido abierto con reintegro total. `rider`: el rider decidió no ir. */
+  abstract cancelarPedido(pedidoId: string, motivo: 'rider' | 'dev'): Observable<Pedido>;
   /** Movimientos del saldo prepago del kiosco, del más nuevo al más viejo. Emite en cada cambio. */
   abstract movimientosSaldo(kioscoId: string): Observable<MovimientoSaldo[]>;
   /** Acredita una carga de saldo: el kiosco transfirió ese monto al alias de FreeDeli. */

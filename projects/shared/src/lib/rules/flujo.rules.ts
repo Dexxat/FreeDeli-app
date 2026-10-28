@@ -1,5 +1,6 @@
-import { Pedido, subtotalProductos } from '../models/pedido.js';
-import { calcularComision } from './pedido.rules.js';
+import { MotivoCancelacion, Pedido, subtotalProductos } from '../models/pedido.js';
+import { esperaSinRider, reintegroAlCancelar, reintegroPendiente } from './cancelacion.rules.js';
+import { ESTADOS_ABIERTOS, calcularComision } from './pedido.rules.js';
 
 /**
  * Transiciones del flujo de un pedido. Son funciones puras: reciben el pedido y
@@ -21,7 +22,7 @@ export function confirmarStock(p: Pedido, faltantes: readonly string[], comision
   if (faltantes.length === 0) return ok({ ...p, fase: 'transferencia' });
   const items = p.items.filter((i) => !faltantes.includes(i.productoId));
   const itemsQuitados = p.items.filter((i) => faltantes.includes(i.productoId));
-  if (items.length === 0) return ok({ ...p, items: [], itemsQuitados, estado: 'cancelado', fase: undefined });
+  if (items.length === 0) return ok({ ...cancelado(p, 'sin-stock', false), items: [], itemsQuitados });
   return ok({
     ...p,
     items,
@@ -37,18 +38,50 @@ export function aceptarAjuste(p: Pedido): Resultado {
   return ok({ ...p, fase: 'transferencia' });
 }
 
-/** El cliente cancela. Solo antes de transferir. */
-export function cancelarPorCliente(p: Pedido): Resultado {
-  if (p.estado !== 'esperando' || !['stock', 'ajuste', 'transferencia'].includes(p.fase ?? '')) {
-    return error('El pedido ya no se puede cancelar desde la app.');
-  }
-  return ok({ ...p, estado: 'cancelado', fase: undefined });
+function cancelado(p: Pedido, motivo: MotivoCancelacion, riderCobra: boolean): Pedido {
+  return { ...p, estado: 'cancelado', fase: undefined, cancelacion: { motivo, riderCobra, reintegro: reintegroAlCancelar(p, riderCobra) } };
+}
+
+const abierto = (p: Pedido) => ESTADOS_ABIERTOS.includes(p.estado);
+
+/**
+ * El cliente cancela, en cualquier momento antes de la entrega. Si ya transfirió, el kiosco le devuelve
+ * el dinero; si el rider ya hizo más de la mitad del viaje, se descuenta el envío, que cobra el rider.
+ * Si lleva MINUTOS_SIN_RIDER sin rider, la cancelación no le cuenta en contra.
+ */
+export function cancelarPorCliente(p: Pedido, ahora: Date, riderPasoLaMitad = false): Resultado {
+  if (!abierto(p)) return error('El pedido ya no se puede cancelar.');
+  const riderCobra = riderPasoLaMitad && p.estado === 'en-camino';
+  return ok(cancelado(p, esperaSinRider(p, ahora) ? 'sin-rider' : 'cliente', riderCobra));
+}
+
+/** El cliente elige seguir esperando un rider: se le vuelve a preguntar en MINUTOS_SIN_RIDER. */
+export function seguirEsperandoRider(p: Pedido, ahora: Date): Resultado {
+  if (!enFase(p, 'rider')) return error('El pedido no está buscando rider.');
+  return ok({ ...p, buscandoRiderDesde: ahora });
+}
+
+/**
+ * Dev cancela un pedido abierto, con reintegro total si el cliente ya pagó.
+ * `rider`: el rider aceptó y decidió no ir (le cuenta en contra).
+ */
+export function cancelarPorDev(p: Pedido, motivo: Extract<MotivoCancelacion, 'rider' | 'dev'>): Resultado {
+  if (!abierto(p)) return error('El pedido ya está cerrado.');
+  if (motivo === 'rider' && (!p.riderId || p.estado === 'esperando')) return error('El pedido no tiene un rider asignado.');
+  return ok(cancelado(p, motivo, false));
+}
+
+/** El kiosco avisa que devolvió el dinero al cliente. */
+export function marcarReintegrado(p: Pedido, ahora: Date): Resultado {
+  if (p.estado !== 'cancelado' || !p.cancelacion?.reintegro) return error('Este pedido no tiene dinero para devolver.');
+  if (p.cancelacion.reintegradoEn) return ok(p);
+  return ok({ ...p, cancelacion: { ...p.cancelacion, reintegradoEn: ahora } });
 }
 
 /** El kiosco confirma que recibió la transferencia. Recién ahí se busca rider. */
-export function confirmarTransferencia(p: Pedido): Resultado {
+export function confirmarTransferencia(p: Pedido, ahora: Date): Resultado {
   if (!enFase(p, 'transferencia')) return error('El pedido no está esperando la transferencia.');
-  return ok({ ...p, pago: 'transferido', fase: 'rider' });
+  return ok({ ...p, pago: 'transferido', fase: 'rider', buscandoRiderDesde: ahora });
 }
 
 /** Un rider acepta la oferta. Queda a la espera de que el kiosco lo apruebe. */
@@ -90,6 +123,12 @@ export function entregarConPin(p: Pedido, pin: string, ahora: Date): Resultado {
   return ok({ ...p, estado: 'entregado', entregadoEn: ahora, pago: 'liberado' });
 }
 
+/** Dev cierra el pedido sin PIN, cuando el rider entregó pero el cliente no pudo darle el PIN. */
+export function entregarSinPin(p: Pedido, ahora: Date): Resultado {
+  if (p.estado !== 'retirado' && p.estado !== 'en-camino') return error('Solo se puede marcar entregado un pedido que el rider ya retiró.');
+  return ok({ ...p, estado: 'entregado', entregadoEn: ahora, pago: 'liberado' });
+}
+
 /** Qué tiene que hacer cada parte con el pedido ahora. Útil para simulaciones y avisos. */
 export function quienDebeActuar(p: Pedido): 'kiosco' | 'cliente' | 'rider' | 'kiosco-y-rider' | null {
   if (p.estado === 'esperando') {
@@ -111,5 +150,7 @@ export function quienDebeActuar(p: Pedido): 'kiosco' | 'cliente' | 'rider' | 'ki
     return p.retiro?.kiosco ? 'rider' : 'kiosco';
   }
   if (p.estado === 'retirado' || p.estado === 'en-camino') return 'rider';
+  // Cancelado después de pagar: el kiosco tiene que devolverle el dinero al cliente.
+  if (reintegroPendiente(p)) return 'kiosco';
   return null;
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import {
@@ -14,7 +14,7 @@ import {
   nombreZona,
   pinValido,
 } from '@freedeli/shared';
-import { interval } from 'rxjs';
+import { interval, take } from 'rxjs';
 import { RiderStore } from '../../core/rider.store';
 import { Sonidos } from '../../core/sonidos';
 import { PinInput } from '../../ui/pin-input';
@@ -42,8 +42,8 @@ export default class Vivo {
   /** El pedido recién entregado, para mostrar la pantalla de éxito. */
   protected readonly entregado = signal<Pedido | null>(null);
 
-  /** Si el kiosco rechazó al rider, el código del pedido para avisarle. */
-  protected readonly rechazado = signal<string | null>(null);
+  /** Por qué el pedido dejó de estar en curso sin que el rider lo entregue: el kiosco eligió otro rider, se canceló o lo cerró Dev. */
+  protected readonly aviso = signal<string | null>(null);
 
   protected readonly pin = signal('');
   protected readonly errorPin = signal<string | null>(null);
@@ -66,14 +66,32 @@ export default class Vivo {
   });
 
   constructor() {
-    // Si el pedido en aprobación desaparece sin pasar a Aceptado, el kiosco eligió otro rider.
     let anterior: Pedido | null | undefined;
     effect(() => {
       const actual = this.pedido();
-      if (anterior?.estado === 'esperando' && actual === null) this.rechazado.set(codigoPedido(anterior));
-      if (actual) this.rechazado.set(null);
+      const cerrado = anterior;
+      if (cerrado && actual === null) untracked(() => !this.entregado() && this.avisarCierre(cerrado));
+      if (actual) this.aviso.set(null);
       anterior = actual;
     });
+  }
+
+  /** El pedido dejó de estar en curso sin que el rider ingresara el PIN. */
+  private avisarCierre(p: Pedido): void {
+    const codigo = codigoPedido(p);
+    // En aprobación, desaparecer sin pasar a Aceptado es que el kiosco eligió otro rider.
+    if (p.estado === 'esperando') {
+      this.aviso.set(`El kiosco eligió otro rider para el pedido ${codigo}.`);
+      return;
+    }
+    this.api
+      .observar(p.id)
+      .pipe(take(1))
+      .subscribe((final) => {
+        if (final?.estado === 'entregado') this.aviso.set(`FreeDeli marcó el pedido ${codigo} como entregado.`);
+        else if (final?.cancelacion?.riderCobra) this.aviso.set(`Se canceló el pedido ${codigo}. Ya hiciste más de la mitad del viaje: el kiosco te paga el envío. Devolvé los productos al kiosco.`);
+        else if (final?.estado === 'cancelado') this.aviso.set(`Se canceló el pedido ${codigo}. Si ya lo retiraste, devolvé los productos al kiosco.`);
+      });
   }
 
   protected readonly codigo = codigoPedido;

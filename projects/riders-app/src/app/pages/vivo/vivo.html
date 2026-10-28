@@ -102,8 +102,8 @@
 } @else if (pedido() === null) {
   <section class="vacio">
     <h1 class="titulo">PEDIDO EN CURSO</h1>
-    @if (rechazado(); as codigoRechazado) {
-      <p class="espera" role="status">El kiosco eligió otro rider para el pedido {{ codigoRechazado }}.</p>
+    @if (aviso(); as a) {
+      <p class="espera" role="status">{{ a }}</p>
     }
     <p class="vacio-texto">No tenés ningún pedido en curso.</p>
     @if (!store.disponible()) {

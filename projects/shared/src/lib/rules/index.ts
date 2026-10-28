@@ -10,3 +10,4 @@ export * from './horario.rules.js';
 export * from './cobertura.rules.js';
 export * from './documentos.rules.js';
 export * from './premios.rules.js';
+export * from './cancelacion.rules.js';

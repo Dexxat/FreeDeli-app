@@ -105,4 +105,18 @@ describe('Vivo (Riders)', () => {
     await estable();
     expect(el.querySelector('[role=alert]')?.textContent).toContain('4 dígitos');
   });
+
+  it('si se cancela el pedido en curso, le pide devolver los productos al kiosco', async () => {
+    const p = enCurso();
+    db.guardarPedido({ ...p, estado: 'cancelado', cancelacion: { motivo: 'cliente', reintegro: 1000, riderCobra: false } });
+    await estable();
+    expect(el.querySelector('[role=status]')?.textContent).toContain(`Se canceló el pedido #A-${p.numero}. Si ya lo retiraste, devolvé los productos al kiosco.`);
+  });
+
+  it('si Dev lo marca entregado, se lo avisa', async () => {
+    const p = enCurso();
+    db.guardarPedido({ ...p, estado: 'entregado', entregadoEn: new Date(), pago: 'liberado' });
+    await estable();
+    expect(el.querySelector('[role=status]')?.textContent).toContain(`FreeDeli marcó el pedido #A-${p.numero} como entregado.`);
+  });
 });

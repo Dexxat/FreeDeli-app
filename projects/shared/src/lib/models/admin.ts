@@ -35,10 +35,12 @@ export interface MovimientoKiosco {
 }
 
 export interface AlertaAdmin {
-  tipo: 'saldo-bajo' | 'pedido-demorado';
+  tipo: 'saldo-bajo' | 'pedido-demorado' | 'cliente-pausado' | 'rider-pausado';
   texto: string;
   /** Ruta del panel donde se resuelve. */
-  ruta: string;
+  ruta?: string;
+  /** Cliente pausado por cancelaciones, para reactivarlo desde la alerta. */
+  usuarioId?: string;
 }
 
 export interface ResumenAdmin {
@@ -102,6 +104,10 @@ export interface RiderAdmin extends Pick<Rider, 'id' | 'nombre' | 'telefono' | '
   ganadoHoy: number;
   /** Envío que está haciendo ahora, para el seguimiento. */
   enCurso: Pedido | null;
+  /** Pedidos que aceptó y decidió no hacer, desde que Dev lo habilitó. Al tercero se pausa. */
+  abandonos: number;
+  /** Dado de baja: ya no puede ingresar. */
+  deBaja: boolean;
 }
 
 /** Movimiento del saldo prepago de un kiosco. */

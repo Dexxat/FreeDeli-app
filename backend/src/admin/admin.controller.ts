@@ -1,9 +1,13 @@
-import { Body, Controller, Get, HttpCode, NotFoundException, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Body, ConflictException, Controller, Get, HttpCode, NotFoundException, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { Roles } from '../auth/sesion.js';
 import { PERIODOS_ADMIN, periodoDe, zonasDe } from '../comun/consultas.js';
 import { zonaApi } from '../comun/zonas.js';
 import {
+  ABANDONOS_PARA_PAUSA,
+  CANCELACIONES_PARA_PAUSA,
   COMISION_MINIMA,
+  cancelarPorDev,
+  entregarSinPin,
   MINUTOS_DEMORA,
   SALDO_BAJO,
   entregaAdmin,
@@ -17,7 +21,7 @@ import {
 } from '../dominio.js';
 import type { Kiosco } from '../generated/prisma/client.js';
 import { EstadoCuenta, EstadoPedido, Rol, TipoMovimientoSaldo } from '../generated/prisma/enums.js';
-import { CargaSaldoDto, PausaDto } from '../pedidos/dto.js';
+import { CancelacionDevDto, CargaSaldoDto, PausaDto } from '../pedidos/dto.js';
 import { PedidosService } from '../pedidos/pedidos.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { DocumentosService } from '../rider/documentos.service.js';
@@ -100,7 +104,7 @@ export class AdminController {
 
   @Get('riders/:id')
   async rider(@Param('id', ParseUUIDPipe) id: string) {
-    const r = await this.db.rider.findUnique({ where: { id } });
+    const r = await this.db.rider.findUnique({ where: { id }, include: { cuenta: { select: { estado: true } } } });
     if (!r) throw new NotFoundException('No existe ese rider.');
     const hoy = inicioDelDia(new Date());
     const entregadosHoy = await this.db.pedido.findMany({ where: { riderId: id, estado: EstadoPedido.ENTREGADO, creadoEn: { gte: hoy } }, select: { gananciaRider: true, propina: true } });
@@ -117,6 +121,8 @@ export class AdminController {
       entregasHoy: entregadosHoy.length,
       ganadoHoy: entregadosHoy.reduce((a, p) => a + p.gananciaRider + p.propina, 0),
       enCurso: enCurso ?? null,
+      abandonos: await this.pedidos.abandonos(id),
+      deBaja: r.cuenta.estado === EstadoCuenta.RECHAZADA,
     };
   }
 
@@ -132,13 +138,49 @@ export class AdminController {
     return (await this.pedidos.buscar({ riderId: id, creadoEn: { gte: desde, lt: hasta } })).map((p) => filaMain(p, nombre));
   }
 
-  /** Pausado, pasa a OFF y no puede volver a conectarse. */
+  /** Pausado, pasa a OFF y no puede volver a conectarse. Al reactivarlo, sus abandonos vuelven a contar desde cero. */
   @Post('riders/:id/pausa') @HttpCode(200)
   async pausarRider(@Param('id', ParseUUIDPipe) id: string, @Body() dto: PausaDto) {
-    const r = await this.db.rider.updateMany({ where: { id }, data: dto.pausado ? { pausado: true, disponible: false } : { pausado: false } });
-    if (r.count === 0) throw new NotFoundException('No existe ese rider.');
-    if (dto.pausado) await this.db.sesionOnline.updateMany({ where: { riderId: id, hasta: null }, data: { hasta: new Date() } });
+    if (!(await this.db.rider.findUnique({ where: { id } }))) throw new NotFoundException('No existe ese rider.');
+    if (dto.pausado) await this.pedidos.pausarRider(this.db, id);
+    else await this.db.rider.update({ where: { id }, data: { pausado: false, habilitadoEn: new Date() } });
     return this.rider(id);
+  }
+
+  /** Baja definitiva: el rider ya no puede ingresar. */
+  @Post('riders/:id/baja') @HttpCode(200)
+  async darDeBaja(@Param('id', ParseUUIDPipe) id: string) {
+    const r = await this.db.rider.findUnique({ where: { id } });
+    if (!r) throw new NotFoundException('No existe ese rider.');
+    if (await this.db.pedido.findFirst({ where: { riderId: id, estado: { in: EN_CURSO } } })) throw new ConflictException('El rider tiene un pedido en curso.');
+    await this.db.$transaction(async (tx) => {
+      await this.pedidos.pausarRider(tx, id);
+      await tx.cuenta.update({ where: { id: r.cuentaId }, data: { estado: EstadoCuenta.RECHAZADA } });
+    });
+    return this.rider(id);
+  }
+
+  // ---------- Clientes ----------
+
+  /** Reactiva a un cliente pausado por cancelaciones: las cancelaciones vuelven a contar desde cero. */
+  @Post('usuarios/:id/reactivar') @HttpCode(200)
+  async reactivarUsuario(@Param('id', ParseUUIDPipe) id: string) {
+    const r = await this.db.usuario.updateMany({ where: { id }, data: { pausado: false, habilitadoEn: new Date() } });
+    if (r.count === 0) throw new NotFoundException('No existe ese cliente.');
+  }
+
+  // ---------- Incidentes ----------
+
+  /** El rider entregó pero el cliente no pudo darle el PIN: se cierra y se liquida como cualquier entrega. */
+  @Post('pedidos/:id/entregar') @HttpCode(200)
+  entregar(@Param('id', ParseUUIDPipe) id: string) {
+    return this.pedidos.transicionar(id, () => true, (p) => entregarSinPin(p, new Date()), (tx, p) => this.pedidos.liquidar(tx, p));
+  }
+
+  /** Cancela con reintegro total. Motivo `rider`: el rider decidió no ir y le cuenta como abandono. */
+  @Post('pedidos/:id/cancelar') @HttpCode(200)
+  cancelar(@Param('id', ParseUUIDPipe) id: string, @Body() dto: CancelacionDevDto) {
+    return this.pedidos.transicionar(id, () => true, (p) => cancelarPorDev(p, dto.motivo));
   }
 
   // ---------- MAIN, Ganancias y Entregas ----------
@@ -151,13 +193,16 @@ export class AdminController {
   async resumen() {
     const ahora = new Date();
     const hoy = inicioDelDia(ahora);
-    const [deHoy, enCurso, kioscos, ridersActivos, demorados] = await Promise.all([
+    const [deHoy, enCurso, kioscos, ridersActivos, demorados, clientesPausados, ridersPausados] = await Promise.all([
       this.db.pedido.findMany({ where: { creadoEn: { gte: hoy } }, select: { estado: true, comisionFreeDeli: true, descuentoPremio: true } }),
       this.db.pedido.count({ where: { estado: { in: this.pedidos.abiertos() } } }),
       this.db.kiosco.findMany({ where: { cuenta: { estado: EstadoCuenta.APROBADA } } }),
       this.db.rider.count({ where: { disponible: true, pausado: false } }),
       this.db.pedido.findMany({ where: { estado: EstadoPedido.ESPERANDO, creadoEn: { lte: new Date(ahora.getTime() - MINUTOS_DEMORA * 60_000) } }, select: { numero: true, kioscoId: true, creadoEn: true } }),
+      this.db.usuario.findMany({ where: { pausado: true }, select: { id: true, nombre: true } }),
+      this.db.rider.findMany({ where: { pausado: true, cuenta: { estado: EstadoCuenta.APROBADA } }, select: { id: true, nombre: true } }),
     ]);
+    const abandonos = await Promise.all(ridersPausados.map(async (r) => ({ ...r, abandonos: await this.pedidos.abandonos(r.id) })));
     const entregados = deHoy.filter((p) => p.estado === EstadoPedido.ENTREGADO);
     return {
       pedidosHoy: deHoy.length,
@@ -173,6 +218,10 @@ export class AdminController {
           texto: `#A-${p.numero} lleva ${Math.floor((ahora.getTime() - p.creadoEn.getTime()) / 60_000)} min sin rider`,
           ruta: `/kioscos/${p.kioscoId}`,
         })),
+        ...clientesPausados.map((u) => ({ tipo: 'cliente-pausado', texto: `${u.nombre} está pausado por ${CANCELACIONES_PARA_PAUSA} cancelaciones`, usuarioId: u.id })),
+        ...abandonos
+          .filter((r) => r.abandonos >= ABANDONOS_PARA_PAUSA)
+          .map((r) => ({ tipo: 'rider-pausado', texto: `${r.nombre} está pausado por ${r.abandonos} pedidos abandonados`, ruta: `/riders/${r.id}` })),
       ],
     };
   }

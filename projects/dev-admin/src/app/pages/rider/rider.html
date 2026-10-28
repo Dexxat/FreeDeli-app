@@ -8,16 +8,27 @@
       <p class="sutil">Zonas: {{ zonas() }}</p>
     </div>
     <div class="acciones">
-      @if (r.pausado) {
-        <span class="chip alerta">Pausado</span>
+      @if (r.deBaja) {
+        <span class="chip alerta">De baja</span>
       } @else {
-        <span class="chip" [class.ok]="r.disponible">{{ r.disponible ? 'ON' : 'OFF' }}</span>
+        @if (r.pausado) {
+          <span class="chip alerta">Pausado</span>
+        } @else {
+          <span class="chip" [class.ok]="r.disponible">{{ r.disponible ? 'ON' : 'OFF' }}</span>
+        }
+        <button type="button" class="boton" [class.peligro]="!r.pausado" [disabled]="enviando()" (click)="alternarPausa()">
+          {{ r.pausado ? 'Reactivar' : 'Pausar' }}
+        </button>
+        <button type="button" class="boton peligro" [disabled]="enviando()" (click)="darDeBaja()">Dar de baja</button>
       }
-      <button type="button" class="boton" [class.peligro]="!r.pausado" [disabled]="enviando()" (click)="alternarPausa()">
-        {{ r.pausado ? 'Reactivar' : 'Pausar' }}
-      </button>
     </div>
   </section>
+  @if (error(); as e) { <p class="alerta-texto" role="alert">{{ e }}</p> }
+  @if (r.abandonos > 0 && !r.deBaja) {
+    <p class="sutil" [class.alerta-texto]="r.abandonos >= abandonosParaPausa">
+      Abandonó {{ r.abandonos }} {{ r.abandonos === 1 ? 'pedido' : 'pedidos' }} desde que lo habilitaste. Con {{ abandonosParaPausa }} se pausa solo.
+    </p>
+  }
 
   <section class="tarjetas">
     <div class="tarjeta"><span class="sutil">Entregas hoy</span><span class="valor">{{ r.entregasHoy }}</span></div>
@@ -38,6 +49,7 @@
           <span class="sutil">{{ p.kioscoNombre }} → {{ p.destino.direccion }}</span>
         </div>
         <fd-barra-estado [estado]="p.estado" />
+        <fd-incidente [pedidoId]="p.id" [numero]="p.numero" [estado]="p.estado" [riderId]="p.riderId" />
       </div>
     } @else {
       <p class="sutil">Sin envío en curso.</p>

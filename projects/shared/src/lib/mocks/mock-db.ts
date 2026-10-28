@@ -10,6 +10,7 @@ import { PEDIDO_MINIMO, calcularComision, costoEnvio, envioCliente, generarPin, 
 import { TARIFA_ENVIO_PROVISORIA } from '../config/freedeli.config';
 import { geolocalizarProvisorio } from '../rules/cobertura.rules';
 import { DocumentosRider } from '../rules/documentos.rules';
+import { ABANDONOS_PARA_PAUSA, CANCELACIONES_PARA_PAUSA, inicioConteoCancelaciones } from '../rules/cancelacion.rules';
 
 /** Generador pseudoaleatorio con semilla, para que los datos simulados sean siempre los mismos. */
 function crearRandom(semilla: number): () => number {
@@ -74,6 +75,7 @@ export class MockDb {
       direccion: { direccion: 'Belgrano 845', notas: 'Depto 2B, tocar timbre', zona: 'san-miguel', ubicacion: { lat: -34.543, lng: -58.701 } },
       estrellas: 3,
       saldoFavor: 0,
+      pausado: false,
     },
   ]);
   /** Fotos del seguro y la licencia, por id de rider. */
@@ -144,8 +146,11 @@ export class MockDb {
     return this.pedidos().find((p) => p.id === id);
   }
 
+  /** Guarda el pedido. Si quedó cancelado, aplica lo que sigue a toda cancelación. */
   guardarPedido(pedido: Pedido): void {
+    const cancela = pedido.estado === 'cancelado' && this.buscarPedido(pedido.id)?.estado !== 'cancelado';
     this.pedidos.update((ps) => ps.map((p) => (p.id === pedido.id ? pedido : p)));
+    if (cancela) this.alCancelar(pedido);
   }
 
   siguienteNumero(): number {
@@ -177,6 +182,41 @@ export class MockDb {
     if (pedido.descuentoPremio) this.moverSaldo(pedido.kioscoId, 'premio', pedido.descuentoPremio, `Premio ${codigoPedido(pedido)}`);
   }
 
+
+  /** Desde cuándo cuentan las cancelaciones y los abandonos: la última reactivación de Dev. */
+  readonly habilitadoEn = new Map<string, Date>();
+  readonly ridersDeBaja = signal<string[]>([]);
+
+  /**
+   * Después de cancelar: el cliente recupera el saldo a favor usado, y se pausa al cliente con
+   * 3 cancelaciones en la semana o al rider con 3 abandonos.
+   */
+  private alCancelar(p: Pedido, ahora = new Date()): void {
+    if (p.descuentoPremio) {
+      this.usuarios.update((us) => us.map((u) => (u.id === p.usuarioId ? { ...u, saldoFavor: u.saldoFavor + p.descuentoPremio! } : u)));
+    }
+    const motivo = p.cancelacion?.motivo;
+    if (motivo === 'cliente') {
+      const desde = inicioConteoCancelaciones(ahora, this.habilitadoEn.get(p.usuarioId) ?? new Date(0));
+      if (this.contarCancelados((x) => x.usuarioId === p.usuarioId && x.cancelacion?.motivo === 'cliente', desde) >= CANCELACIONES_PARA_PAUSA) {
+        this.usuarios.update((us) => us.map((u) => (u.id === p.usuarioId ? { ...u, pausado: true } : u)));
+      }
+    }
+    if (motivo === 'rider' && p.riderId) {
+      if (this.abandonos(p.riderId) >= ABANDONOS_PARA_PAUSA) {
+        this.riders.update((rs) => rs.map((r) => (r.id === p.riderId ? { ...r, pausado: true, disponible: false } : r)));
+      }
+    }
+  }
+
+  /** Pedidos que el rider aceptó y decidió no hacer, desde que Dev lo habilitó. */
+  abandonos(riderId: string): number {
+    return this.contarCancelados((x) => x.riderId === riderId && x.cancelacion?.motivo === 'rider', this.habilitadoEn.get(riderId) ?? new Date(0));
+  }
+
+  private contarCancelados(filtro: (p: Pedido) => boolean, desde: Date): number {
+    return this.pedidos().filter((x) => x.estado === 'cancelado' && x.creadoEn >= desde && filtro(x)).length;
+  }
 
   /** Oferta vigente por rider. */
   readonly ofertas = signal<Record<string, OfertaPedido>>({});
@@ -211,6 +251,7 @@ export class MockDb {
       id: `ped-${numero}`,
       fase: 'rider',
       pago: 'transferido',
+      buscandoRiderDesde: ahora,
     };
     this.pedidos.update((ps) => [...ps, pedido]);
     return pedido;

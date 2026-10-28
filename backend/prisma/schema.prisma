@@ -52,6 +52,15 @@ enum EstadoPago {
   LIBERADO
 }
 
+/// Por qué se canceló un pedido. CLIENTE suma para pausar al cliente y RIDER, para pausar al rider.
+enum MotivoCancelacion {
+  CLIENTE
+  SIN_RIDER
+  SIN_STOCK
+  RIDER
+  DEV
+}
+
 enum TipoDocumento {
   SEGURO
   LICENCIA
@@ -65,36 +74,40 @@ enum TipoMovimientoSaldo {
 }
 
 model Cuenta {
-  id        String       @id @default(uuid())
-  email     String       @unique
+  id       String       @id @default(uuid())
+  email    String       @unique
   /// scrypt: "sal:hash" en hexadecimal.
-  clave     String
-  rol       Rol
-  estado    EstadoCuenta
-  creadaEn  DateTime     @default(now())
-  usuario   Usuario?
-  kiosco    Kiosco?
-  rider     Rider?
+  clave    String
+  rol      Rol
+  estado   EstadoCuenta
+  creadaEn DateTime     @default(now())
+  usuario  Usuario?
+  kiosco   Kiosco?
+  rider    Rider?
 }
 
 model Usuario {
-  id          String   @id @default(uuid())
-  cuentaId    String   @unique
-  cuenta      Cuenta   @relation(fields: [cuentaId], references: [id])
+  id           String   @id @default(uuid())
+  cuentaId     String   @unique
+  cuenta       Cuenta   @relation(fields: [cuentaId], references: [id])
   /// Nombre y apellido.
-  nombre      String
-  dni         String?
-  telefono    String
-  direccion   String
-  notas       String?
-  zona        Zona
-  lat         Float
-  lng         Float
+  nombre       String
+  dni          String?
+  telefono     String
+  direccion    String
+  notas        String?
+  zona         Zona
+  lat          Float
+  lng          Float
   /// FREEDELI RUSH: estrellas hacia el próximo premio (0 a 4).
-  estrellas   Int      @default(0)
+  estrellas    Int      @default(0)
   /// Saldo a favor en pesos: se descuenta solo del próximo pedido.
-  saldoFavor  Int      @default(0)
-  pedidos     Pedido[]
+  saldoFavor   Int      @default(0)
+  /// Pausado por cancelaciones: no puede pedir hasta que Dev lo reactive.
+  pausado      Boolean  @default(false)
+  /// Desde cuándo cuentan sus cancelaciones: el alta o la última reactivación.
+  habilitadoEn DateTime @default(now())
+  pedidos      Pedido[]
 }
 
 model Kiosco {
@@ -128,21 +141,23 @@ model Producto {
 }
 
 model Rider {
-  id             String   @id @default(uuid())
-  cuentaId       String   @unique
-  cuenta         Cuenta   @relation(fields: [cuentaId], references: [id])
+  id             String           @id @default(uuid())
+  cuentaId       String           @unique
+  cuenta         Cuenta           @relation(fields: [cuentaId], references: [id])
   nombre         String
   telefono       String
   dni            String
   vehiculoModelo String
   patente        String
   aliasCbu       String
-  notificaciones Boolean  @default(true)
-  sonidos8bit    Boolean  @default(true)
-  disponible     Boolean  @default(false)
+  notificaciones Boolean          @default(true)
+  sonidos8bit    Boolean          @default(true)
+  disponible     Boolean          @default(false)
   zonas          Zona[]
-  pausado        Boolean  @default(false)
-  riderDesde     DateTime @default(now())
+  pausado        Boolean          @default(false)
+  riderDesde     DateTime         @default(now())
+  /// Desde cuándo cuentan sus abandonos: el alta o la última reactivación.
+  habilitadoEn   DateTime         @default(now())
   pedidos        Pedido[]
   ofertas        Oferta[]
   sesionesOnline SesionOnline[]
@@ -150,41 +165,49 @@ model Rider {
 }
 
 model Pedido {
-  id               String        @id @default(uuid())
-  numero           Int           @unique @default(autoincrement())
-  zona             Zona
-  kioscoId         String
-  kiosco           Kiosco        @relation(fields: [kioscoId], references: [id])
-  usuarioId        String
-  usuario          Usuario       @relation(fields: [usuarioId], references: [id])
-  destinoNombre    String
-  destinoDireccion String
-  destinoNotas     String?
-  distanciaKm      Float
-  costoEnvio       Int
-  propina          Int           @default(0)
-  gananciaRider    Int
-  pago             EstadoPago    @default(PENDIENTE)
-  aliasKiosco      String
-  comisionFreeDeli Int
+  id                 String             @id @default(uuid())
+  numero             Int                @unique @default(autoincrement())
+  zona               Zona
+  kioscoId           String
+  kiosco             Kiosco             @relation(fields: [kioscoId], references: [id])
+  usuarioId          String
+  usuario            Usuario            @relation(fields: [usuarioId], references: [id])
+  destinoNombre      String
+  destinoDireccion   String
+  destinoNotas       String?
+  distanciaKm        Float
+  costoEnvio         Int
+  propina            Int                @default(0)
+  gananciaRider      Int
+  pago               EstadoPago         @default(PENDIENTE)
+  aliasKiosco        String
+  comisionFreeDeli   Int
   /// Saldo a favor del cliente usado en el pedido (premio de FREEDELI RUSH). Lo pone FreeDeli.
-  descuentoPremio  Int           @default(0)
-  pin              String
-  estado           EstadoPedido  @default(ESPERANDO)
-  fase             FasePedido?   @default(STOCK)
-  ridersRechazados String[]      @default([])
-  retiroKiosco     DateTime?
-  retiroRider      DateTime?
-  riderId          String?
-  rider            Rider?        @relation(fields: [riderId], references: [id])
-  creadoEn         DateTime      @default(now())
-  aceptadoEn       DateTime?
-  enCaminoEn       DateTime?
-  entregadoEn      DateTime?
+  descuentoPremio    Int                @default(0)
+  pin                String
+  estado             EstadoPedido       @default(ESPERANDO)
+  fase               FasePedido?        @default(STOCK)
+  ridersRechazados   String[]           @default([])
+  retiroKiosco       DateTime?
+  retiroRider        DateTime?
+  riderId            String?
+  rider              Rider?             @relation(fields: [riderId], references: [id])
+  creadoEn           DateTime           @default(now())
+  aceptadoEn         DateTime?
+  enCaminoEn         DateTime?
+  entregadoEn        DateTime?
   /// El cliente ya ganó la estrella de FREEDELI RUSH con este pedido.
-  estrellaGanada   Boolean       @default(false)
-  items            ItemPedido[]
-  ofertas          Oferta[]
+  estrellaGanada     Boolean            @default(false)
+  /// Desde cuándo se busca rider (o desde que el cliente eligió seguir esperando).
+  buscandoRiderDesde DateTime?
+  motivoCancelacion  MotivoCancelacion?
+  /// Lo que el kiosco le devuelve al cliente al cancelarse.
+  reintegro          Int                @default(0)
+  /// El rider había hecho más de la mitad del viaje: cobra el envío igual.
+  riderCobra         Boolean            @default(false)
+  reintegradoEn      DateTime?
+  items              ItemPedido[]
+  ofertas            Oferta[]
 
   @@index([kioscoId, estado])
   @@index([usuarioId, estado])

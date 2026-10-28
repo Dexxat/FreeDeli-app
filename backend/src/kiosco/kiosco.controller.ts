@@ -4,7 +4,7 @@ import { Roles, SesionActual, type Sesion } from '../auth/sesion.js';
 import { Perfiles } from '../comun/perfiles.js';
 import { ReglasConfig } from '../comun/reglas.config.js';
 import { zonaApi } from '../comun/zonas.js';
-import { aprobarRider, confirmarRetiro, confirmarStock, confirmarTransferencia, gananciasKiosco, rangoPeriodo } from '../dominio.js';
+import { aprobarRider, confirmarRetiro, confirmarStock, confirmarTransferencia, gananciasKiosco, marcarReintegrado, rangoPeriodo } from '../dominio.js';
 import { EstadoPedido, Rol } from '../generated/prisma/enums.js';
 import { geolocalizar } from '../comun/zonas.js';
 import { AprobarRiderDto, CambiosProductoDto, DatosKioscoDto, ProductoDto, StockDto } from '../pedidos/dto.js';
@@ -30,9 +30,16 @@ export class KioscoController {
     return { ...k, zona: zonaApi(k.zona), ubicacion: { lat: k.lat, lng: k.lng }, costoEnvio: 0, aliasFreeDeli: this.reglas.aliasFreeDeli };
   }
 
+  /** Pedidos abiertos y cancelados con dinero por devolver al cliente. */
   @Get('pedidos/en-vivo')
   async enVivo(@SesionActual() s: Sesion) {
-    return this.pedidos.buscar({ kioscoId: await this.perfiles.kioscoId(s.sub), estado: { in: this.pedidos.abiertos() } }, 'asc');
+    return this.pedidos.buscar(
+      {
+        kioscoId: await this.perfiles.kioscoId(s.sub),
+        OR: [{ estado: { in: this.pedidos.abiertos() } }, { estado: EstadoPedido.CANCELADO, reintegro: { gt: 0 }, reintegradoEn: null }],
+      },
+      'asc',
+    );
   }
 
   private async propio(s: Sesion) {
@@ -47,7 +54,7 @@ export class KioscoController {
 
   @Post('pedidos/:id/transferencia') @HttpCode(200)
   async transferencia(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string) {
-    return this.pedidos.transicionar(id, await this.propio(s), confirmarTransferencia);
+    return this.pedidos.transicionar(id, await this.propio(s), (p) => confirmarTransferencia(p, new Date()));
   }
 
   @Post('pedidos/:id/aprobar-rider') @HttpCode(200)
@@ -62,6 +69,12 @@ export class KioscoController {
   @Post('pedidos/:id/envio') @HttpCode(200)
   async envio(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string) {
     return this.pedidos.transicionar(id, await this.propio(s), (p) => confirmarRetiro(p, 'kiosco', new Date()));
+  }
+
+  /** El kiosco le devolvió al cliente el dinero de un pedido cancelado. */
+  @Post('pedidos/:id/reintegro') @HttpCode(200)
+  async reintegro(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string) {
+    return this.pedidos.transicionar(id, await this.propio(s), (p) => marcarReintegrado(p, new Date()));
   }
 
   /** Pedidos terminados del período, del más nuevo al más viejo. */

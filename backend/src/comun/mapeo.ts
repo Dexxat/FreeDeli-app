@@ -1,6 +1,6 @@
-import { EstadoPago, EstadoPedido, FasePedido } from '../generated/prisma/enums.js';
+import { EstadoPago, EstadoPedido, FasePedido, MotivoCancelacion } from '../generated/prisma/enums.js';
 import type { Prisma } from '../generated/prisma/client.js';
-import type { Pedido as PedidoDominio } from '../dominio.js';
+import type { MotivoCancelacion as MotivoDominio, Pedido as PedidoDominio } from '../dominio.js';
 import { zonaApi } from './zonas.js';
 
 /** Enums de la base ↔ textos que usan las apps. */
@@ -20,11 +20,13 @@ const FASES: Record<FasePedido, NonNullable<PedidoDominio['fase']>> = {
   APROBACION: 'aprobacion',
 };
 const PAGOS: Record<EstadoPago, PedidoDominio['pago']> = { PENDIENTE: 'pendiente', TRANSFERIDO: 'transferido', LIBERADO: 'liberado' };
+const MOTIVOS: Record<MotivoCancelacion, MotivoDominio> = { CLIENTE: 'cliente', SIN_RIDER: 'sin-rider', SIN_STOCK: 'sin-stock', RIDER: 'rider', DEV: 'dev' };
 
 const invertir = <K extends string, V extends string>(r: Record<K, V>) => Object.fromEntries(Object.entries(r).map(([k, v]) => [v, k])) as Record<V, K>;
 const ESTADOS_DB = invertir(ESTADOS);
 const FASES_DB = invertir(FASES);
 const PAGOS_DB = invertir(PAGOS);
+const MOTIVOS_DB = invertir(MOTIVOS);
 
 export const estadoDb = (e: PedidoDominio['estado']): EstadoPedido => ESTADOS_DB[e];
 
@@ -66,6 +68,10 @@ export function aDominio(p: PedidoConItems): PedidoDominio {
     enCaminoEn: p.enCaminoEn ?? undefined,
     estrellaGanada: p.estrellaGanada,
     entregadoEn: p.entregadoEn ?? undefined,
+    buscandoRiderDesde: p.buscandoRiderDesde ?? undefined,
+    cancelacion: p.motivoCancelacion
+      ? { motivo: MOTIVOS[p.motivoCancelacion], reintegro: p.reintegro, riderCobra: p.riderCobra, reintegradoEn: p.reintegradoEn ?? undefined }
+      : undefined,
   };
 }
 
@@ -84,5 +90,10 @@ export function cambiosDb(p: PedidoDominio): Prisma.PedidoUncheckedUpdateInput {
     enCaminoEn: p.enCaminoEn ?? null,
     estrellaGanada: p.estrellaGanada ?? false,
     entregadoEn: p.entregadoEn ?? null,
+    buscandoRiderDesde: p.buscandoRiderDesde ?? null,
+    motivoCancelacion: p.cancelacion ? MOTIVOS_DB[p.cancelacion.motivo] : null,
+    reintegro: p.cancelacion?.reintegro ?? 0,
+    riderCobra: p.cancelacion?.riderCobra ?? false,
+    reintegradoEn: p.cancelacion?.reintegradoEn ?? null,
   };
 }

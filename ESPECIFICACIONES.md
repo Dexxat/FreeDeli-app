@@ -37,7 +37,10 @@ Dentro de MAIN también están:
 - **Kioscos:** ver los activos, sus movimientos y el saldo que les queda para seguir operando.
 - **Riders:** ver los activos, sus movimientos y el seguimiento de cada envío.
 - **Ganancias:** monitorear las ganancias de la plataforma.
-- **Pausar actividad:** poder pausar (y reactivar) a un kiosco o a un rider puntual.
+- **Pausar actividad:** poder pausar (y reactivar) a un kiosco o a un rider puntual, y dar de baja a un rider.
+- **Destrabar pedidos:** cada pedido abierto de MAIN (y el envío en curso en la ficha del rider) tiene "Entregado sin PIN", "El rider no fue" y "Cancelar". Ver _Cancelaciones e incidentes_.
+- **Alertas en MAIN:** saldo bajo, pedidos demorados, clientes pausados por cancelaciones (con el botón Reactivar) y riders pausados por abandonos.
+- **Cargas de saldo a cualquier hora:** cada carga queda registrada en los movimientos del kiosco.
 - **Conflictos:** todos, de kioscos y de riders, se resuelven por **WhatsApp** con la asistencia, que atiende el número de la empresa durante el horario de FreeDeli. La plataforma no los registra: cada app tiene el botón de WhatsApp FreeDeli.
 - **Sin chat interno:** la comunicación con kioscos y riders se hace por el **WhatsApp de la empresa**, no desde la plataforma. A lo sumo, un botón o link que abra ese WhatsApp.
 
@@ -67,7 +70,7 @@ Dentro de MAIN también están:
 - Solo le llegan pedidos al rider que está **ON**, no está pausado y no tiene un pedido en curso.
 - El aviso aparece encima de cualquier sección, con sonido 8 bit (si están activados) y vibración.
 - **Avisos por WhatsApp:** todos los avisos al rider llegan por WhatsApp, también con la app cerrada: pedido nuevo (con el link a la app), el kiosco lo aprobó, el kiosco eligió a otro, y el alta aprobada o rechazada. El rider los puede apagar en su perfil. Por eso el teléfono del rider tiene que ser un celular con WhatsApp.
-- Tiene **30 segundos** para aceptar, con cuenta regresiva.
+- Tiene **60 segundos** para aceptar, con cuenta regresiva.
 - Antes de aceptar ve: kiosco y zona de retiro, la entrega aproximada (calle y altura redondeada, por ejemplo "Conesa al 1800"), la cantidad de productos y su ganancia. La dirección exacta y las notas aparecen al aceptar.
 - Si rechaza o deja vencer el aviso, el pedido pasa a otro rider **sin castigo**: sigue ON.
 - Al aceptar, el pedido pasa a **Aceptado** y se abre la pantalla Vivo.
@@ -130,6 +133,18 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 6. **Entrega:** el rider sale en camino y cierra con el PIN del cliente.
 
 Si al quitar productos el pedido queda por debajo del mínimo, se mantiene igual: el cliente decide si lo acepta. La comisión se recalcula con el mínimo de $1.500.
+
+### Cancelaciones e incidentes
+
+- **El cliente puede cancelar en cualquier momento** antes de la entrega. Si todavía no transfirió, no hay nada que devolver.
+- **Reintegro:** si ya transfirió, el kiosco le devuelve todo por transferencia, a la cuenta desde la que pagó, sin cupones. El pedido le queda en "Tu turno" al kiosco hasta que toca "Ya lo devolví".
+- **Mitad del viaje:** si el rider ya hizo más de la mitad del trayecto, el envío no se devuelve: el kiosco se lo paga al rider. _Se mide con el GPS del rider; hasta tenerlo, el reintegro es total._
+- **Productos:** si el rider ya los retiró, se los devuelve al kiosco. La app del rider se lo avisa al cancelarse.
+- **3 cancelaciones en una semana** pausan la cuenta del cliente: no puede pedir hasta que Dev la reactive desde la alerta en MAIN. Al reactivarla, el conteo vuelve a cero.
+- **Sin rider:** a los **10 minutos** buscando rider, la app le pregunta al cliente si sigue esperando. Si sigue, se le vuelve a preguntar en otros 10 minutos. Si cancela, no le cuenta como cancelación.
+- **El rider que decide no ir:** se resuelve por WhatsApp. Dev cancela con "El rider no fue": reintegro total al cliente y un abandono para el rider. Con **3 abandonos** el rider se pausa solo hasta que Dev lo evalúe: lo reactiva (el conteo vuelve a cero) o lo da de baja.
+- **Cliente sin batería, sin datos o que no aparece:** si el rider entregó pero no pudo ingresar el PIN, Dev lo marca "Entregado sin PIN" y se liquida como cualquier entrega.
+- **Baja de riders:** Dev puede dar de baja a un rider por abandonos o por fallas reiteradas con la batería, la señal o la documentación. Ya no puede ingresar.
 
 ## FreeDeli (usuarios)
 

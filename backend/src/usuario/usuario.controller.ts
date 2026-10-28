@@ -6,7 +6,7 @@ import { Roles, SesionActual, type Sesion } from '../auth/sesion.js';
 import { Perfiles } from '../comun/perfiles.js';
 import { ReglasConfig } from '../comun/reglas.config.js';
 import { ZONAS_API, geolocalizar, zonaApi, zonaDb, type ZonaApi } from '../comun/zonas.js';
-import { aceptarAjuste, cancelarPorCliente, costoEnvio, distanciaKm, envioCliente, normalizarDni, puedeRecibirPedidos } from '../dominio.js';
+import { aceptarAjuste, cancelarPorCliente, seguirEsperandoRider, costoEnvio, distanciaKm, envioCliente, normalizarDni, puedeRecibirPedidos } from '../dominio.js';
 import { EstadoCuenta, EstadoPedido, Rol } from '../generated/prisma/enums.js';
 import { PedidosService } from '../pedidos/pedidos.service.js';
 import { NuevoPedidoDto } from '../pedidos/dto.js';
@@ -34,6 +34,7 @@ export class UsuarioController {
       telefono: u.telefono,
       estrellas: u.estrellas,
       saldoFavor: u.saldoFavor,
+      pausado: u.pausado,
       email: u.cuenta.email,
       direccion: { direccion: u.direccion, notas: u.notas ?? undefined, zona: zonaApi(u.zona), ubicacion: { lat: u.lat, lng: u.lng } },
     };
@@ -142,7 +143,15 @@ export class UsuarioController {
   @Post('pedidos/:id/cancelar') @HttpCode(200)
   async cancelar(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string) {
     const usuarioId = await this.perfiles.usuarioId(s.sub);
-    return this.pedidos.transicionar(id, (f) => f.usuarioId === usuarioId, cancelarPorCliente, (tx, p) => this.pedidos.devolverPremio(tx, p));
+    // Hasta tener la ubicación del rider en vivo, no se puede saber si pasó la mitad del viaje: reintegro total.
+    return this.pedidos.transicionar(id, (f) => f.usuarioId === usuarioId, (p) => cancelarPorCliente(p, new Date()));
+  }
+
+  /** Pasados 10 minutos sin rider, el cliente elige seguir esperando. */
+  @Post('pedidos/:id/seguir-esperando') @HttpCode(200)
+  async seguirEsperando(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string) {
+    const usuarioId = await this.perfiles.usuarioId(s.sub);
+    return this.pedidos.transicionar(id, (f) => f.usuarioId === usuarioId, (p) => seguirEsperandoRider(p, new Date()));
   }
 
   /** FREEDELI RUSH: jugó 10 minutos seguidos mientras el rider estaba en camino. */

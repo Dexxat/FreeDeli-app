@@ -8,6 +8,7 @@ import { Pedido } from '../models/pedido.js';
 import { PeriodoHistorial } from '../models/rider.js';
 import { RiderPublico } from '../models/usuario.js';
 import { ESTADOS_ABIERTOS } from '../rules/pedido.rules.js';
+import { reintegroPendiente } from '../rules/cancelacion.rules.js';
 import { API_URL } from './api-url';
 import { EventosCliente } from './eventos';
 import { MovimientoSaldoJson, revivirMovimiento, revivirPedido } from './revivir';
@@ -41,7 +42,7 @@ export class HttpKioscosApi extends KioscosApi {
         this.eventos.pedidos$.pipe(
           scan((lista: Pedido[], p: Pedido) => {
             const sin = lista.filter((x) => x.id !== p.id);
-            return ESTADOS_ABIERTOS.includes(p.estado) ? [...sin, p].sort((a, b) => a.creadoEn.getTime() - b.creadoEn.getTime()) : sin;
+            return ESTADOS_ABIERTOS.includes(p.estado) || reintegroPendiente(p) ? [...sin, p].sort((a, b) => a.creadoEn.getTime() - b.creadoEn.getTime()) : sin;
           }, inicial),
           startWith(inicial),
         ),
@@ -67,6 +68,10 @@ export class HttpKioscosApi extends KioscosApi {
 
   aprobarRider(pedidoId: string, aprobado: boolean): Observable<Pedido> {
     return this.paso(pedidoId, 'aprobar-rider', { aprobado });
+  }
+
+  marcarReintegrado(pedidoId: string): Observable<Pedido> {
+    return this.paso(pedidoId, 'reintegro');
   }
 
   confirmarEnvio(pedidoId: string): Observable<Pedido> {

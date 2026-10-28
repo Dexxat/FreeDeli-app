@@ -30,6 +30,6 @@ export class ReglasConfig {
 
   /** Segundos que tiene un rider para aceptar una oferta. */
   get segundosOferta(): number {
-    return Number(this.config.get('SEGUNDOS_OFERTA') ?? 30);
+    return Number(this.config.get('SEGUNDOS_OFERTA') ?? 60);
   }
 }

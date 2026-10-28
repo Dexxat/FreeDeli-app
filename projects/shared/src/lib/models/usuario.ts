@@ -25,6 +25,8 @@ export interface Usuario extends DatosPersonales {
   estrellas: number;
   /** Saldo a favor en pesos: se descuenta solo del próximo pedido. */
   saldoFavor: number;
+  /** Pausado por cancelaciones: no puede pedir hasta que Dev lo reactive. */
+  pausado: boolean;
 }
 
 /** Lo que el usuario ve del rider que lleva su pedido. */

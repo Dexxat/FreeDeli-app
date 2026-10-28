@@ -38,6 +38,12 @@
 }
 
 <fd-aviso-horario />
+@if (store.usuario()?.pausado) {
+  <p class="pausada" role="alert">
+    <strong>CUENTA PAUSADA</strong>
+    <span>Cancelaste {{ cancelacionesParaPausa }} pedidos esta semana. Escribinos por <a [href]="whatsapp">WhatsApp</a> para reactivarla.</span>
+  </p>
+}
 @if (store.usuario()?.saldoFavor; as saldo) {
   <p class="a-favor" role="status">Tenés {{ saldo | pesos }} a favor de FREEDELI RUSH: se descuentan solos de tu próximo pedido.</p>
 }

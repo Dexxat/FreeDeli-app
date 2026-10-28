@@ -1,6 +1,6 @@
 import { Injectable, Injector, computed, inject, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { Observable, delay, distinctUntilChanged, map, of, throwError } from 'rxjs';
+import { Observable, delay, distinctUntilChanged, map, of, tap, throwError } from 'rxjs';
 import { AdminApi } from '../api/admin.api';
 import { AlertaAdmin, AltaPendiente, MovimientoSaldo, EntregaAdmin, FilaMain, RiderAdmin, GananciasAdmin, KioscoAdmin, MovimientoKiosco, PeriodoAdmin, ResumenAdmin } from '../models/admin';
 import { ZonaId } from '../models/zona';
@@ -14,6 +14,8 @@ import { MockDb } from './mock-db';
 import { LATENCIA_MOCK } from './mock-riders.api';
 import { DocumentosRider, SIN_DOCUMENTOS } from '../rules/documentos.rules';
 import { gananciaFreeDeli } from '../rules/premios.rules';
+import { ABANDONOS_PARA_PAUSA, CANCELACIONES_PARA_PAUSA } from '../rules/cancelacion.rules';
+import { Resultado, cancelarPorDev, entregarSinPin } from '../rules/flujo.rules';
 
 @Injectable()
 export class MockAdminApi extends AdminApi {
@@ -49,6 +51,12 @@ export class MockAdminApi extends AdminApi {
       if (min >= MINUTOS_DEMORA) {
         alertas.push({ tipo: 'pedido-demorado', texto: `${codigoPedido(p)} lleva ${min} min sin rider`, ruta: `/kioscos/${p.kioscoId}` });
       }
+    }
+    for (const u of this.db.usuarios().filter((x) => x.pausado)) {
+      alertas.push({ tipo: 'cliente-pausado', texto: `${u.nombre} está pausado por ${CANCELACIONES_PARA_PAUSA} cancelaciones`, usuarioId: u.id });
+    }
+    for (const r of this.ridersAdmin().filter((x) => x.pausado && !x.deBaja && x.abandonos >= ABANDONOS_PARA_PAUSA)) {
+      alertas.push({ tipo: 'rider-pausado', texto: `${r.nombre} está pausado por ${r.abandonos} pedidos abandonados`, ruta: `/riders/${r.id}` });
     }
     return {
       pedidosHoy: deHoy.length,
@@ -126,6 +134,8 @@ export class MockAdminApi extends AdminApi {
         entregasHoy: entregadosHoy.length,
         ganadoHoy: entregadosHoy.reduce((a, p) => a + p.gananciaRider + p.propina, 0),
         enCurso: pedidos.find((p) => p.riderId === r.id && ['aceptado', 'retirado', 'en-camino'].includes(p.estado)) ?? null,
+        abandonos: this.db.abandonos(r.id),
+        deBaja: this.db.ridersDeBaja().includes(r.id),
       };
     });
   });
@@ -150,8 +160,42 @@ export class MockAdminApi extends AdminApi {
 
   pausarRider(id: string, pausado: boolean): Observable<RiderAdmin> {
     if (!this.db.riders().some((r) => r.id === id)) return throwError(() => new Error('Rider inexistente.'));
+    if (!pausado) this.db.habilitadoEn.set(id, new Date());
     this.db.riders.update((rs) => rs.map((r) => (r.id === id ? { ...r, pausado, disponible: pausado ? false : r.disponible } : r)));
     return of(this.ridersAdmin().find((r) => r.id === id)!).pipe(delay(this.latencia));
+  }
+
+  darDeBajaRider(id: string): Observable<RiderAdmin> {
+    const rider = this.ridersAdmin().find((r) => r.id === id);
+    if (!rider) return throwError(() => new Error('Rider inexistente.'));
+    if (rider.enCurso) return throwError(() => new Error('El rider tiene un pedido en curso.'));
+    this.db.ridersDeBaja.update((ids) => (ids.includes(id) ? ids : [...ids, id]));
+    this.db.riders.update((rs) => rs.map((r) => (r.id === id ? { ...r, pausado: true, disponible: false } : r)));
+    return of(this.ridersAdmin().find((r) => r.id === id)!).pipe(delay(this.latencia));
+  }
+
+  reactivarUsuario(id: string): Observable<void> {
+    if (!this.db.usuarios().some((u) => u.id === id)) return throwError(() => new Error('Cliente inexistente.'));
+    this.db.habilitadoEn.set(id, new Date());
+    this.db.usuarios.update((us) => us.map((u) => (u.id === id ? { ...u, pausado: false } : u)));
+    return of(undefined).pipe(delay(this.latencia));
+  }
+
+  entregarPedido(pedidoId: string): Observable<Pedido> {
+    return this.transicion(pedidoId, (p) => entregarSinPin(p, new Date())).pipe(tap((p) => this.db.liquidar(p)));
+  }
+
+  cancelarPedido(pedidoId: string, motivo: 'rider' | 'dev'): Observable<Pedido> {
+    return this.transicion(pedidoId, (p) => cancelarPorDev(p, motivo));
+  }
+
+  private transicion(pedidoId: string, paso: (p: Pedido) => Resultado): Observable<Pedido> {
+    const p = this.db.buscarPedido(pedidoId);
+    if (!p) return throwError(() => new Error('No encontramos el pedido.'));
+    const r = paso(p);
+    if (!r.ok) return throwError(() => new Error(r.error));
+    this.db.guardarPedido(r.pedido);
+    return of(r.pedido).pipe(delay(this.latencia));
   }
 
   private entregados(periodo: PeriodoAdmin, zonas?: ZonaId[]): Pedido[] {

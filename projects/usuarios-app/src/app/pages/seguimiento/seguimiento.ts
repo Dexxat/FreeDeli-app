@@ -9,6 +9,8 @@ import {
   UsuariosApi,
   mensajeDeError,
   codigoPedido,
+  formatearPesos,
+  reintegroPendiente,
   linkWhatsApp,
   minutosParaLlegar,
   totalPedido,
@@ -17,13 +19,15 @@ import { PasoActual } from '../../ui/paso-actual';
 import { Rush } from '../../ui/rush/rush';
 import { Estrellas } from '../../ui/estrellas';
 import { UsuarioStore } from '../../core/usuario.store';
-import { distinctUntilChanged, interval, map, of, startWith, switchMap } from 'rxjs';
+import { distinctUntilChanged, map, of, switchMap } from 'rxjs';
+import { Reloj } from '../../core/reloj';
+import { CancelarPedido } from '../../ui/cancelar-pedido';
 
 const HORA = new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
 
 @Component({
   selector: 'fd-seguimiento',
-  imports: [BarraEstado, PesosPipe, RouterLink, PasoActual, Rush, Estrellas],
+  imports: [BarraEstado, PesosPipe, RouterLink, PasoActual, Rush, Estrellas, CancelarPedido],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './seguimiento.html',
   styleUrl: './seguimiento.scss',
@@ -69,16 +73,33 @@ export default class Seguimiento {
     })).pipe(switchMap((clave) => (clave ? this.api.riderAsignado(clave.split('|')[0]) : of(null)))),
   );
 
-  private readonly ahora = toSignal(interval(30_000).pipe(startWith(0), map(() => new Date())), { initialValue: new Date() });
+  private readonly reloj = inject(Reloj);
 
   protected readonly minutos = computed(() => {
     const p = this.pedido();
     const k = this.kiosco();
-    return p && k ? minutosParaLlegar(p, k.tiempoEstimadoMin, this.ahora()) : null;
+    return p && k ? minutosParaLlegar(p, k.tiempoEstimadoMin, this.reloj.ahora()) : null;
+  });
+
+  /** Qué le pasó al dinero de un pedido cancelado. */
+  protected readonly textoCancelado = computed(() => {
+    const c = this.pedido()?.cancelacion;
+    if (!c?.reintegro) return 'No se cobró nada. Podés pedir en otro kiosco.';
+    const envio = c.riderCobra ? ' El rider ya había hecho más de la mitad del viaje: el envío no se devuelve.' : '';
+    if (c.reintegradoEn) return `El kiosco ya te devolvió ${formatearPesos(c.reintegro)}.${envio}`;
+    return `El kiosco te devuelve ${formatearPesos(c.reintegro)} a la cuenta desde la que transferiste.${envio}`;
+  });
+  protected readonly motivoCancelado = computed(() => {
+    const motivo = this.pedido()?.cancelacion?.motivo;
+    if (motivo === 'rider') return 'El rider no pudo llevar tu pedido.';
+    if (motivo === 'sin-stock') return 'Al kiosco no le quedaba ninguno de los productos.';
+    if (motivo === 'dev') return 'FreeDeli canceló el pedido.';
+    return null;
   });
 
   protected readonly digitos = computed(() => [...(this.pedido()?.pin ?? '')]);
   protected readonly codigo = codigoPedido;
+  protected readonly reintegroPendiente = reintegroPendiente;
   protected readonly total = totalPedido;
   protected readonly hora = (d?: Date) => (d ? HORA.format(d) : '');
 

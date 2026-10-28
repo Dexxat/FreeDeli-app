@@ -90,4 +90,15 @@ describe('Inicio en vivo (Kioscos)', () => {
     expect(db.buscarPedido(p.id)!.retiro?.kiosco).toBeInstanceOf(Date);
     expect(el.textContent).toContain('Falta que el rider confirme el retiro');
   });
+
+  it('un pedido cancelado después de pagar queda en TU TURNO hasta devolver el dinero', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const p = nuevoPedido();
+    db.guardarPedido({ ...p, estado: 'cancelado', fase: undefined, pago: 'transferido', cancelacion: { motivo: 'cliente', reintegro: 17000, riderCobra: false } });
+    await estable();
+    expect(columna('col-accion').textContent).toContain('Devolvele $17.000 al cliente');
+    boton('YA LO DEVOLVÍ')!.click();
+    await estable();
+    expect(el.textContent).not.toContain(`#A-${p.numero}`);
+  });
 });

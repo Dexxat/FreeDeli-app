@@ -4,12 +4,16 @@ import {
   aprobarRider,
   asignarRider,
   cancelarPorCliente,
+  cancelarPorDev,
   confirmarRetiro,
   confirmarStock,
   confirmarTransferencia,
   entregarConPin,
+  entregarSinPin,
+  marcarReintegrado,
   quienDebeActuar,
   salirEnCamino,
+  seguirEsperandoRider,
 } from './flujo.rules.js';
 
 const ahora = new Date(2026, 9, 26, 20, 0);
@@ -35,8 +39,8 @@ describe('flujo del pedido', () => {
     let p = paso(confirmarStock(base, [], 10));
     expect(p.fase).toBe('transferencia');
     expect(quienDebeActuar(p)).toBe('kiosco');
-    p = paso(confirmarTransferencia(p));
-    expect(p).toMatchObject({ pago: 'transferido', fase: 'rider' });
+    p = paso(confirmarTransferencia(p, ahora));
+    expect(p).toMatchObject({ pago: 'transferido', fase: 'rider', buscandoRiderDesde: ahora });
     p = paso(asignarRider(p, 'r1'));
     expect(p).toMatchObject({ riderId: 'r1', fase: 'aprobacion', estado: 'esperando' });
     p = paso(aprobarRider(p, true, ahora));
@@ -62,15 +66,16 @@ describe('flujo del pedido', () => {
     expect(p.comisionFreeDeli).toBe(1500);
     expect(quienDebeActuar(p)).toBe('cliente');
     expect(paso(aceptarAjuste(p)).fase).toBe('transferencia');
-    expect(paso(cancelarPorCliente(p)).estado).toBe('cancelado');
+    expect(paso(cancelarPorCliente(p, ahora)).cancelacion).toEqual({ motivo: 'cliente', reintegro: 0, riderCobra: false });
   });
 
   it('sin ningún producto en stock se cancela', () => {
-    expect(paso(confirmarStock(base, ['k3-p1', 'k3-p7'], 10)).estado).toBe('cancelado');
+    const p = paso(confirmarStock(base, ['k3-p1', 'k3-p7'], 10));
+    expect(p).toMatchObject({ estado: 'cancelado', cancelacion: { motivo: 'sin-stock', reintegro: 0 } });
   });
 
   it('el kiosco puede rechazar al rider y no se le vuelve a ofrecer', () => {
-    let p = paso(confirmarTransferencia(paso(confirmarStock(base, [], 10))));
+    let p = pagado();
     p = paso(asignarRider(p, 'r1'));
     p = paso(aprobarRider(p, false, ahora));
     expect(p).toMatchObject({ fase: 'rider', riderId: undefined, ridersRechazados: ['r1'] });
@@ -78,8 +83,60 @@ describe('flujo del pedido', () => {
     expect(asignarRider(p, 'r2').ok).toBe(true);
   });
 
-  it('no se puede cancelar después de buscar rider', () => {
-    const p = paso(confirmarTransferencia(paso(confirmarStock(base, [], 10))));
-    expect(cancelarPorCliente(p).ok).toBe(false);
+  describe('cancelaciones', () => {
+    const total = 4 * 2800 + 3 * 1500 + 1500;
+    const minutos = (m: number) => new Date(ahora.getTime() + m * 60_000);
+    const enCamino = () => paso(salirEnCamino(paso(confirmarRetiro(paso(confirmarRetiro(paso(aprobarRider(paso(asignarRider(pagado(), 'r1')), true, ahora)), 'rider', ahora)), 'kiosco', ahora)), ahora));
+
+    it('después de pagar, el cliente puede cancelar y se le devuelve todo', () => {
+      expect(paso(cancelarPorCliente(pagado(), minutos(2))).cancelacion).toEqual({ motivo: 'cliente', reintegro: total, riderCobra: false });
+    });
+
+    it('si el rider pasó la mitad del viaje, cobra el envío y se descuenta del reintegro', () => {
+      expect(paso(cancelarPorCliente(enCamino(), ahora, true)).cancelacion).toEqual({ motivo: 'cliente', reintegro: total - 1500, riderCobra: true });
+    });
+
+    it('la mitad del viaje solo cuenta con el rider en camino', () => {
+      expect(paso(cancelarPorCliente(pagado(), ahora, true)).cancelacion?.riderCobra).toBe(false);
+    });
+
+    it('a los 10 minutos sin rider, cancelar no le cuenta en contra al cliente', () => {
+      expect(paso(cancelarPorCliente(pagado(), minutos(9))).cancelacion?.motivo).toBe('cliente');
+      expect(paso(cancelarPorCliente(pagado(), minutos(10))).cancelacion?.motivo).toBe('sin-rider');
+    });
+
+    it('seguir esperando reinicia los 10 minutos', () => {
+      const p = paso(seguirEsperandoRider(pagado(), minutos(10)));
+      expect(paso(cancelarPorCliente(p, minutos(15))).cancelacion?.motivo).toBe('cliente');
+      expect(seguirEsperandoRider(base, ahora).ok).toBe(false);
+    });
+
+    it('un pedido entregado o cancelado ya no se cancela', () => {
+      const cancelado = paso(cancelarPorCliente(base, ahora));
+      expect(cancelarPorCliente(cancelado, ahora).ok).toBe(false);
+      expect(cancelarPorDev(cancelado, 'dev').ok).toBe(false);
+    });
+
+    it('Dev cancela porque el rider no fue: reintegro total', () => {
+      const p = paso(aprobarRider(paso(asignarRider(pagado(), 'r1')), true, ahora));
+      expect(paso(cancelarPorDev(p, 'rider')).cancelacion).toEqual({ motivo: 'rider', reintegro: total, riderCobra: false });
+      expect(cancelarPorDev(pagado(), 'rider').ok).toBe(false);
+    });
+
+    it('el kiosco marca el reintegro una sola vez', () => {
+      const p = paso(marcarReintegrado(paso(cancelarPorCliente(pagado(), ahora)), minutos(5)));
+      expect(p.cancelacion?.reintegradoEn).toEqual(minutos(5));
+      expect(paso(marcarReintegrado(p, minutos(9))).cancelacion?.reintegradoEn).toEqual(minutos(5));
+      expect(marcarReintegrado(paso(cancelarPorCliente(base, ahora)), ahora).ok).toBe(false);
+    });
+  });
+
+  it('Dev marca entregado sin PIN solo si el rider ya lo retiró', () => {
+    expect(paso(entregarSinPin(paso({ ok: true, pedido: { ...base, estado: 'en-camino' } }), ahora))).toMatchObject({ estado: 'entregado', pago: 'liberado' });
+    expect(entregarSinPin(pagado(), ahora).ok).toBe(false);
   });
 });
+
+function pagado(): Pedido {
+  return paso(confirmarTransferencia(paso(confirmarStock(base, [], 10)), ahora));
+}

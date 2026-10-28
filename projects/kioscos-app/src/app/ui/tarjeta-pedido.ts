@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { FREEDELI_CONFIG, KioscosApi, Pedido, PesosPipe, aporteKioscoEnvio, linkWhatsApp, cantidadProductos, codigoPedido, subtotalProductos, totalPedido } from '@freedeli/shared';
+import { FREEDELI_CONFIG, KioscosApi, Pedido, PesosPipe, aporteKioscoEnvio, formatearPesos, linkWhatsApp, mensajeDeError, cantidadProductos, codigoPedido, subtotalProductos, totalPedido } from '@freedeli/shared';
 import { Observable, of, switchMap } from 'rxjs';
 
 /** Etiqueta del paso en el que está el pedido, desde el punto de vista del kiosco. */
@@ -19,6 +19,7 @@ export function pasoKiosco(p: Pedido): string {
   if (p.estado === 'aceptado') return p.retiro?.kiosco ? 'Esperando al rider' : 'Confirmar envío';
   if (p.estado === 'retirado') return 'Retirado';
   if (p.estado === 'en-camino') return 'En camino';
+  if (p.estado === 'cancelado') return 'Cancelado';
   return p.estado;
 }
 
@@ -72,9 +73,9 @@ export class TarjetaPedido {
         this.enviando.set(false);
         this.faltantes.set([]);
       },
-      error: (e: Error) => {
+      error: (e: unknown) => {
         this.enviando.set(false);
-        this.error.set(e.message);
+        this.error.set(mensajeDeError(e, e instanceof Error ? e.message : undefined));
       },
     });
   }
@@ -95,5 +96,10 @@ export class TarjetaPedido {
 
   protected confirmarEnvio(): void {
     this.hacer(this.api.confirmarEnvio(this.pedido().id));
+  }
+
+  protected marcarReintegrado(): void {
+    const monto = formatearPesos(this.pedido().cancelacion?.reintegro ?? 0);
+    if (confirm(`¿Ya le transferiste ${monto} al cliente?`)) this.hacer(this.api.marcarReintegrado(this.pedido().id));
   }
 }

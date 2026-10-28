@@ -11,7 +11,8 @@ import { enRango, rangoPeriodo } from '../rules/periodos.rules';
 import { aliasCbuValido } from '../rules/validaciones.rules';
 import { Pedido } from '../models/pedido';
 import { RiderPublico } from '../models/usuario';
-import { Resultado, aprobarRider, confirmarRetiro, confirmarStock, confirmarTransferencia } from '../rules/flujo.rules';
+import { Resultado, aprobarRider, confirmarRetiro, confirmarStock, confirmarTransferencia, marcarReintegrado } from '../rules/flujo.rules';
+import { reintegroPendiente } from '../rules/cancelacion.rules';
 import { ESTADOS_ABIERTOS } from '../rules/pedido.rules';
 import { KIOSCO_ACTUAL_ID, MockDb } from './mock-db';
 import { LATENCIA_MOCK } from './mock-riders.api';
@@ -27,7 +28,7 @@ export class MockKioscosApi extends KioscosApi {
     computed(() =>
       this.db
         .pedidos()
-        .filter((p) => p.kioscoId === KIOSCO_ACTUAL_ID && ESTADOS_ABIERTOS.includes(p.estado))
+        .filter((p) => p.kioscoId === KIOSCO_ACTUAL_ID && (ESTADOS_ABIERTOS.includes(p.estado) || reintegroPendiente(p)))
         .sort((a, b) => a.creadoEn.getTime() - b.creadoEn.getTime()),
     ),
   );
@@ -74,7 +75,7 @@ export class MockKioscosApi extends KioscosApi {
   }
 
   confirmarTransferencia(pedidoId: string): Observable<Pedido> {
-    return this.transicion(pedidoId, confirmarTransferencia);
+    return this.transicion(pedidoId, (p) => confirmarTransferencia(p, new Date()));
   }
 
   aprobarRider(pedidoId: string, aprobado: boolean): Observable<Pedido> {
@@ -83,6 +84,10 @@ export class MockKioscosApi extends KioscosApi {
 
   confirmarEnvio(pedidoId: string): Observable<Pedido> {
     return this.transicion(pedidoId, (p) => confirmarRetiro(p, 'kiosco', new Date()));
+  }
+
+  marcarReintegrado(pedidoId: string): Observable<Pedido> {
+    return this.transicion(pedidoId, (p) => marcarReintegrado(p, new Date()));
   }
 
   private propios(): Pedido[] {

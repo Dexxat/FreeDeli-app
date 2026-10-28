@@ -16,6 +16,7 @@ const MOTIVOS = {
   'pedido-en-curso': 'Ya tenés un pedido en curso.',
   'fuera-de-horario': 'FreeDeli toma pedidos de 00 a 08 hs.',
   'fuera-de-cobertura': 'Tu dirección está fuera del área donde entrega FreeDeli.',
+  'cuenta-pausada': 'Tu cuenta está pausada por cancelaciones. Escribinos por WhatsApp para reactivarla.',
 } as const;
 
 /** Tope por producto, para evitar errores de tipeo. */

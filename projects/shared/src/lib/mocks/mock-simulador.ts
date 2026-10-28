@@ -117,7 +117,7 @@ export class MockSimulador {
         case 'ajuste':
           return cliente ? aceptarAjuste : null;
         case 'transferencia':
-          return kiosco ? confirmarTransferencia : null;
+          return kiosco ? (x) => confirmarTransferencia(x, ahora()) : null;
         case 'rider': {
           // Las ofertas para el rider real las maneja su app; acá toman los riders simulados.
           if (!rider) return null;

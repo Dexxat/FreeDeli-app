@@ -36,6 +36,26 @@ export type FasePedido = 'stock' | 'ajuste' | 'transferencia' | 'rider' | 'aprob
 
 export type EstadoPago = 'pendiente' | 'transferido' | 'liberado';
 
+/**
+ * Por qué se canceló un pedido.
+ * - `cliente`: lo canceló el cliente. Cuenta para pausar su cuenta.
+ * - `sin-rider`: el cliente no quiso seguir esperando un rider. No cuenta.
+ * - `sin-stock`: el kiosco no tenía ninguno de los productos.
+ * - `rider`: el rider aceptó y decidió no ir. Cuenta para pausar al rider.
+ * - `dev`: lo canceló Dev por otro motivo.
+ */
+export type MotivoCancelacion = 'cliente' | 'sin-rider' | 'sin-stock' | 'rider' | 'dev';
+
+export interface Cancelacion {
+  motivo: MotivoCancelacion;
+  /** Lo que el kiosco le devuelve al cliente por transferencia. 0 si todavía no había pagado. */
+  reintegro: number;
+  /** El rider ya había hecho más de la mitad del viaje: el kiosco le paga el viaje igual. */
+  riderCobra: boolean;
+  /** Cuando el kiosco avisó que devolvió el dinero. */
+  reintegradoEn?: Date;
+}
+
 export interface ItemPedido {
   productoId: string;
   nombre: string;
@@ -85,12 +105,16 @@ export interface Pedido {
   retiro?: { kiosco?: Date; rider?: Date };
   riderId?: string;
   creadoEn: Date;
+  /** Desde cuándo se busca rider, o desde que el cliente eligió seguir esperando. */
+  buscandoRiderDesde?: Date;
   aceptadoEn?: Date;
   /** Cuando el rider salió en camino: desde ahí se puede jugar FREEDELI RUSH. */
   enCaminoEn?: Date;
   /** Si el cliente ya ganó la estrella de FREEDELI RUSH con este pedido (una por pedido). */
   estrellaGanada?: boolean;
   entregadoEn?: Date;
+  /** Solo en pedidos cancelados. */
+  cancelacion?: Cancelacion;
 }
 
 export function subtotalProductos(p: Pick<Pedido, 'items'>): number {

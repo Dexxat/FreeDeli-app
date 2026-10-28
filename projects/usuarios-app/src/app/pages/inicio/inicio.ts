@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { BarraEstado, PesosPipe, UsuariosApi, ZONAS, ZonaId, codigoPedido, nombreZona, primerNombre } from '@freedeli/shared';
+import { BarraEstado, CANCELACIONES_PARA_PAUSA, FREEDELI_CONFIG, PesosPipe, UsuariosApi, ZONAS, ZonaId, codigoPedido, linkWhatsApp, nombreZona, primerNombre } from '@freedeli/shared';
 import { UsuarioStore } from '../../core/usuario.store';
 import { fechaRelativa } from '../../core/fechas';
 import { AvisoHorario } from '../../ui/aviso-horario';
@@ -22,6 +22,8 @@ export default class Inicio {
   protected readonly recientes = toSignal(this.api.recientes(3), { initialValue: [] });
 
   protected readonly zonas = ZONAS;
+  protected readonly cancelacionesParaPausa = CANCELACIONES_PARA_PAUSA;
+  protected readonly whatsapp = linkWhatsApp(inject(FREEDELI_CONFIG).whatsapp, 'Hola FreeDeli, mi cuenta está pausada por cancelaciones.');
   protected readonly zona = nombreZona;
   protected readonly primerNombre = primerNombre;
   protected readonly codigo = codigoPedido;

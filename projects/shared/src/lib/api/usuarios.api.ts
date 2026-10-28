@@ -7,7 +7,7 @@ import { EstrellaSumada } from '../rules/premios.rules';
 
 export type ResultadoCrearPedido =
   | { ok: true; pedido: Pedido }
-  | { ok: false; motivo: 'kiosco-cerrado' | 'sin-productos' | 'producto-inexistente' | 'pedido-minimo' | 'pedido-en-curso' | 'fuera-de-horario' | 'fuera-de-cobertura' };
+  | { ok: false; motivo: 'kiosco-cerrado' | 'sin-productos' | 'producto-inexistente' | 'pedido-minimo' | 'pedido-en-curso' | 'fuera-de-horario' | 'fuera-de-cobertura' | 'cuenta-pausada' };
 
 /** Operaciones del usuario con sesión iniciada (app FreeDeli). */
 export abstract class UsuariosApi {
@@ -30,8 +30,13 @@ export abstract class UsuariosApi {
   abstract riderAsignado(pedidoId: string): Observable<RiderPublico | null>;
   /** Acepta el pedido ajustado por falta de stock. */
   abstract aceptarAjuste(pedidoId: string): Observable<Pedido>;
-  /** Cancela el pedido. Solo antes de que se busque rider. */
+  /**
+   * Cancela el pedido en cualquier momento antes de la entrega. Si ya transfirió, el kiosco le devuelve
+   * el dinero (ver `cancelacion.reintegro`). Tres cancelaciones en una semana pausan la cuenta.
+   */
   abstract cancelarPedido(pedidoId: string): Observable<Pedido>;
+  /** Pasados 10 minutos sin rider, el cliente elige seguir esperando. */
+  abstract seguirEsperando(pedidoId: string): Observable<Pedido>;
   /** FREEDELI RUSH: el cliente jugó 10 minutos seguidos mientras el rider estaba en camino. */
   abstract sumarEstrella(pedidoId: string): Observable<EstrellaSumada>;
 }

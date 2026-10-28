@@ -56,6 +56,11 @@ export class PausaDto {
   @IsBoolean() pausado!: boolean;
 }
 
+/** Dev cancela un pedido: `rider` si el rider decidió no ir, `dev` por cualquier otro motivo. */
+export class CancelacionDevDto {
+  @IsIn(['rider', 'dev'], { message: 'Motivo inválido.' }) motivo!: 'rider' | 'dev';
+}
+
 /** Cambios del perfil del rider: cada sección de Ajustes manda solo lo suyo. */
 export class PerfilRiderDto {
   @IsOptional() @Cumple(nombreCompletoValido, MENSAJES.nombre) nombre?: string;
