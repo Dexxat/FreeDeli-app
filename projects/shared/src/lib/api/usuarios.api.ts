@@ -2,7 +2,7 @@ import { Observable } from 'rxjs';
 import { Kiosco, Producto } from '../models/kiosco';
 import { Pedido } from '../models/pedido';
 import { DatosPersonales, DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } from '../models/usuario';
-import { ZonaId } from '../models/zona';
+import { Ubicacion, ZonaId } from '../models/zona';
 import { EstrellaSumada } from '../rules/premios.rules';
 
 export type ResultadoCrearPedido =
@@ -15,9 +15,9 @@ export abstract class UsuariosApi {
   abstract cambiarDireccion(direccion: DireccionEntrega): Observable<Usuario>;
   /** Falla con el mensaje del servidor si el email ya es de otra cuenta. */
   abstract actualizarDatos(datos: DatosPersonales): Observable<Usuario>;
-  /** Kioscos que reciben pedidos ahora. Sin zona, todos. */
-  abstract kioscosAbiertos(zona?: ZonaId): Observable<Kiosco[]>;
-  abstract kiosco(id: string): Observable<Kiosco | null>;
+  /** Kioscos que reciben pedidos ahora, con distancia y envío hasta `desde` (el GPS del cliente). Sin zona, todos. */
+  abstract kioscosAbiertos(desde: Ubicacion, zona?: ZonaId): Observable<Kiosco[]>;
+  abstract kiosco(id: string, desde: Ubicacion): Observable<Kiosco | null>;
   abstract productos(kioscoId: string): Observable<Producto[]>;
   /** Crea el pedido con los precios del catálogo y un PIN nuevo. Queda esperando rider. */
   abstract crearPedido(nuevo: NuevoPedido): Observable<ResultadoCrearPedido>;

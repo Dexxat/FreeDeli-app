@@ -6,7 +6,7 @@ import { Kiosco, Producto } from '../models/kiosco';
 import { Pedido, cantidadProductos, totalPedido } from '../models/pedido';
 import { DatosPersonales, DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } from '../models/usuario';
 import { nombreCorto, normalizarDni } from '../rules/validaciones.rules';
-import { ZonaId } from '../models/zona';
+import { Ubicacion, ZonaId } from '../models/zona';
 import { ESTADOS_ABIERTOS, PEDIDO_MINIMO, calcularComision, costoEnvio, distanciaKm, envioCliente, generarPin, puedeRecibirPedidos } from '../rules/pedido.rules';
 import { servicioAbierto } from '../rules/horario.rules';
 import { dentroDelArea } from '../rules/cobertura.rules';
@@ -81,8 +81,7 @@ export class MockUsuariosApi extends UsuariosApi {
   }
 
   cambiarDireccion(direccion: DireccionEntrega): Observable<Usuario> {
-    const ubicacion = this.db.geolocalizar(direccion.direccion, direccion.zona);
-    this.actualizarUsuario({ direccion: { ...direccion, ubicacion } });
+    this.actualizarUsuario({ direccion });
     return this.responder(this.usuario());
   }
 
@@ -92,36 +91,30 @@ export class MockUsuariosApi extends UsuariosApi {
     return this.responder(this.usuario());
   }
 
-  /** Dónde entregar: la ubicación de la dirección del usuario. */
-  private destino() {
-    const u = this.usuario();
-    return u.direccion.ubicacion ?? this.db.geolocalizar(u.direccion.direccion, u.direccion.zona);
-  }
-
-  /** Costo real del viaje desde el kiosco hasta la dirección del usuario. */
-  private viaje(k: Kiosco): { km: number; costo: number } {
-    const km = distanciaKm(k.ubicacion, this.destino());
+  /** Costo real del viaje desde el kiosco hasta el cliente. */
+  private viaje(k: Kiosco, destino: Ubicacion): { km: number; costo: number } {
+    const km = distanciaKm(k.ubicacion, destino);
     return { km, costo: costoEnvio(km, this.config.tarifaEnvio) };
   }
 
   /** El kiosco con distancia y la parte del envío que paga el usuario. */
-  private paraUsuario(k: Kiosco): Kiosco {
-    const { km, costo } = this.viaje(k);
+  private paraUsuario(k: Kiosco, destino: Ubicacion): Kiosco {
+    const { km, costo } = this.viaje(k, destino);
     return { ...k, distanciaKm: km, costoEnvio: envioCliente(costo), recibePedidos: puedeRecibirPedidos(k) };
   }
 
-  kioscosAbiertos(zona?: ZonaId): Observable<Kiosco[]> {
+  kioscosAbiertos(desde: Ubicacion, zona?: ZonaId): Observable<Kiosco[]> {
     return this.responder(
       this.db
         .kioscos()
         .filter((k) => puedeRecibirPedidos(k) && (!zona || k.zona === zona))
-        .map((k) => this.paraUsuario(k)),
+        .map((k) => this.paraUsuario(k, desde)),
     );
   }
 
-  kiosco(id: string): Observable<Kiosco | null> {
+  kiosco(id: string, desde: Ubicacion): Observable<Kiosco | null> {
     const k = this.db.kioscos().find((x) => x.id === id);
-    return this.responder(k ? this.paraUsuario(k) : null);
+    return this.responder(k ? this.paraUsuario(k, desde) : null);
   }
 
   productos(kioscoId: string): Observable<Producto[]> {
@@ -130,7 +123,7 @@ export class MockUsuariosApi extends UsuariosApi {
 
   crearPedido(nuevo: NuevoPedido): Observable<ResultadoCrearPedido> {
     const encontrado = this.db.kioscos().find((k) => k.id === nuevo.kioscoId);
-    const kiosco = encontrado ? this.paraUsuario(encontrado) : undefined;
+    const kiosco = encontrado ? this.paraUsuario(encontrado, nuevo.ubicacion) : undefined;
     const catalogo = this.db.productos().filter((p) => p.kioscoId === nuevo.kioscoId && p.disponible);
     const lineas = nuevo.items.filter((i) => Number.isInteger(i.cantidad) && i.cantidad > 0);
 
@@ -140,7 +133,7 @@ export class MockUsuariosApi extends UsuariosApi {
       resultado = { ok: false, motivo: 'cuenta-pausada' };
     } else if (!this.horarioLibre && !servicioAbierto(new Date())) {
       resultado = { ok: false, motivo: 'fuera-de-horario' };
-    } else if (!dentroDelArea(this.destino())) {
+    } else if (!dentroDelArea(nuevo.ubicacion)) {
       resultado = { ok: false, motivo: 'fuera-de-cobertura' };
     } else if (!kiosco || !puedeRecibirPedidos(kiosco)) {
       resultado = { ok: false, motivo: 'kiosco-cerrado' };
@@ -164,7 +157,7 @@ export class MockUsuariosApi extends UsuariosApi {
         kioscoNombre: kiosco.nombre,
         kioscoDireccion: kiosco.direccion,
         usuarioId: u.id,
-        destino: { nombre: nombreCorto(u.nombre), direccion: u.direccion.direccion, notas: u.direccion.notas },
+        destino: { nombre: nombreCorto(u.nombre), direccion: u.direccion.direccion, notas: u.direccion.notas, ubicacion: nuevo.ubicacion },
         items: lineas.map((i) => {
           const prod = catalogo.find((p) => p.id === i.productoId)!;
           return { productoId: prod.id, nombre: prod.nombre, cantidad: i.cantidad, precioUnitario: prod.precio };
@@ -173,7 +166,7 @@ export class MockUsuariosApi extends UsuariosApi {
         distanciaKm: kiosco.distanciaKm ?? 0,
         propina: 0,
         // El rider cobra el viaje completo; lo que supera el tope lo pone el kiosco.
-        gananciaRider: this.viaje(encontrado!).costo,
+        gananciaRider: this.viaje(encontrado!, nuevo.ubicacion).costo,
         // El cliente transfiere al alias del kiosco; queda pendiente hasta que el kiosco lo confirme.
         pago: 'pendiente',
         aliasKiosco: kiosco.aliasCobro,

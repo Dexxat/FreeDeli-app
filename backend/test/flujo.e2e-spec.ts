@@ -1,9 +1,9 @@
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { DespachoService } from '../src/pedidos/despacho.service.js';
-import { PrismaService } from '../src/prisma/prisma.service.js';
 import { crearApp } from './app.js';
 import { DOCUMENTOS } from './fotos.js';
+import { GPS_CLIENTE } from './escenario.js';
 
 describe('Flujo completo del pedido', () => {
   let app: INestApplication;
@@ -68,7 +68,7 @@ describe('Flujo completo del pedido', () => {
   });
 
   it('el usuario ve el kiosco con distancia y envío, y su catálogo', async () => {
-    const ks = await api().get('/api/kioscos?zona=san-miguel').set(auth(usuario)).expect(200);
+    const ks = await api().get('/api/kioscos').query({ ...GPS_CLIENTE, zona: 'san-miguel' }).set(auth(usuario)).expect(200);
     const k = ks.body.find((x: { id: string }) => x.id === kioscoId);
     expect(k).toMatchObject({ nombre: 'Kiosco Flujo', zona: 'san-miguel', recibePedidos: true });
     // El viaje más barato ($3.000) ya supera el tope: el cliente paga $2.500.
@@ -80,7 +80,7 @@ describe('Flujo completo del pedido', () => {
 
   it('rechaza pedidos por debajo del mínimo', async () => {
     const coca = productos.find((p) => p.precio === 2800)!;
-    const r = await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 2 }] }).expect(409);
+    const r = await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 2 }], ubicacion: GPS_CLIENTE }).expect(409);
     expect(r.body).toMatchObject({ codigo: 'pedido-minimo' });
     expect(r.body.message).toContain('pedido mínimo');
   });
@@ -91,7 +91,7 @@ describe('Flujo completo del pedido', () => {
     vi.setSystemTime(new Date('2026-10-27T17:00:00Z')); // 14 hs en Argentina
     process.env.HORARIO_LIBRE = 'false';
     try {
-      const r = await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }] }).expect(409);
+      const r = await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }], ubicacion: GPS_CLIENTE }).expect(409);
       expect(r.body).toMatchObject({ codigo: 'fuera-de-horario' });
       expect(r.body.message).toContain('00 a 08 hs');
       const h = await api().get('/api/horario').expect(200);
@@ -102,18 +102,14 @@ describe('Flujo completo del pedido', () => {
     }
   });
 
-  it('no toma pedidos para direcciones fuera del área de cobertura', async () => {
+  it('pide la ubicación del GPS y no entrega fuera del área de cobertura', async () => {
     const coca = productos.find((p) => p.precio === 2800)!;
-    const db = app.get(PrismaService);
-    const donde = { cuenta: { email: 'u@flujo.local' } };
-    const antes = await db.usuario.findFirstOrThrow({ where: donde });
-    await db.usuario.update({ where: { id: antes.id }, data: { lat: -34.52, lng: -58.71 } }); // al norte de San Miguel
-    try {
-      const r = await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }] }).expect(409);
-      expect(r.body).toMatchObject({ codigo: 'fuera-de-cobertura' });
-    } finally {
-      await db.usuario.update({ where: { id: antes.id }, data: { lat: antes.lat, lng: antes.lng } });
-    }
+    const items = [{ productoId: coca.id, cantidad: 6 }];
+    await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items }).expect(400);
+    await api().get('/api/kioscos').set(auth(usuario)).expect(400);
+    const alNorte = { lat: -34.52, lng: -58.71 };
+    const r = await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items, ubicacion: alNorte }).expect(409);
+    expect(r.body).toMatchObject({ codigo: 'fuera-de-cobertura' });
   });
 
   it('recorre todo el flujo hasta Entregado', async () => {
@@ -122,7 +118,7 @@ describe('Flujo completo del pedido', () => {
     const creado = await api()
       .post('/api/pedidos')
       .set(auth(usuario))
-      .send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }, { productoId: hielo.id, cantidad: 2 }] })
+      .send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }, { productoId: hielo.id, cantidad: 2 }], ubicacion: GPS_CLIENTE })
       .expect(201);
     const p = creado.body;
     expect(p).toMatchObject({ estado: 'esperando', fase: 'stock', pago: 'pendiente', comisionFreeDeli: 1980 });
@@ -130,7 +126,7 @@ describe('Flujo completo del pedido', () => {
     // El rider cobra el viaje completo; el cliente paga hasta $2.500.
     expect(p.costoEnvio).toBe(2500);
     expect([3000, 4000, 5000]).toContain(p.gananciaRider);
-    await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }] }).expect(409);
+    await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }], ubicacion: GPS_CLIENTE }).expect(409);
 
     // Kiosco: no tiene hielo. Se ajusta y el cliente acepta.
     const enVivo = await api().get('/api/kiosco/pedidos/en-vivo').set(auth(kiosco)).expect(200);
@@ -190,7 +186,7 @@ describe('Flujo completo del pedido', () => {
 
   it('dos confirmaciones simultáneas no se pisan', async () => {
     const coca = productos.find((x) => x.precio === 2800)!;
-    const p = (await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }] }).expect(201)).body;
+    const p = (await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }], ubicacion: GPS_CLIENTE }).expect(201)).body;
     const [a, b] = await Promise.all([
       api().post(`/api/kiosco/pedidos/${p.id}/stock`).set(auth(kiosco)).send({ faltantes: [] }),
       api().post(`/api/kiosco/pedidos/${p.id}/stock`).set(auth(kiosco)).send({ faltantes: [] }),
@@ -201,7 +197,7 @@ describe('Flujo completo del pedido', () => {
 
   it('cada rol solo accede a lo suyo', async () => {
     await api().get('/api/kiosco/pedidos/en-vivo').set(auth(usuario)).expect(403);
-    await api().post('/api/pedidos').set(auth(kiosco)).send({ kioscoId, items: [] }).expect(403);
+    await api().post('/api/pedidos').set(auth(kiosco)).send({ kioscoId, items: [], ubicacion: GPS_CLIENTE }).expect(403);
     await api().post(`/api/admin/kioscos/${kioscoId}/saldo`).set(auth(kiosco)).send({ monto: 1 }).expect(403);
   });
 });

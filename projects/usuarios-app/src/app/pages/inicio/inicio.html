@@ -9,6 +9,7 @@
         </span>
         <button type="button" class="enlace" (click)="editarDireccion()">Cambiar</button>
       </div>
+      <p class="sutil nota">El rider va a donde está tu celular: la dirección lo ayuda a encontrarte.</p>
     } @else {
       <form class="form-direccion" (ngSubmit)="guardarDireccion()" novalidate>
         <label class="campo">
@@ -38,6 +39,7 @@
 }
 
 <fd-aviso-horario />
+<fd-aviso-ubicacion />
 @if (store.usuario()?.pausado) {
   <p class="pausada" role="alert">
     <strong>CUENTA PAUSADA</strong>

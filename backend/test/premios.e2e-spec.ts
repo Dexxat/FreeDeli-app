@@ -1,7 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { crearApp } from './app.js';
-import { armarEscenario, auth } from './escenario.js';
+import { GPS_CLIENTE, armarEscenario, auth } from './escenario.js';
 
 /** FREEDELI RUSH: estrellas, premio de $2.500 y quién lo paga. */
 describe('premios (e2e)', () => {
@@ -65,7 +65,7 @@ describe('premios (e2e)', () => {
 
   it('si cancela el pedido, recupera el saldo a favor', async () => {
     await db.usuario.updateMany({ where: { cuenta: { email: 'u-premios@test.local' } }, data: { saldoFavor: 2500 } });
-    const p = (await e.api().post('/api/pedidos').set(auth(e.usuario)).send({ kioscoId: e.kioscoId, items: [{ productoId: e.coca.id, cantidad: 6 }] }).expect(201)).body;
+    const p = (await e.api().post('/api/pedidos').set(auth(e.usuario)).send({ kioscoId: e.kioscoId, items: [{ productoId: e.coca.id, cantidad: 6 }], ubicacion: GPS_CLIENTE }).expect(201)).body;
     expect(p.descuentoPremio).toBe(2500);
     expect((await perfil()).saldoFavor).toBe(0);
     await e.api().post(`/api/pedidos/${p.id}/cancelar`).set(auth(e.usuario)).expect(200);

@@ -24,6 +24,7 @@ import {
   textoHorario,
   type Pedido,
   type Resultado,
+  type Ubicacion,
 } from '../dominio.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { EstadoPedido, FasePedido, MotivoCancelacion, TipoMovimientoSaldo } from '../generated/prisma/enums.js';
@@ -35,6 +36,8 @@ type Tx = Prisma.TransactionClient;
 export interface NuevoPedido {
   kioscoId: string;
   items: { productoId: string; cantidad: number }[];
+  /** GPS del cliente: ahí se entrega. */
+  ubicacion: Ubicacion;
 }
 
 const ABIERTOS_DB = ESTADOS_ABIERTOS.map(estadoDb);
@@ -170,10 +173,11 @@ export class PedidosService {
     if (subtotal < PEDIDO_MINIMO) {
       throw new ConflictException({ statusCode: 409, codigo: 'pedido-minimo', message: `El pedido mínimo es de $${PEDIDO_MINIMO.toLocaleString('es-AR')} en productos.` });
     }
-    if (!dentroDelArea({ lat: usuario.lat, lng: usuario.lng })) {
-      throw new ConflictException({ statusCode: 409, codigo: 'fuera-de-cobertura', message: 'Tu dirección está fuera del área donde entrega FreeDeli.' });
+    const destino = { lat: nuevo.ubicacion.lat, lng: nuevo.ubicacion.lng };
+    if (!dentroDelArea(destino)) {
+      throw new ConflictException({ statusCode: 409, codigo: 'fuera-de-cobertura', message: 'Estás fuera del área donde entrega FreeDeli.' });
     }
-    const km = distanciaKm({ lat: kiosco.lat, lng: kiosco.lng }, { lat: usuario.lat, lng: usuario.lng });
+    const km = distanciaKm({ lat: kiosco.lat, lng: kiosco.lng }, destino);
     // El rider cobra el viaje completo; el cliente paga hasta el tope y el kiosco pone el resto.
     const viaje = costoEnvio(km, this.reglas.tarifaEnvio);
     // Un pedido abierto por usuario: se bloquea la fila del usuario para que dos pedidos
@@ -195,6 +199,8 @@ export class PedidosService {
           destinoNombre: nombreCorto(usuario.nombre),
           destinoDireccion: usuario.direccion,
           destinoNotas: usuario.notas,
+          destinoLat: destino.lat,
+          destinoLng: destino.lng,
           distanciaKm: km,
           costoEnvio: envioCliente(viaje),
           gananciaRider: viaje,

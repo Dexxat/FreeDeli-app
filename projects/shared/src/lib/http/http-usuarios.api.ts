@@ -5,7 +5,7 @@ import { ResultadoCrearPedido, UsuariosApi } from '../api/usuarios.api.js';
 import { Kiosco, Producto } from '../models/kiosco.js';
 import { Pedido, cantidadProductos, totalPedido } from '../models/pedido.js';
 import { DatosPersonales, DireccionEntrega, KioscoReciente, NuevoPedido, RiderPublico, Usuario } from '../models/usuario.js';
-import { ZonaId } from '../models/zona.js';
+import { Ubicacion, ZonaId } from '../models/zona.js';
 import { ESTADOS_ABIERTOS } from '../rules/pedido.rules.js';
 import { API_URL } from './api-url';
 import { EventosCliente } from './eventos';
@@ -34,12 +34,12 @@ export class HttpUsuariosApi extends UsuariosApi {
     return this.http.patch<Usuario>(`${this.url}/usuario/datos`, datos);
   }
 
-  kioscosAbiertos(zona?: ZonaId): Observable<Kiosco[]> {
-    return this.http.get<Kiosco[]>(`${this.url}/kioscos`, { params: zona ? { zona } : {} });
+  kioscosAbiertos(desde: Ubicacion, zona?: ZonaId): Observable<Kiosco[]> {
+    return this.http.get<Kiosco[]>(`${this.url}/kioscos`, { params: { ...desde, ...(zona ? { zona } : {}) } });
   }
 
-  kiosco(id: string): Observable<Kiosco | null> {
-    return this.http.get<Kiosco>(`${this.url}/kioscos/${id}`).pipe(catchError(() => of(null)));
+  kiosco(id: string, desde: Ubicacion): Observable<Kiosco | null> {
+    return this.http.get<Kiosco>(`${this.url}/kioscos/${id}`, { params: { ...desde } }).pipe(catchError(() => of(null)));
   }
 
   productos(kioscoId: string): Observable<Producto[]> {

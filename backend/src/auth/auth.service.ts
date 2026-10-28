@@ -54,7 +54,6 @@ export class AuthService implements OnApplicationBootstrap {
   async registrarUsuario(dto: RegistroUsuarioDto): Promise<RespuestaSesion> {
     const email = dto.email.toLowerCase();
     await this.emailLibre(email);
-    const { lat, lng } = geolocalizar(dto.direccion, dto.zona);
     const cuenta = await this.db.cuenta.create({
       data: {
         email,
@@ -69,8 +68,6 @@ export class AuthService implements OnApplicationBootstrap {
             direccion: dto.direccion.trim(),
             notas: dto.notas?.trim() || null,
             zona: zonaDb(dto.zona),
-            lat,
-            lng,
           },
         },
       },

@@ -1,12 +1,11 @@
 import { Kiosco } from './kiosco.js';
 import { Ubicacion, ZonaId } from './zona.js';
 
+/** Referencia escrita para el rider. El pedido se entrega donde está el celular (ver NuevoPedido). */
 export interface DireccionEntrega {
   direccion: string;
   notas?: string;
   zona: ZonaId;
-  /** La pone el servidor al geolocalizar la dirección. */
-  ubicacion?: Ubicacion;
 }
 
 /** Datos personales que el usuario edita en Ajustes. */
@@ -49,4 +48,6 @@ export interface KioscoReciente {
 export interface NuevoPedido {
   kioscoId: string;
   items: { productoId: string; cantidad: number }[];
+  /** GPS del celular del cliente: ahí se entrega. Sin ubicación no se puede pedir. */
+  ubicacion: Ubicacion;
 }

@@ -1,6 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { crearApp } from './app.js';
-import { armarEscenario, auth } from './escenario.js';
+import { GPS_CLIENTE, armarEscenario, auth } from './escenario.js';
 import { FOTO } from './fotos.js';
 
 describe('Perfiles, reportes y panel Dev', () => {
@@ -100,7 +100,7 @@ describe('Perfiles, reportes y panel Dev', () => {
     const movs = (await e.api().get(`/api/admin/kioscos/${e.kioscoId}/movimientos?periodo=hoy`).set(auth(e.dev)).expect(200)).body;
     expect(movs[0].envioRider + movs[0].comisionFreeDeli + movs[0].netoKiosco).toBe(movs[0].totalCliente);
     await e.api().post(`/api/admin/kioscos/${e.kioscoId}/pausa`).set(auth(e.dev)).send({ pausado: true }).expect(200);
-    expect((await e.api().get('/api/kioscos').set(auth(e.usuario)).expect(200)).body.some((x: { id: string }) => x.id === e.kioscoId)).toBe(false);
+    expect((await e.api().get('/api/kioscos').query(GPS_CLIENTE).set(auth(e.usuario)).expect(200)).body.some((x: { id: string }) => x.id === e.kioscoId)).toBe(false);
     await e.api().post(`/api/admin/kioscos/${e.kioscoId}/pausa`).set(auth(e.dev)).send({ pausado: false }).expect(200);
 
     const rider = (await e.api().get(`/api/admin/riders/${e.riderId}`).set(auth(e.dev)).expect(200)).body;

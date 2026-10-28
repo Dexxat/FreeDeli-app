@@ -1,12 +1,19 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
-import { API_URL, CambiosPerfilRider, Rider, RidersApi, SesionService, ZonaId, alternarZona } from '@freedeli/shared';
+import { API_URL, CambiosPerfilRider, ErrorGps, Gps, Rider, RidersApi, SesionService, ZonaId, alternarZona } from '@freedeli/shared';
+
+/** Por qué no se pudo pasar a ON sin ubicación. */
+const SIN_GPS: Record<ErrorGps, string> = {
+  'sin-permiso': 'Para conectarte, permití la ubicación para este sitio en la configuración del navegador. FreeDeli la usa mientras llevás un pedido.',
+  'no-disponible': 'No encontramos tu ubicación. Prendé el GPS del celular para conectarte.',
+};
 
 /** Estado del rider con sesión iniciada, compartido por el header y las pantallas. */
 @Injectable({ providedIn: 'root' })
 export class RiderStore {
   private readonly api = inject(RidersApi);
+  private readonly gps = inject(Gps);
 
   readonly rider = signal<Rider | null>(null);
   readonly disponible = computed(() => this.rider()?.disponible ?? false);
@@ -48,9 +55,18 @@ export class RiderStore {
     );
   }
 
-  alternarDisponible(): void {
+  /** Para pasar a ON hace falta la ubicación: la primera vez el navegador pide permiso. Devuelve si se pudo. */
+  async alternarDisponible(): Promise<boolean> {
     const disponible = !this.disponible();
-    void this.aplicar({ disponible }, () => this.api.setDisponible(disponible));
+    if (disponible) {
+      try {
+        await this.gps.posicion();
+      } catch (motivo) {
+        this.error.set(SIN_GPS[motivo as ErrorGps] ?? SIN_GPS['no-disponible']);
+        return false;
+      }
+    }
+    return this.aplicar({ disponible }, () => this.api.setDisponible(disponible));
   }
 
   actualizarPerfil(cambios: CambiosPerfilRider): Promise<boolean> {

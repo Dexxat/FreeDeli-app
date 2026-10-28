@@ -46,7 +46,7 @@ export function aDominio(p: PedidoConItems): PedidoDominio {
     kioscoNombre: p.kiosco.nombre,
     kioscoDireccion: p.kiosco.direccion,
     usuarioId: p.usuarioId,
-    destino: { nombre: p.destinoNombre, direccion: p.destinoDireccion, notas: p.destinoNotas ?? undefined },
+    destino: { nombre: p.destinoNombre, direccion: p.destinoDireccion, notas: p.destinoNotas ?? undefined, ubicacion: { lat: p.destinoLat, lng: p.destinoLng } },
     items: p.items.filter((i) => !i.quitado).map(item),
     itemsQuitados: quitados.length ? quitados : undefined,
     costoEnvio: p.costoEnvio,
@@ -72,6 +72,7 @@ export function aDominio(p: PedidoConItems): PedidoDominio {
     cancelacion: p.motivoCancelacion
       ? { motivo: MOTIVOS[p.motivoCancelacion], reintegro: p.reintegro, riderCobra: p.riderCobra, reintegradoEn: p.reintegradoEn ?? undefined }
       : undefined,
+    posicionRider: p.riderLat !== null && p.riderLng !== null && p.riderPosicionEn ? { lat: p.riderLat, lng: p.riderLng, en: p.riderPosicionEn } : undefined,
   };
 }
 
@@ -95,5 +96,8 @@ export function cambiosDb(p: PedidoDominio): Prisma.PedidoUncheckedUpdateInput {
     reintegro: p.cancelacion?.reintegro ?? 0,
     riderCobra: p.cancelacion?.riderCobra ?? false,
     reintegradoEn: p.cancelacion?.reintegradoEn ?? null,
+    riderLat: p.posicionRider?.lat ?? null,
+    riderLng: p.posicionRider?.lng ?? null,
+    riderPosicionEn: p.posicionRider?.en ?? null,
   };
 }

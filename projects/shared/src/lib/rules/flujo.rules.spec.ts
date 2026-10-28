@@ -12,6 +12,7 @@ import {
   entregarSinPin,
   marcarReintegrado,
   quienDebeActuar,
+  reportarPosicion,
   salirEnCamino,
   seguirEsperandoRider,
 } from './flujo.rules.js';
@@ -20,7 +21,7 @@ const ahora = new Date(2026, 9, 26, 20, 0);
 
 const base: Pedido = {
   id: 'p1', numero: 1, zona: 'muniz', kioscoId: 'k3', kioscoNombre: 'K', kioscoDireccion: '', usuarioId: 'u1',
-  destino: { nombre: 'M', direccion: 'Calle 1' },
+  destino: { nombre: 'M', direccion: 'Calle 1', ubicacion: { lat: -34.55, lng: -58.7 } },
   items: [
     { productoId: 'k3-p1', nombre: 'Coca', cantidad: 4, precioUnitario: 2800 },
     { productoId: 'k3-p7', nombre: 'Hielo', cantidad: 3, precioUnitario: 1500 },
@@ -92,12 +93,29 @@ describe('flujo del pedido', () => {
       expect(paso(cancelarPorCliente(pagado(), minutos(2))).cancelacion).toEqual({ motivo: 'cliente', reintegro: total, riderCobra: false });
     });
 
-    it('si el rider pasó la mitad del viaje, cobra el envío y se descuenta del reintegro', () => {
-      expect(paso(cancelarPorCliente(enCamino(), ahora, true)).cancelacion).toEqual({ motivo: 'cliente', reintegro: total - 1500, riderCobra: true });
+    // El kiosco está a 1 km: a 0,3 km del cliente el rider pasó la mitad; a 0,7 km, no.
+    const cerca = { lat: -34.5473, lng: -58.7 };
+    const lejos = { lat: -34.5437, lng: -58.7 };
+    const conPosicion = (p: Pedido, u: { lat: number; lng: number }, en = ahora) => paso(reportarPosicion(p, u, en));
+
+    it('si el GPS del rider dice que pasó la mitad del viaje, cobra el envío y se descuenta del reintegro', () => {
+      expect(paso(cancelarPorCliente(conPosicion(enCamino(), cerca), minutos(1))).cancelacion).toEqual({ motivo: 'cliente', reintegro: total - 1500, riderCobra: true });
+    });
+
+    it('antes de la mitad, o sin una posición de los últimos 2 minutos, el rider no cobra', () => {
+      expect(paso(cancelarPorCliente(conPosicion(enCamino(), lejos), ahora)).cancelacion?.riderCobra).toBe(false);
+      expect(paso(cancelarPorCliente(conPosicion(enCamino(), cerca), minutos(3))).cancelacion?.riderCobra).toBe(false);
+      expect(paso(cancelarPorCliente(enCamino(), ahora)).cancelacion?.riderCobra).toBe(false);
     });
 
     it('la mitad del viaje solo cuenta con el rider en camino', () => {
-      expect(paso(cancelarPorCliente(pagado(), ahora, true)).cancelacion?.riderCobra).toBe(false);
+      const aceptado = paso(aprobarRider(paso(asignarRider(pagado(), 'r1')), true, ahora));
+      expect(paso(cancelarPorCliente(conPosicion(aceptado, cerca), ahora)).cancelacion?.riderCobra).toBe(false);
+    });
+
+    it('el rider manda su posición solo con el pedido en curso', () => {
+      expect(reportarPosicion(pagado(), cerca, ahora).ok).toBe(false);
+      expect(conPosicion(enCamino(), cerca).posicionRider).toEqual({ ...cerca, en: ahora });
     });
 
     it('a los 10 minutos sin rider, cancelar no le cuenta en contra al cliente', () => {

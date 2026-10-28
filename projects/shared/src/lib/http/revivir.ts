@@ -14,6 +14,7 @@ export function revivirPedido(p: Pedido): Pedido {
     buscandoRiderDesde: fecha(p.buscandoRiderDesde),
     retiro: p.retiro ? { kiosco: fecha(p.retiro.kiosco), rider: fecha(p.retiro.rider) } : undefined,
     cancelacion: p.cancelacion ? { ...p.cancelacion, reintegradoEn: fecha(p.cancelacion.reintegradoEn) } : undefined,
+    posicionRider: p.posicionRider ? { ...p.posicionRider, en: new Date(p.posicionRider.en) } : undefined,
   };
 }
 

@@ -6,10 +6,10 @@ import { CuentasService } from '../cuentas/cuentas.service.js';
 import { DocumentoDto } from '../auth/dto.js';
 import { DocumentosService, TipoDocumentoPipe } from './documentos.service.js';
 import { ZONAS_API, zonaApi, zonaDb } from '../comun/zonas.js';
-import { confirmarRetiro, entregarConPin, inicioDelDia, normalizarDni, normalizarPatente, rangoPeriodo, resumirGanancias, salirEnCamino, type TipoDocumento } from '../dominio.js';
+import { confirmarRetiro, entregarConPin, reportarPosicion, inicioDelDia, normalizarDni, normalizarPatente, rangoPeriodo, resumirGanancias, salirEnCamino, type TipoDocumento } from '../dominio.js';
 import { EstadoCuenta, EstadoPedido, FasePedido, Rol } from '../generated/prisma/enums.js';
 import { DespachoService } from '../pedidos/despacho.service.js';
-import { EstadoRiderDto, PerfilRiderDto, PinDto } from '../pedidos/dto.js';
+import { EstadoRiderDto, PerfilRiderDto, PinDto, UbicacionDto } from '../pedidos/dto.js';
 import { PedidosService } from '../pedidos/pedidos.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -166,6 +166,12 @@ export class RiderController {
   @Post('pedidos/:id/en-camino') @HttpCode(200)
   async enCamino(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string) {
     return this.pedidos.transicionar(id, await this.propio(s), (p) => salirEnCamino(p, new Date()));
+  }
+
+  /** El GPS del rider, mientras lleva el pedido. El cliente ve cuánto le falta y sirve para saber si pasó la mitad del viaje. */
+  @Post('pedidos/:id/posicion') @HttpCode(204)
+  async posicion(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string, @Body() dto: UbicacionDto): Promise<void> {
+    await this.pedidos.transicionar(id, await this.propio(s), (p) => reportarPosicion(p, dto, new Date()));
   }
 
   /** Con el PIN correcto se entrega, se libera el pago y se liquida el saldo del kiosco (comisión y premio). */

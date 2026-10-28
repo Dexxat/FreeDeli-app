@@ -11,6 +11,7 @@ import {
   confirmarStock,
   confirmarTransferencia,
   entregarConPin,
+  reportarPosicion,
   salirEnCamino,
 } from '../rules/flujo.rules';
 import { ESTADOS_ABIERTOS } from '../rules/pedido.rules';
@@ -106,6 +107,16 @@ export class MockSimulador {
     }
   }
 
+  /** El rider simulado sale y su GPS lo ubica a mitad de camino, para que el cliente vea cuánto le falta. */
+  private salirEnCamino(p: Pedido): Resultado {
+    const r = salirEnCamino(p, new Date());
+    const kiosco = this.db.kioscos().find((k) => k.id === p.kioscoId);
+    if (!r.ok || !kiosco) return r;
+    const a = kiosco.ubicacion;
+    const b = p.destino.ubicacion;
+    return reportarPosicion(r.pedido, { lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 }, new Date());
+  }
+
   /** El paso que haría un actor simulado con este pedido, o null si le toca a una persona. */
   private pasoSimulado(p: Pedido): ((p: Pedido) => Resultado) | null {
     const { cliente, kiosco, rider } = this.actores;
@@ -135,7 +146,7 @@ export class MockSimulador {
       if (rider && !p.retiro?.rider) return (x) => confirmarRetiro(x, 'rider', ahora());
       return null;
     }
-    if (p.estado === 'retirado') return rider ? (x) => salirEnCamino(x, ahora()) : null;
+    if (p.estado === 'retirado') return rider ? (x) => this.salirEnCamino(x) : null;
     if (p.estado === 'en-camino') return rider ? (x) => entregarConPin(x, x.pin, ahora()) : null;
     return null;
   }

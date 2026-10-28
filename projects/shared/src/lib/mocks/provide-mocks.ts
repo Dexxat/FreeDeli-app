@@ -1,10 +1,12 @@
 import { EnvironmentProviders, inject, makeEnvironmentProviders, provideEnvironmentInitializer } from '@angular/core';
 import { AdminApi } from '../api/admin.api';
+import { Gps } from '../api/gps';
 import { KioscosApi } from '../api/kioscos.api';
 import { PedidosApi } from '../api/pedidos.api';
 import { RidersApi } from '../api/riders.api';
 import { UsuariosApi } from '../api/usuarios.api';
 import { MockAdminApi } from './mock-admin.api';
+import { MockGps } from './mock-gps';
 import { MockKioscosApi } from './mock-kioscos.api';
 import { DEMORA_OFERTA_MOCK, MockPedidosApi } from './mock-pedidos.api';
 import { LATENCIA_MOCK, MockRidersApi } from './mock-riders.api';
@@ -37,6 +39,7 @@ export function provideFreeDeliMocks(opciones: OpcionesMocks = {}): EnvironmentP
     { provide: UsuariosApi, useClass: MockUsuariosApi },
     { provide: KioscosApi, useClass: MockKioscosApi },
     { provide: AdminApi, useClass: MockAdminApi },
+    { provide: Gps, useClass: MockGps },
     MockSimulador,
     ...(algunActor ? [provideEnvironmentInitializer(() => inject(MockSimulador))] : []),
   ]);

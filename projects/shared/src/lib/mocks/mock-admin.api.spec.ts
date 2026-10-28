@@ -5,6 +5,7 @@ import { UsuariosApi } from '../api/usuarios.api';
 import { MockDb, RIDER_ACTUAL_ID, USUARIO_ACTUAL_ID } from './mock-db';
 import { Pedido } from '../models/pedido';
 import { provideFreeDeliMocks } from './provide-mocks';
+import { UBICACION_MOCK as casa } from './mock-gps';
 
 describe('MockAdminApi', () => {
   let admin: AdminApi;
@@ -33,7 +34,7 @@ describe('MockAdminApi', () => {
 
   it('pausar un kiosco lo saca de la app de usuarios', async () => {
     await firstValueFrom(admin.pausarKiosco('k1', true));
-    const abiertos = await firstValueFrom(TestBed.inject(UsuariosApi).kioscosAbiertos());
+    const abiertos = await firstValueFrom(TestBed.inject(UsuariosApi).kioscosAbiertos(casa));
     expect(abiertos.map((k) => k.id)).not.toContain('k1');
     await firstValueFrom(admin.pausarKiosco('k1', false));
     expect(db.kioscos().find((k) => k.id === 'k1')!.pausado).toBe(false);

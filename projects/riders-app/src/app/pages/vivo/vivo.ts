@@ -100,12 +100,12 @@ export default class Vivo {
   /** El rider no cobra nada en mano: todo es por transferencia. */
   protected readonly textoPago = { pendiente: 'PENDIENTE', transferido: 'TRANSFERIDO', liberado: 'LIBERADO' } as const;
 
-  /** Antes de retirar se va al kiosco; después, a la dirección del cliente. */
+  /** Antes de retirar se va al kiosco; después, al punto exacto donde estaba el celular del cliente al pedir. */
   protected readonly linkMapa = computed(() => {
     const p = this.pedido();
     if (!p) return '';
-    const direccion = p.estado === 'aceptado' ? p.kioscoDireccion : p.destino.direccion;
-    return linkComoLlegar(`${direccion}, ${nombreZona(p.zona)}, Buenos Aires`);
+    if (p.estado === 'aceptado') return linkComoLlegar(`${p.kioscoDireccion}, ${nombreZona(p.zona)}, Buenos Aires`);
+    return linkComoLlegar(`${p.destino.ubicacion.lat},${p.destino.ubicacion.lng}`);
   });
 
   protected readonly linkWhatsApp = computed(() => {

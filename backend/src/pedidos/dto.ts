@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDefined, IsEmail, IsIn, IsInt, IsLatitude, IsLongitude, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength, ValidateNested } from 'class-validator';
 import { MENSAJES } from '../auth/dto.js';
 import { Cumple } from '../comun/validar.js';
 import { ZONAS_API, type ZonaApi } from '../comun/zonas.js';
@@ -10,10 +10,19 @@ export class LineaDto {
   @IsInt() @Min(1) @Max(20) cantidad!: number;
 }
 
+/** GPS del celular. En la URL llega como texto: se convierte a número. */
+export class UbicacionDto {
+  @Type(() => Number) @IsLatitude({ message: 'Latitud inválida.' }) lat!: number;
+  @Type(() => Number) @IsLongitude({ message: 'Longitud inválida.' }) lng!: number;
+}
+
 export class NuevoPedidoDto {
   @IsUUID() kioscoId!: string;
   @IsArray() @ArrayMinSize(1) @ArrayMaxSize(50) @ValidateNested({ each: true }) @Type(() => LineaDto)
   items!: LineaDto[];
+  /** Sin ubicación no se puede pedir: se entrega donde está el celular. */
+  @IsDefined({ message: 'Activá la ubicación para pedir.' }) @ValidateNested() @Type(() => UbicacionDto)
+  ubicacion!: UbicacionDto;
 }
 
 export class StockDto {

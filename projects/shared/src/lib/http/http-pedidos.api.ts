@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, distinctUntilChanged, filter, map, of, scan, startWith, switchMap, tap, throwError } from 'rxjs';
 import { PedidosApi, ResultadoAceptar, ResultadoEntrega } from '../api/pedidos.api.js';
 import { OfertaPedido, Pedido } from '../models/pedido.js';
+import { Ubicacion } from '../models/zona.js';
 import { API_URL } from './api-url';
 import { EventosCliente } from './eventos';
 import { revivirOferta, revivirPedido } from './revivir';
@@ -87,6 +88,10 @@ export class HttpPedidosApi extends PedidosApi {
     const paso = estado === 'aceptado' ? 'retiro' : estado === 'retirado' ? 'en-camino' : null;
     if (!paso) return throwError(() => new Error('No se puede avanzar este pedido.'));
     return this.http.post<Pedido>(`${this.url}/rider/pedidos/${pedidoId}/${paso}`, {}).pipe(map(revivirPedido), tap((p) => this.recordar(p)));
+  }
+
+  reportarPosicion(pedidoId: string, ubicacion: Ubicacion): Observable<void> {
+    return this.http.post(`${this.url}/rider/pedidos/${pedidoId}/posicion`, ubicacion).pipe(map(() => undefined));
   }
 
   confirmarEntrega(pedidoId: string, pin: string): Observable<ResultadoEntrega> {

@@ -98,16 +98,24 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 - **Pedido mínimo:** $15.000 en productos. Con el 10 % da justo la comisión mínima de $1.500.
 - **Saldo prepago del kiosco:** el kiosco carga crédito en FreeDeli. Al liberarse cada pago, la comisión se descuenta de ese saldo. Si no le alcanza para la comisión mínima, no recibe pedidos.
 - **Horario:** FreeDeli toma pedidos de **00 a 08 hs**, hora de Argentina. Fuera de ese horario la app de usuarios avisa que está cerrado y no deja pedir. Los kioscos no tienen horario propio: solo se suman kioscos abiertos en ese horario, y reciben pedidos mientras no estén pausados y tengan saldo.
-- **Costo de envío por anillos:** lo que cobra el rider es un monto fijo según la distancia en línea recta entre el kiosco y la entrega. De madrugada no hay tráfico, así que no se mide el tiempo ni se usan APIs de mapas pagas.
+- **Costo de envío por anillos:** lo que cobra el rider es un monto fijo según la distancia en línea recta entre el kiosco y el GPS del cliente. De madrugada no hay tráfico, así que no se mide el tiempo ni se usan APIs de mapas pagas.
   - Menos de 1,5 km: $3.000.
   - De 1,5 a 3 km: $4.000.
   - Más de 3 km: $5.000.
   - _Montos de los anillos provisorios._ Con el tope de $2.500 para el cliente, el kiosco pone entre $500 y $2.500 por pedido.
-- **Área de cobertura:** FreeDeli entrega solo dentro del rombo entre San Miguel, Muñiz y Bella Vista. Afuera no se entrega, también porque son zonas menos seguras para los riders. Una dirección fuera del área no puede pedir. Las esquinas son:
+- **Área de cobertura:** FreeDeli entrega solo dentro del rombo entre San Miguel, Muñiz y Bella Vista. Afuera no se entrega, también porque son zonas menos seguras para los riders. Si el GPS del cliente está fuera del área, no puede pedir. Las esquinas son:
   - Norte, terminal de ómnibus San Miguel: -34.532705, -58.701625.
   - Este, Av. Pres. Illia y Moine: -34.554047, -58.672300.
   - Sur, Av. Gaspar Campos en Bella Vista: -34.572896, -58.692213.
   - Oeste, Av. España y Fernando Fader: -34.551329, -58.721658.
+
+### GPS
+
+- **Cliente:** el pedido se entrega **donde está el celular** al pedir. Sin permiso de ubicación no puede pedir: la app le explica cómo activarla. La dirección y las notas quedan como referencia para que el rider lo encuentre.
+- **Rider:** sin permiso de ubicación no puede pasar a ON. Mientras lleva un pedido (de Aceptado a Entregado), su app manda la posición cada 15 segundos. El cliente ve cuánto le falta ("Tu rider está a 1,2 km") y "Cómo llegar" lo lleva al punto exacto del cliente.
+- **Batería y señal son responsabilidad del rider:** una posición de más de 2 minutos no cuenta.
+- Solo se guarda la última posición del rider en el pedido en curso, no un recorrido.
+- El navegador solo da la ubicación en sitios con HTTPS.
 
 ---
 
@@ -138,7 +146,7 @@ Si al quitar productos el pedido queda por debajo del mínimo, se mantiene igual
 
 - **El cliente puede cancelar en cualquier momento** antes de la entrega. Si todavía no transfirió, no hay nada que devolver.
 - **Reintegro:** si ya transfirió, el kiosco le devuelve todo por transferencia, a la cuenta desde la que pagó, sin cupones. El pedido le queda en "Tu turno" al kiosco hasta que toca "Ya lo devolví".
-- **Mitad del viaje:** si el rider ya hizo más de la mitad del trayecto, el envío no se devuelve: el kiosco se lo paga al rider. _Se mide con el GPS del rider; hasta tenerlo, el reintegro es total._
+- **Mitad del viaje:** si el rider en camino ya hizo más de la mitad del trayecto, el envío no se devuelve: el kiosco se lo paga al rider. Se mide con el GPS del rider: está más cerca del cliente que la mitad de la distancia entre el kiosco y el cliente. Sin una posición de los últimos 2 minutos, el reintegro es total.
 - **Productos:** si el rider ya los retiró, se los devuelve al kiosco. La app del rider se lo avisa al cancelarse.
 - **3 cancelaciones en una semana** pausan la cuenta del cliente: no puede pedir hasta que Dev la reactive desde la alerta en MAIN. Al reactivarla, el conteo vuelve a cero.
 - **Sin rider:** a los **10 minutos** buscando rider, la app le pregunta al cliente si sigue esperando. Si sigue, se le vuelve a preguntar en otros 10 minutos. Si cancela, no le cuenta como cancelación.
@@ -152,11 +160,11 @@ La acción principal es **PEDIR**: es el botón más grande de la pantalla de in
 
 ### Flujo de pedido
 
-1. **Inicio:** saludo, dirección de entrega (con opción de cambiarla), el botón grande **PEDIR** (con la cantidad de kioscos abiertos), el pedido en curso con su barra de estado y un acceso para pedir de nuevo en kioscos recientes.
+1. **Inicio:** saludo, dirección de referencia para el rider (con opción de cambiarla), el aviso si falta el permiso de ubicación, el botón grande **PEDIR** (con la cantidad de kioscos abiertos), el pedido en curso con su barra de estado y un acceso para pedir de nuevo en kioscos recientes.
 2. **Kioscos disponibles:** lista de los kioscos abiertos, con filtro por zona (Todas / San Miguel / Muñiz / Bella Vista). Cada uno muestra la zona, el tiempo estimado y el costo de envío.
 3. **Kiosco (armar el pedido):** productos con botones − / +, y una barra inferior con la cantidad, el total (productos + envío) y el botón **HACER PEDIDO**.
 4. **Pedido realizado:** confirmación con el número de pedido, la barra de estado esperando que un rider acepte y el resumen (kiosco, productos, envío, total).
-5. **Seguimiento:** el tiempo estimado, la barra de estado, el **PIN de entrega** de 4 dígitos, los datos del rider y un contacto por WhatsApp con FreeDeli.
+5. **Seguimiento:** el tiempo estimado, la barra de estado, a cuánto está el rider en camino, el **PIN de entrega** de 4 dígitos, los datos del rider y un contacto por WhatsApp con FreeDeli.
 6. **Entrega confirmada:** pantalla final cuando el rider ingresa el PIN correcto.
 
 ### Barra de estado (compartida con Riders)

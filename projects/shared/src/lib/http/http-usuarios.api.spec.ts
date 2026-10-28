@@ -12,7 +12,7 @@ const URL = 'http://api.test/api';
 function pedidoJson(cambios: Partial<Pedido> = {}): Pedido {
   return {
     id: 'p1', numero: 1001, zona: 'muniz', kioscoId: 'k1', kioscoNombre: 'K', kioscoDireccion: 'D', usuarioId: 'u1',
-    destino: { nombre: 'M', direccion: 'Calle 1' }, items: [{ productoId: 'x', nombre: 'Coca', cantidad: 6, precioUnitario: 2800 }],
+    destino: { nombre: 'M', direccion: 'Calle 1', ubicacion: { lat: -34.543, lng: -58.701 } }, items: [{ productoId: 'x', nombre: 'Coca', cantidad: 6, precioUnitario: 2800 }],
     costoEnvio: 1200, distanciaKm: 0.5, propina: 0, gananciaRider: 1200, pago: 'pendiente', aliasKiosco: 'a', comisionFreeDeli: 1680,
     pin: '1234', estado: 'esperando', fase: 'stock', creadoEn: '2026-10-26T20:00:00.000Z' as unknown as Date, ...cambios,
   };
@@ -40,7 +40,7 @@ describe('HttpUsuariosApi', () => {
   afterEach(() => http.verify());
 
   it('crear pedido: convierte las fechas', async () => {
-    const r = firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'x', cantidad: 6 }] }));
+    const r = firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'x', cantidad: 6 }], ubicacion: { lat: -34.543, lng: -58.701 } }));
     http.expectOne({ method: 'POST', url: `${URL}/pedidos` }).flush(pedidoJson());
     const res = await r;
     expect(res.ok).toBe(true);
@@ -48,7 +48,7 @@ describe('HttpUsuariosApi', () => {
   });
 
   it('crear pedido: traduce el código de error de la API', async () => {
-    const r = firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [] }));
+    const r = firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [], ubicacion: { lat: -34.543, lng: -58.701 } }));
     http.expectOne(`${URL}/pedidos`).flush({ codigo: 'pedido-minimo', message: 'El pedido mínimo…' }, { status: 409, statusText: 'Conflict' });
     expect(await r).toEqual({ ok: false, motivo: 'pedido-minimo' });
   });

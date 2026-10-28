@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { MockDb, USUARIO_ACTUAL_ID, UsuariosApi, provideFreeDeliMocks } from '@freedeli/shared';
+import { MockDb, UBICACION_MOCK, USUARIO_ACTUAL_ID, UsuariosApi, provideFreeDeliMocks } from '@freedeli/shared';
 import { firstValueFrom } from 'rxjs';
 import Realizado from './realizado';
 
@@ -17,7 +17,7 @@ describe('Realizado (Usuarios)', () => {
     });
     const db = TestBed.inject(MockDb);
     db.pedidos.update((ps) => ps.map((p) => (p.usuarioId === USUARIO_ACTUAL_ID && p.estado === 'retirado' ? { ...p, estado: 'entregado' } : p)));
-    const r = await firstValueFrom(TestBed.inject(UsuariosApi).crearPedido({ kioscoId: 'k3', items: [{ productoId: 'k3-p4', cantidad: 17 }] }));
+    const r = await firstValueFrom(TestBed.inject(UsuariosApi).crearPedido({ kioscoId: 'k3', items: [{ productoId: 'k3-p4', cantidad: 17 }], ubicacion: UBICACION_MOCK }));
     if (!r.ok) throw new Error('no se creó');
 
     const h = await RouterTestingHarness.create();

@@ -48,6 +48,9 @@
         }
       </div>
       <fd-barra-estado [estado]="p.estado" />
+      @if (distanciaRider(); as d) {
+        <p class="sutil" role="status">Tu rider está a <strong>{{ d }}</strong></p>
+      }
     </section>
 
     <section class="pin">

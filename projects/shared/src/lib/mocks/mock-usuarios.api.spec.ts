@@ -4,6 +4,7 @@ import { UsuariosApi } from '../api/usuarios.api';
 import { subtotalProductos, totalPedido } from '../models/pedido';
 import { MockDb, USUARIO_ACTUAL_ID } from './mock-db';
 import { provideFreeDeliMocks } from './provide-mocks';
+import { UBICACION_MOCK as casa } from './mock-gps';
 import { anilloEnvio } from '../rules/pedido.rules';
 import { FREEDELI_CONFIG, TARIFA_ENVIO_PROVISORIA } from '../config/freedeli.config';
 
@@ -33,10 +34,10 @@ describe('MockUsuariosApi', () => {
 
   it('lista solo kioscos abiertos y filtra por zona', async () => {
     configurar();
-    const todos = await firstValueFrom(api.kioscosAbiertos());
+    const todos = await firstValueFrom(api.kioscosAbiertos(casa));
     expect(todos.every((k) => k.recibePedidos)).toBe(true);
     expect(todos.map((k) => k.id)).not.toContain('k5');
-    const muniz = await firstValueFrom(api.kioscosAbiertos('muniz'));
+    const muniz = await firstValueFrom(api.kioscosAbiertos(casa, 'muniz'));
     expect(muniz.map((k) => k.id)).toEqual(['k3']);
   });
 
@@ -45,7 +46,7 @@ describe('MockUsuariosApi', () => {
     const u = await firstValueFrom(api.actualizarDatos({ nombre: ' Martina Gómez ', dni: '40.111.333', email: 'MARTINA@nuevo.com', telefono: '11 5555-0000' }));
     expect(u).toMatchObject({ nombre: 'Martina Gómez', dni: '40111333', email: 'martina@nuevo.com', telefono: '11 5555-0000' });
     sinPedidoAbierto();
-    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
+    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }], ubicacion: casa }));
     if (!r.ok) throw new Error('no se creó');
     expect(r.pedido.destino.nombre).toBe('Martina G.');
   });
@@ -57,7 +58,7 @@ describe('MockUsuariosApi', () => {
 
   it('no deja crear otro pedido con uno en curso', async () => {
     configurar();
-    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
+    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }], ubicacion: casa }));
     expect(r).toEqual({ ok: false, motivo: 'pedido-en-curso' });
   });
 
@@ -69,7 +70,7 @@ describe('MockUsuariosApi', () => {
       vi.setSystemTime(new Date('2026-10-27T17:00:00Z')); // 14 hs en Argentina
       configurar(undefined, { horarioLibre: false });
       sinPedidoAbierto();
-      const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
+      const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }], ubicacion: casa }));
       expect(r).toEqual({ ok: false, motivo: 'fuera-de-horario' });
     });
 
@@ -78,7 +79,7 @@ describe('MockUsuariosApi', () => {
       vi.setSystemTime(new Date('2026-10-27T05:30:00Z')); // 02:30 en Argentina
       configurar(undefined, { horarioLibre: false });
       sinPedidoAbierto();
-      const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
+      const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }], ubicacion: casa }));
       expect(r.ok).toBe(true);
     });
   });
@@ -86,9 +87,9 @@ describe('MockUsuariosApi', () => {
   it('el cliente paga el envío hasta el tope y el rider cobra el viaje completo', async () => {
     configurar();
     sinPedidoAbierto();
-    const k = (await firstValueFrom(api.kioscosAbiertos())).find((x) => x.id === 'k1')!;
+    const k = (await firstValueFrom(api.kioscosAbiertos(casa))).find((x) => x.id === 'k1')!;
     expect(k.costoEnvio).toBe(2500);
-    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
+    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }], ubicacion: casa }));
     if (!r.ok) throw new Error('no se creó');
     // Anillo de menos de 1,5 km: el rider cobra $3.000, el cliente paga $2.500 y el kiosco pone $500.
     expect(r.pedido).toMatchObject({ costoEnvio: 2500, gananciaRider: 3000 });
@@ -98,7 +99,7 @@ describe('MockUsuariosApi', () => {
   it('si el viaje cuesta menos que el tope, el cliente paga el costo real', async () => {
     configurar(undefined, { tarifa: { cerca: 1800, media: 2200, lejos: 2600 } });
     sinPedidoAbierto();
-    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
+    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }], ubicacion: casa }));
     if (!r.ok) throw new Error('no se creó');
     expect(r.pedido).toMatchObject({ costoEnvio: 1800, gananciaRider: 1800 });
   });
@@ -132,7 +133,7 @@ describe('MockUsuariosApi', () => {
       expect(await firstValueFrom(api.sumarEstrella(p.id))).toEqual({ estrellas: 0, saldoFavor: 2500, premio: true });
       db.guardarPedido({ ...p, estado: 'entregado', entregadoEn: new Date() });
 
-      const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
+      const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }], ubicacion: casa }));
       if (!r.ok) throw new Error('no se creó');
       expect(r.pedido.descuentoPremio).toBe(2500);
       expect(totalPedido(r.pedido)).toBe(6 * 2800 + 2500 - 2500);
@@ -143,11 +144,11 @@ describe('MockUsuariosApi', () => {
     });
   });
 
-  it('crea el pedido con precios del catálogo, PIN y la dirección del usuario', async () => {
+  it('crea el pedido con precios del catálogo, PIN y la ubicación del GPS', async () => {
     configurar();
     sinPedidoAbierto();
     const r = await firstValueFrom(
-      api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }, { productoId: 'k1-p2', cantidad: 0 }] }),
+      api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }, { productoId: 'k1-p2', cantidad: 0 }], ubicacion: casa }),
     );
     expect(r.ok).toBe(true);
     if (!r.ok) return;
@@ -157,22 +158,32 @@ describe('MockUsuariosApi', () => {
     expect(r.pedido.distanciaKm).toBe(0.2);
     expect(totalPedido(r.pedido)).toBe(6 * 2800 + 2500);
     expect(r.pedido.pin).toMatch(/^\d{4}$/);
-    expect(r.pedido.destino.direccion).toBe('Belgrano 845');
+    expect(r.pedido.destino).toMatchObject({ direccion: 'Belgrano 845', ubicacion: casa });
     expect(r.pedido).toMatchObject({ pago: 'pendiente', aliasKiosco: 'elfaro.kiosco', comisionFreeDeli: 1680, gananciaRider: 3000, costoEnvio: 2500 });
   });
 
   it('rechaza kiosco cerrado, carrito vacío y productos de otro kiosco', async () => {
     configurar();
     sinPedidoAbierto();
-    expect(await firstValueFrom(api.crearPedido({ kioscoId: 'k5', items: [{ productoId: 'k5-p1', cantidad: 1 }] }))).toEqual({ ok: false, motivo: 'kiosco-cerrado' });
-    expect(await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [] }))).toEqual({ ok: false, motivo: 'sin-productos' });
-    expect(await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k2-p1', cantidad: 6 }] }))).toEqual({ ok: false, motivo: 'producto-inexistente' });
+    expect(await firstValueFrom(api.crearPedido({ kioscoId: 'k5', items: [{ productoId: 'k5-p1', cantidad: 1 }], ubicacion: casa }))).toEqual({ ok: false, motivo: 'kiosco-cerrado' });
+    expect(await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [], ubicacion: casa }))).toEqual({ ok: false, motivo: 'sin-productos' });
+    expect(await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k2-p1', cantidad: 6 }], ubicacion: casa }))).toEqual({ ok: false, motivo: 'producto-inexistente' });
   });
 
-  it('el envío depende de la distancia a la dirección del usuario', async () => {
+  it('no entrega si el GPS del cliente está fuera del área', async () => {
     configurar();
-    const cerca = await firstValueFrom(api.kiosco('k1'));
-    const lejos = await firstValueFrom(api.kiosco('k4'));
+    sinPedidoAbierto();
+    const capital = { lat: -34.6037, lng: -58.3816 };
+    expect(await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }], ubicacion: capital }))).toEqual({
+      ok: false,
+      motivo: 'fuera-de-cobertura',
+    });
+  });
+
+  it('el envío depende de la distancia hasta el GPS del cliente', async () => {
+    configurar();
+    const cerca = await firstValueFrom(api.kiosco('k1', casa));
+    const lejos = await firstValueFrom(api.kiosco('k4', casa));
     expect(cerca!.distanciaKm).toBeLessThan(lejos!.distanciaKm!);
     expect(anilloEnvio(cerca!.distanciaKm!)).toBe('cerca');
     expect(anilloEnvio(lejos!.distanciaKm!)).toBe('media');
@@ -184,7 +195,7 @@ describe('MockUsuariosApi', () => {
   it('exige el pedido mínimo de $15.000 en productos', async () => {
     configurar();
     sinPedidoAbierto();
-    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 5 }] }));
+    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 5 }], ubicacion: casa }));
     expect(r).toEqual({ ok: false, motivo: 'pedido-minimo' });
   });
 
@@ -192,8 +203,8 @@ describe('MockUsuariosApi', () => {
     configurar();
     sinPedidoAbierto();
     db.kioscos.update((ks) => ks.map((k) => (k.id === 'k1' ? { ...k, saldo: 1000 } : k)));
-    expect((await firstValueFrom(api.kioscosAbiertos())).map((k) => k.id)).not.toContain('k1');
-    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }] }));
+    expect((await firstValueFrom(api.kioscosAbiertos(casa))).map((k) => k.id)).not.toContain('k1');
+    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }], ubicacion: casa }));
     expect(r).toEqual({ ok: false, motivo: 'kiosco-cerrado' });
   });
 
@@ -209,7 +220,7 @@ describe('MockUsuariosApi', () => {
     configurar({ kiosco: true, rider: true });
     sinPedidoAbierto();
     const saldoAntes = db.kioscos().find((k) => k.id === 'k3')!.saldo;
-    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k3', items: [{ productoId: 'k3-p4', cantidad: 17 }] }));
+    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k3', items: [{ productoId: 'k3-p4', cantidad: 17 }], ubicacion: casa }));
     if (!r.ok) throw new Error('no se creó');
     expect(r.pedido).toMatchObject({ estado: 'esperando', fase: 'stock' });
     const vistos: string[] = [];
@@ -229,7 +240,7 @@ describe('MockUsuariosApi', () => {
   it('el cliente acepta un ajuste de stock o cancela', async () => {
     configurar();
     sinPedidoAbierto();
-    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }, { productoId: 'k1-p7', cantidad: 2 }] }));
+    const r = await firstValueFrom(api.crearPedido({ kioscoId: 'k1', items: [{ productoId: 'k1-p1', cantidad: 6 }, { productoId: 'k1-p7', cantidad: 2 }], ubicacion: casa }));
     if (!r.ok) throw new Error('no se creó');
     db.guardarPedido({ ...r.pedido, fase: 'ajuste' });
     expect((await firstValueFrom(api.aceptarAjuste(r.pedido.id))).fase).toBe('transferencia');

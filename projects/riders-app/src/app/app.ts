@@ -4,6 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { ICONOS, ItemNav, NavInferior } from '@freedeli/shared';
 import { RiderStore } from './core/rider.store';
+import { ReportePosicion } from './core/reporte-posicion';
 import { OfertaEntrante } from './layout/oferta-entrante';
 import { RiderHeader } from './layout/rider-header';
 
@@ -68,4 +69,8 @@ export class App {
     { initialValue: true },
   );
   protected readonly secciones = SECCIONES;
+
+  constructor() {
+    inject(ReportePosicion);
+  }
 }

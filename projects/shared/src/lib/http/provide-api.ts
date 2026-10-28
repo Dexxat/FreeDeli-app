@@ -1,12 +1,14 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
 import { AdminApi } from '../api/admin.api.js';
+import { Gps } from '../api/gps.js';
 import { KioscosApi } from '../api/kioscos.api.js';
 import { HttpAdminApi } from './http-admin.api';
 import { PedidosApi } from '../api/pedidos.api.js';
 import { HttpKioscosApi } from './http-kioscos.api';
 import { RidersApi } from '../api/riders.api.js';
 import { UsuariosApi } from '../api/usuarios.api.js';
+import { GpsNavegador } from './gps-navegador';
 import { HttpPedidosApi } from './http-pedidos.api';
 import { HttpRidersApi } from './http-riders.api';
 import { API_URL } from './api-url';
@@ -23,5 +25,6 @@ export function provideFreeDeliApi(opciones: { url: string }): EnvironmentProvid
     { provide: PedidosApi, useClass: HttpPedidosApi },
     { provide: KioscosApi, useClass: HttpKioscosApi },
     { provide: AdminApi, useClass: HttpAdminApi },
+    { provide: Gps, useClass: GpsNavegador },
   ]);
 }

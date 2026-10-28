@@ -1,7 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { crearApp } from './app.js';
-import { armarEscenario, auth } from './escenario.js';
+import { GPS_CLIENTE, armarEscenario, auth } from './escenario.js';
 
 /** Cancelaciones, reintegros, pausas por cancelar o abandonar y herramientas de Dev para incidentes. */
 describe('incidentes (e2e)', () => {
@@ -46,6 +46,28 @@ describe('incidentes (e2e)', () => {
     await cancelar(p.id).expect(409);
   });
 
+  it('el GPS del rider: el cliente ve su posición y, si cancela con el rider pasada la mitad, el rider cobra el envío', async () => {
+    const p = await e.pedidoEnCamino();
+    const posicion = (token: string, ubicacion: object) => e.api().post(`/api/rider/pedidos/${p.id}/posicion`).set(auth(token)).send(ubicacion);
+    await posicion(e.rider, { lat: 200, lng: 0 }).expect(400);
+    await posicion(e.usuario, GPS_CLIENTE).expect(403);
+    // El kiosco queda a 0,7 km del cliente: el rider ya está en la puerta.
+    await posicion(e.rider, GPS_CLIENTE).expect(204);
+    const visto = (await e.api().get(`/api/pedidos/${p.id}`).set(auth(e.usuario)).expect(200)).body;
+    expect(visto.posicionRider).toMatchObject(GPS_CLIENTE);
+
+    const cancelado = (await cancelar(p.id).expect(200)).body;
+    expect(cancelado.cancelacion).toMatchObject({ motivo: 'cliente', riderCobra: true, reintegro: 6 * 2800 });
+    await posicion(e.rider, GPS_CLIENTE).expect(409);
+  });
+
+  it('sin una posición de los últimos 2 minutos, el rider no cobra el envío', async () => {
+    const p = await e.pedidoEnCamino();
+    await e.api().post(`/api/rider/pedidos/${p.id}/posicion`).set(auth(e.rider)).send(GPS_CLIENTE).expect(204);
+    await db.pedido.update({ where: { id: p.id }, data: { riderPosicionEn: new Date(Date.now() - 3 * 60_000) } });
+    expect((await cancelar(p.id).expect(200)).body.cancelacion.riderCobra).toBe(false);
+  });
+
   it('a los 10 minutos sin rider, el cliente sigue esperando o cancela sin que le cuente', async () => {
     await db.rider.update({ where: { id: e.riderId }, data: { disponible: false } });
     const p = await e.pedidoPagado();
@@ -60,7 +82,7 @@ describe('incidentes (e2e)', () => {
   it('a la tercera cancelación en la semana se pausa la cuenta hasta que Dev la reactive', async () => {
     for (let i = 0; i < 3; i++) await cancelar((await e.pedidoPagado()).id).expect(200);
     expect((await e.api().get('/api/usuario/perfil').set(auth(e.usuario)).expect(200)).body.pausado).toBe(true);
-    const r = await e.api().post('/api/pedidos').set(auth(e.usuario)).send({ kioscoId: e.kioscoId, items: [{ productoId: e.coca.id, cantidad: 6 }] }).expect(409);
+    const r = await e.api().post('/api/pedidos').set(auth(e.usuario)).send({ kioscoId: e.kioscoId, items: [{ productoId: e.coca.id, cantidad: 6 }], ubicacion: GPS_CLIENTE }).expect(409);
     expect(r.body.codigo).toBe('cuenta-pausada');
 
     const alerta = (await alertas()).find((a) => a.tipo === 'cliente-pausado');

@@ -3,8 +3,9 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { EMPTY, Observable, delay, distinctUntilChanged, map, of, switchMap, throwError, timer } from 'rxjs';
 import { PedidosApi, ResultadoAceptar, ResultadoEntrega } from '../api/pedidos.api';
 import { OfertaPedido, Pedido } from '../models/pedido';
+import { Ubicacion } from '../models/zona';
 import { armarOferta } from '../rules/pedido.rules';
-import { asignarRider, confirmarRetiro, entregarConPin, salirEnCamino } from '../rules/flujo.rules';
+import { asignarRider, confirmarRetiro, entregarConPin, reportarPosicion, salirEnCamino } from '../rules/flujo.rules';
 import { MockDb, OTRO_RIDER_ID, RIDER_ACTUAL_ID } from './mock-db';
 import { LATENCIA_MOCK } from './mock-riders.api';
 
@@ -141,6 +142,15 @@ export class MockPedidosApi extends PedidosApi {
     if (!r.ok) return throwError(() => new Error(r.error));
     this.guardar(r.pedido);
     return of(r.pedido).pipe(delay(this.latencia));
+  }
+
+  reportarPosicion(pedidoId: string, ubicacion: Ubicacion): Observable<void> {
+    const pedido = this.buscar(pedidoId);
+    if (!pedido || pedido.riderId !== RIDER_ACTUAL_ID) return throwError(() => new Error('No encontramos el pedido.'));
+    const r = reportarPosicion(pedido, ubicacion, new Date());
+    if (!r.ok) return throwError(() => new Error(r.error));
+    this.guardar(r.pedido);
+    return of(undefined).pipe(delay(this.latencia));
   }
 
   confirmarEntrega(pedidoId: string, pin: string): Observable<ResultadoEntrega> {

@@ -4,7 +4,7 @@ import { WhatsappService } from '../src/avisos/whatsapp.service.js';
 import { DespachoService } from '../src/pedidos/despacho.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { crearApp } from './app.js';
-import { armarEscenario, auth } from './escenario.js';
+import { GPS_CLIENTE, armarEscenario, auth } from './escenario.js';
 import { DOCUMENTOS } from './fotos.js';
 
 /** Los avisos a los riders salen por WhatsApp en cada momento clave. */
@@ -51,7 +51,7 @@ describe('avisos por WhatsApp (e2e)', () => {
   });
 
   it('pedido nuevo, kiosco que lo rechaza y kiosco que lo aprueba', async () => {
-    const p = (await e.api().post('/api/pedidos').set(auth(e.usuario)).send({ kioscoId: e.kioscoId, items: [{ productoId: e.coca.id, cantidad: 6 }] }).expect(201)).body;
+    const p = (await e.api().post('/api/pedidos').set(auth(e.usuario)).send({ kioscoId: e.kioscoId, items: [{ productoId: e.coca.id, cantidad: 6 }], ubicacion: GPS_CLIENTE }).expect(201)).body;
     await e.api().post(`/api/kiosco/pedidos/${p.id}/stock`).set(auth(e.kiosco)).send({ faltantes: [] }).expect(200);
     await e.api().post(`/api/kiosco/pedidos/${p.id}/transferencia`).set(auth(e.kiosco)).expect(200);
     await app.get(DespachoService).barrer();
@@ -78,7 +78,7 @@ describe('avisos por WhatsApp (e2e)', () => {
 
   it('el rider que apagó los avisos no los recibe', async () => {
     await e.api().patch('/api/rider/perfil').set(auth(e.rider)).send({ notificaciones: false }).expect(200);
-    const p = (await e.api().post('/api/pedidos').set(auth(e.usuario)).send({ kioscoId: e.kioscoId, items: [{ productoId: e.coca.id, cantidad: 6 }] }).expect(201)).body;
+    const p = (await e.api().post('/api/pedidos').set(auth(e.usuario)).send({ kioscoId: e.kioscoId, items: [{ productoId: e.coca.id, cantidad: 6 }], ubicacion: GPS_CLIENTE }).expect(201)).body;
     await e.api().post(`/api/kiosco/pedidos/${p.id}/stock`).set(auth(e.kiosco)).send({ faltantes: [] }).expect(200);
     await e.api().post(`/api/kiosco/pedidos/${p.id}/transferencia`).set(auth(e.kiosco)).expect(200);
     await app.get(DespachoService).barrer();

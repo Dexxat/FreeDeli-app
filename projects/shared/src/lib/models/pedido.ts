@@ -1,4 +1,4 @@
-import { ZonaId } from './zona.js';
+import { Ubicacion, ZonaId } from './zona.js';
 
 /**
  * Estados de un pedido.
@@ -56,6 +56,11 @@ export interface Cancelacion {
   reintegradoEn?: Date;
 }
 
+/** Última posición que mandó el GPS del rider mientras lleva el pedido. */
+export interface PosicionRider extends Ubicacion {
+  en: Date;
+}
+
 export interface ItemPedido {
   productoId: string;
   nombre: string;
@@ -72,8 +77,11 @@ export interface Pedido {
   kioscoNombre: string;
   kioscoDireccion: string;
   usuarioId: string;
-  /** Quién recibe: nombre corto del usuario, por ejemplo "Martina R.". */
-  destino: { nombre: string; direccion: string; notas?: string };
+  /**
+   * Quién recibe: nombre corto del usuario, por ejemplo "Martina R.". Se entrega en `ubicacion`,
+   * donde estaba el celular del cliente al pedir; la dirección y las notas ayudan al rider a encontrarlo.
+   */
+  destino: { nombre: string; direccion: string; notas?: string; ubicacion: Ubicacion };
   items: ItemPedido[];
   /** Lo que paga el cliente por el envío: el costo real hasta TOPE_ENVIO_CLIENTE. */
   costoEnvio: number;
@@ -115,6 +123,8 @@ export interface Pedido {
   entregadoEn?: Date;
   /** Solo en pedidos cancelados. */
   cancelacion?: Cancelacion;
+  /** Desde que el rider acepta hasta que entrega. */
+  posicionRider?: PosicionRider;
 }
 
 export function subtotalProductos(p: Pick<Pedido, 'items'>): number {

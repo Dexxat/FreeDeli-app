@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { MockDb, USUARIO_ACTUAL_ID, provideFreeDeliMocks } from '@freedeli/shared';
+import { Gps, MockDb, USUARIO_ACTUAL_ID, provideFreeDeliMocks } from '@freedeli/shared';
 import Inicio from './inicio';
 
 const esperar = () => new Promise((r) => setTimeout(r, 5));
@@ -82,5 +82,23 @@ describe('Inicio (Usuarios)', () => {
     await estable();
     expect(db.usuarios()[0].direccion.direccion).toBe('Paunero 1500');
     expect(el.querySelector('form')).toBeNull();
+  });
+
+  it('sin permiso de ubicación no deja pedir y explica cómo activarla', async () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [Inicio],
+      providers: [
+        provideFreeDeliMocks({ latencia: 0, horarioLibre: true }),
+        provideRouter([]),
+        { provide: Gps, useValue: { posicion: () => Promise.reject('sin-permiso') } },
+      ],
+    });
+    db = TestBed.inject(MockDb);
+    db.pedidos.update((ps) => ps.map((p) => (p.usuarioId === USUARIO_ACTUAL_ID && p.estado === 'retirado' ? { ...p, estado: 'entregado' } : p)));
+    crear();
+    await estable();
+    expect(el.querySelector('[role=alert]')?.textContent).toContain('ACTIVÁ TU UBICACIÓN');
+    expect(el.querySelector('a.pedir')?.textContent).toContain('Activá tu ubicación para pedir');
   });
 });

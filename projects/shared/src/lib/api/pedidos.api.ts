@@ -1,5 +1,6 @@
 import { Observable } from 'rxjs';
 import { OfertaPedido, Pedido } from '../models/pedido';
+import { Ubicacion } from '../models/zona';
 
 export type ResultadoAceptar =
   | { ok: true; pedido: Pedido }
@@ -28,6 +29,8 @@ export abstract class PedidosApi {
   abstract aceptarOferta(pedidoId: string): Observable<ResultadoAceptar>;
   /** Rechazar no tiene castigo: el pedido se ofrece a otro rider. */
   abstract rechazarOferta(pedidoId: string): Observable<void>;
+  /** El GPS del rider manda su posición mientras lleva el pedido: el cliente ve cuánto le falta. */
+  abstract reportarPosicion(pedidoId: string, ubicacion: Ubicacion): Observable<void>;
   /** Si el PIN coincide, el pedido pasa a Entregado en las dos apps. */
   abstract confirmarEntrega(pedidoId: string, pin: string): Observable<ResultadoEntrega>;
 }

@@ -6,3 +6,4 @@ export * from './mock-usuarios.api';
 export * from './mock-admin.api';
 export * from './mock-kioscos.api';
 export * from './mock-simulador';
+export * from './mock-gps';

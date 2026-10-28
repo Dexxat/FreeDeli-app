@@ -10,6 +10,7 @@ import { PEDIDO_MINIMO, calcularComision, costoEnvio, envioCliente, generarPin, 
 import { TARIFA_ENVIO_PROVISORIA } from '../config/freedeli.config';
 import { geolocalizarProvisorio } from '../rules/cobertura.rules';
 import { DocumentosRider } from '../rules/documentos.rules';
+import { UBICACION_MOCK } from './mock-gps';
 import { ABANDONOS_PARA_PAUSA, CANCELACIONES_PARA_PAUSA, inicioConteoCancelaciones } from '../rules/cancelacion.rules';
 
 /** Generador pseudoaleatorio con semilla, para que los datos simulados sean siempre los mismos. */
@@ -72,7 +73,7 @@ export class MockDb {
       dni: '40111222',
       telefono: '+54 9 11 5555-0199',
       email: 'martina@example.com',
-      direccion: { direccion: 'Belgrano 845', notas: 'Depto 2B, tocar timbre', zona: 'san-miguel', ubicacion: { lat: -34.543, lng: -58.701 } },
+      direccion: { direccion: 'Belgrano 845', notas: 'Depto 2B, tocar timbre', zona: 'san-miguel' },
       estrellas: 3,
       saldoFavor: 0,
       pausado: false,
@@ -279,6 +280,9 @@ export class MockDb {
       else items.push({ productoId: `${kiosco.id}-${prod.id}`, nombre: prod.nombre, cantidad, precioUnitario: prod.precio });
       subtotal += cantidad * prod.precio;
     }
+    const nombre = pick(NOMBRES);
+    const direccion = `${pick(CALLES)} ${100 + Math.floor(random() * 2900)}`;
+    const notas = random() < 0.4 ? 'Timbre 2B, dejar en portería' : undefined;
     return {
       id: '',
       numero: 0,
@@ -287,11 +291,7 @@ export class MockDb {
       kioscoNombre: kiosco.nombre,
       kioscoDireccion: kiosco.direccion,
       usuarioId: `u${1 + Math.floor(random() * 4)}`,
-      destino: {
-        nombre: pick(NOMBRES),
-        direccion: `${pick(CALLES)} ${100 + Math.floor(random() * 2900)}`,
-        notas: random() < 0.4 ? 'Timbre 2B, dejar en portería' : undefined,
-      },
+      destino: { nombre, direccion, notas, ubicacion: this.geolocalizar(direccion, kiosco.zona) },
       items,
       costoEnvio: envioCliente(costoEnvio(km, TARIFA_ENVIO_PROVISORIA)),
       distanciaKm: km,
@@ -342,7 +342,7 @@ export class MockDb {
     pedidos.push({
       ...enCurso,
       usuarioId: USUARIO_ACTUAL_ID,
-      destino: { nombre: 'Martina R.', direccion: 'Belgrano 845', notas: 'Depto 2B, tocar timbre' },
+      destino: { nombre: 'Martina R.', direccion: 'Belgrano 845', notas: 'Depto 2B, tocar timbre', ubicacion: UBICACION_MOCK },
     });
 
     // Numerar por orden de creación, como lo haría el backend.

@@ -73,13 +73,15 @@ export default class Inicio {
     });
   }
 
-  protected alternarDisponible(): void {
+  protected async alternarDisponible(): Promise<void> {
     if (this.store.disponible()) {
       this.sonidos.off();
-    } else {
+      await this.store.alternarDisponible();
+    } else if (await this.store.alternarDisponible()) {
       this.sonidos.start();
+    } else {
+      this.sonidos.error();
     }
-    this.store.alternarDisponible();
   }
 
   protected alternarZona(zona: ZonaId): void {

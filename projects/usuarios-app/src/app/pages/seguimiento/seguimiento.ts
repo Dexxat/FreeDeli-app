@@ -9,6 +9,7 @@ import {
   UsuariosApi,
   mensajeDeError,
   codigoPedido,
+  distanciaDelRider,
   formatearPesos,
   reintegroPendiente,
   linkWhatsApp,
@@ -22,6 +23,7 @@ import { UsuarioStore } from '../../core/usuario.store';
 import { distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { Reloj } from '../../core/reloj';
 import { CancelarPedido } from '../../ui/cancelar-pedido';
+import { formatearKm } from '../kioscos/kioscos';
 
 const HORA = new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
 
@@ -61,8 +63,17 @@ export default class Seguimiento {
     );
   }
 
+  /** Para el tiempo estimado del kiosco. Se pide una vez por pedido, aunque el pedido cambie. */
   private readonly kiosco = toSignal(
-    toObservable(computed(() => this.pedido()?.kioscoId)).pipe(switchMap((id) => (id ? this.api.kiosco(id) : of(null)))),
+    toObservable(
+      computed(
+        () => {
+          const p = this.pedido();
+          return p ? { id: p.kioscoId, desde: p.destino.ubicacion } : null;
+        },
+        { equal: (a, b) => a?.id === b?.id },
+      ),
+    ).pipe(switchMap((k) => (k ? this.api.kiosco(k.id, k.desde) : of(null)))),
   );
 
   /** Se vuelve a pedir cuando cambia el rider o el estado (aparece al aceptar). */
@@ -74,6 +85,13 @@ export default class Seguimiento {
   );
 
   private readonly reloj = inject(Reloj);
+
+  /** "1,2 km": cuánto le falta al rider en camino, según su GPS. */
+  protected readonly distanciaRider = computed(() => {
+    const p = this.pedido();
+    const km = p ? distanciaDelRider(p, this.reloj.ahora()) : undefined;
+    return km === undefined ? null : formatearKm(km);
+  });
 
   protected readonly minutos = computed(() => {
     const p = this.pedido();

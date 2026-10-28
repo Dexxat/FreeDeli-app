@@ -1,6 +1,8 @@
 import { MotivoCancelacion, Pedido, subtotalProductos } from '../models/pedido.js';
+import { Ubicacion } from '../models/zona.js';
 import { esperaSinRider, reintegroAlCancelar, reintegroPendiente } from './cancelacion.rules.js';
 import { ESTADOS_ABIERTOS, calcularComision } from './pedido.rules.js';
+import { riderPasoLaMitad } from './ubicacion.rules.js';
 
 /**
  * Transiciones del flujo de un pedido. Son funciones puras: reciben el pedido y
@@ -46,13 +48,12 @@ const abierto = (p: Pedido) => ESTADOS_ABIERTOS.includes(p.estado);
 
 /**
  * El cliente cancela, en cualquier momento antes de la entrega. Si ya transfirió, el kiosco le devuelve
- * el dinero; si el rider ya hizo más de la mitad del viaje, se descuenta el envío, que cobra el rider.
- * Si lleva MINUTOS_SIN_RIDER sin rider, la cancelación no le cuenta en contra.
+ * el dinero; si el GPS del rider dice que ya hizo más de la mitad del viaje, se descuenta el envío,
+ * que cobra el rider. Si lleva MINUTOS_SIN_RIDER sin rider, la cancelación no le cuenta en contra.
  */
-export function cancelarPorCliente(p: Pedido, ahora: Date, riderPasoLaMitad = false): Resultado {
+export function cancelarPorCliente(p: Pedido, ahora: Date): Resultado {
   if (!abierto(p)) return error('El pedido ya no se puede cancelar.');
-  const riderCobra = riderPasoLaMitad && p.estado === 'en-camino';
-  return ok(cancelado(p, esperaSinRider(p, ahora) ? 'sin-rider' : 'cliente', riderCobra));
+  return ok(cancelado(p, esperaSinRider(p, ahora) ? 'sin-rider' : 'cliente', riderPasoLaMitad(p, ahora)));
 }
 
 /** El cliente elige seguir esperando un rider: se le vuelve a preguntar en MINUTOS_SIN_RIDER. */
@@ -69,6 +70,12 @@ export function cancelarPorDev(p: Pedido, motivo: Extract<MotivoCancelacion, 'ri
   if (!abierto(p)) return error('El pedido ya está cerrado.');
   if (motivo === 'rider' && (!p.riderId || p.estado === 'esperando')) return error('El pedido no tiene un rider asignado.');
   return ok(cancelado(p, motivo, false));
+}
+
+/** El GPS del rider manda su posición mientras lleva el pedido (de Aceptado a Entregado). */
+export function reportarPosicion(p: Pedido, ubicacion: Ubicacion, ahora: Date): Resultado {
+  if (!['aceptado', 'retirado', 'en-camino'].includes(p.estado)) return error('El pedido no está en curso.');
+  return ok({ ...p, posicionRider: { lat: ubicacion.lat, lng: ubicacion.lng, en: ahora } });
 }
 
 /** El kiosco avisa que devolvió el dinero al cliente. */

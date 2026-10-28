@@ -1,15 +1,18 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BarraEstado, CANCELACIONES_PARA_PAUSA, FREEDELI_CONFIG, PesosPipe, UsuariosApi, ZONAS, ZonaId, codigoPedido, linkWhatsApp, nombreZona, primerNombre } from '@freedeli/shared';
+import { of, switchMap } from 'rxjs';
 import { UsuarioStore } from '../../core/usuario.store';
+import { UbicacionCliente } from '../../core/ubicacion';
 import { fechaRelativa } from '../../core/fechas';
 import { AvisoHorario } from '../../ui/aviso-horario';
+import { AvisoUbicacion } from '../../ui/aviso-ubicacion';
 
 @Component({
   selector: 'fd-inicio',
-  imports: [RouterLink, BarraEstado, PesosPipe, FormsModule, AvisoHorario],
+  imports: [RouterLink, BarraEstado, PesosPipe, FormsModule, AvisoHorario, AvisoUbicacion],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './inicio.html',
   styleUrl: './inicio.scss',
@@ -17,8 +20,11 @@ import { AvisoHorario } from '../../ui/aviso-horario';
 export default class Inicio {
   private readonly api = inject(UsuariosApi);
   protected readonly store = inject(UsuarioStore);
+  private readonly ubicacion = inject(UbicacionCliente);
 
-  protected readonly kioscosAbiertos = toSignal(this.api.kioscosAbiertos());
+  protected readonly kioscosAbiertos = toSignal(
+    toObservable(this.ubicacion.ubicacion).pipe(switchMap((u) => (u ? this.api.kioscosAbiertos(u) : of(undefined)))),
+  );
   protected readonly recientes = toSignal(this.api.recientes(3), { initialValue: [] });
 
   protected readonly zonas = ZONAS;
@@ -31,6 +37,7 @@ export default class Inicio {
 
   protected readonly textoPedir = computed(() => {
     if (this.store.pedidoEnCurso()) return 'Tenés un pedido en curso';
+    if (this.ubicacion.estado().tipo === 'error') return 'Activá tu ubicación para pedir';
     const n = this.kioscosAbiertos()?.length;
     if (n === undefined) return 'Buscando kioscos abiertos…';
     if (n === 0) return 'No hay kioscos abiertos ahora';

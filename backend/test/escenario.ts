@@ -5,6 +5,9 @@ import { DOCUMENTOS } from './fotos.js';
 
 export const auth = (t: string) => ({ Authorization: `Bearer ${t}` });
 
+/** GPS del cliente de prueba: Belgrano 845, San Miguel, dentro del área de cobertura. */
+export const GPS_CLIENTE = { lat: -34.543, lng: -58.701 };
+
 /**
  * Arma un escenario con un kiosco con saldo y catálogo, un rider ON y un usuario.
  * `sufijo` evita choques de email entre archivos de test que comparten la base.
@@ -41,7 +44,7 @@ export async function armarEscenario(app: INestApplication, sufijo: string) {
 
   /** Hace un pedido de 6 Coca-Cola ($16.800) y lo lleva hasta que el cliente transfirió y se busca rider. */
   async function pedidoPagado(): Promise<PedidoCreado> {
-    const p = (await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }] }).expect(201)).body;
+    const p = (await api().post('/api/pedidos').set(auth(usuario)).send({ kioscoId, items: [{ productoId: coca.id, cantidad: 6 }], ubicacion: GPS_CLIENTE }).expect(201)).body;
     await api().post(`/api/kiosco/pedidos/${p.id}/stock`).set(auth(kiosco)).send({ faltantes: [] }).expect(200);
     await api().post(`/api/kiosco/pedidos/${p.id}/transferencia`).set(auth(kiosco)).expect(200);
     return p;

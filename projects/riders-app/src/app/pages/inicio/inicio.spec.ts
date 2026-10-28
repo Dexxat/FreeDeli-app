@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideFreeDeliMocks } from '@freedeli/shared';
+import { Gps, provideFreeDeliMocks } from '@freedeli/shared';
 import Inicio from './inicio';
 
 const esperar = () => new Promise((r) => setTimeout(r, 5));
@@ -58,5 +58,20 @@ describe('Inicio (Riders)', () => {
       expect(interruptor().getAttribute('aria-pressed')).toBe('true');
       expect(Number(zonas()[0].querySelectorAll('.valor')[1].textContent)).toBe(ridersAntes + 1);
     });
+  });
+
+  it('sin permiso de ubicación no se conecta y explica cómo activarla', async () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [Inicio],
+      providers: [provideFreeDeliMocks({ latencia: 0 }), { provide: Gps, useValue: { posicion: () => Promise.reject('sin-permiso') } }],
+    });
+    fixture = TestBed.createComponent(Inicio);
+    el = fixture.nativeElement;
+    await estable();
+    interruptor().click();
+    await estable();
+    expect(interruptor().getAttribute('aria-pressed')).toBe('false');
+    expect(el.querySelector('[role=alert]')?.textContent).toContain('permití la ubicación');
   });
 });

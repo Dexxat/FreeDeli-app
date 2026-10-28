@@ -1,6 +1,6 @@
 import { Browser, Locator, Page, expect, test as base } from '@playwright/test';
 import { APPS } from '../../entorno/config.mjs';
-import { Api } from './api.js';
+import { Api, GPS_CLIENTE, Ubicacion } from './api.js';
 import { limpiar } from './db.js';
 
 export type App = 'usuarios' | 'kioscos' | 'riders' | 'dev';
@@ -21,12 +21,22 @@ interface Problema {
   texto: string;
 }
 
+/** Dónde está el GPS del dispositivo. null: el permiso de ubicación está bloqueado. */
+export interface OpcionesApp {
+  ubicacion?: Ubicacion | null;
+}
+
 /**
  * Abre una app en su propio contexto (sesión y almacenamiento separados), como un dispositivo distinto.
+ * Por defecto el GPS está en la casa del cliente de prueba.
  * Registra errores de JavaScript, errores de consola y respuestas 5xx de la API: la prueba falla si aparecen.
  */
-async function abrirApp(browser: Browser, app: App, problemas: Problema[]): Promise<Page> {
-  const contexto = await browser.newContext({ viewport: TAMANIO[app] });
+async function abrirApp(browser: Browser, app: App, problemas: Problema[], opciones: OpcionesApp): Promise<Page> {
+  const ubicacion = opciones.ubicacion === undefined ? GPS_CLIENTE : opciones.ubicacion;
+  const contexto = await browser.newContext({
+    viewport: TAMANIO[app],
+    ...(ubicacion ? { geolocation: { latitude: ubicacion.lat, longitude: ubicacion.lng }, permissions: ['geolocation'] } : {}),
+  });
   const page = await contexto.newPage();
   page.on('pageerror', (e) => problemas.push({ app, texto: `error JS: ${e.message}` }));
   page.on('console', (m) => {
@@ -41,7 +51,7 @@ async function abrirApp(browser: Browser, app: App, problemas: Problema[]): Prom
   return page;
 }
 
-export const test = base.extend<{ api: Api; abrir: (app: App) => Promise<Page>; _limpieza: void }>({
+export const test = base.extend<{ api: Api; abrir: (app: App, opciones?: OpcionesApp) => Promise<Page>; _limpieza: void }>({
   // Antes de cada prueba: sin riders conectados ni pedidos abiertos de pruebas anteriores.
   _limpieza: [
     async ({}, use) => {
@@ -59,8 +69,8 @@ export const test = base.extend<{ api: Api; abrir: (app: App) => Promise<Page>; 
   abrir: async ({ browser }, use) => {
     const problemas: Problema[] = [];
     const paginas: Page[] = [];
-    await use(async (app) => {
-      const p = await abrirApp(browser, app, problemas);
+    await use(async (app, opciones = {}) => {
+      const p = await abrirApp(browser, app, problemas, opciones);
       paginas.push(p);
       return p;
     });

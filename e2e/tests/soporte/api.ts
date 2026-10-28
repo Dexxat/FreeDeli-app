@@ -4,6 +4,13 @@ import { APPS, DEV } from '../../entorno/config.mjs';
 export const URL_API = `http://localhost:${APPS[0].puerto}/api`;
 
 type Zona = 'san-miguel' | 'muniz' | 'bella-vista';
+export interface Ubicacion {
+  lat: number;
+  lng: number;
+}
+
+/** GPS del cliente de prueba: Belgrano 845, San Miguel, dentro del área de cobertura. */
+export const GPS_CLIENTE: Ubicacion = { lat: -34.543, lng: -58.701 };
 export interface Pedido {
   id: string;
   numero: number;
@@ -129,8 +136,9 @@ export class Api {
     k: { id: string; token: string; productos: { id: string }[] },
     hasta: 'stock' | 'transferencia' | 'rider' = 'stock',
     items?: { productoId: string; cantidad: number }[],
+    ubicacion = GPS_CLIENTE,
   ): Promise<Pedido> {
-    let p = await this.llamar<Pedido>('POST', '/pedidos', { kioscoId: k.id, items: items ?? [{ productoId: k.productos[0].id, cantidad: 6 }] }, usuarioToken);
+    let p = await this.llamar<Pedido>('POST', '/pedidos', { kioscoId: k.id, items: items ?? [{ productoId: k.productos[0].id, cantidad: 6 }], ubicacion }, usuarioToken);
     if (hasta === 'stock') return p;
     p = await this.llamar<Pedido>('POST', `/kiosco/pedidos/${p.id}/stock`, { faltantes: [] }, k.token);
     if (hasta === 'transferencia') return p;

@@ -1,6 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { crearApp } from './app.js';
+import { GPS_CLIENTE } from './escenario.js';
 
 /** Lee eventos SSE de una respuesta hasta que `listo` devuelva true. */
 async function leerEventos(url: string, listo: (eventos: { type: string; data: unknown }[]) => boolean, ms = 5000) {
@@ -63,7 +64,7 @@ describe('Eventos en tiempo real (SSE)', () => {
       (await api().post('/api/auth/registro/usuario').send({ email, clave: 'claveUsuario1', nombre: 'Ana Pérez', dni: '40111333', telefono: '11 5555-0101', direccion: 'Pringles 210', zona: 'muniz' }).expect(201)).body.token;
     const ana = await registrar('ana@sse.local');
     const otro = await registrar('otro@sse.local');
-    const pedido = (await api().post('/api/pedidos').set(auth(ana)).send({ kioscoId, items: [{ productoId: prod.id, cantidad: 2 }] }).expect(201)).body;
+    const pedido = (await api().post('/api/pedidos').set(auth(ana)).send({ kioscoId, items: [{ productoId: prod.id, cantidad: 2 }], ubicacion: GPS_CLIENTE }).expect(201)).body;
 
     const deAna = leerEventos(`${base}/api/eventos?token=${ana}`, (es) => es.some((e) => (e.data as { pedido?: { fase?: string } }).pedido?.fase === 'transferencia'));
     const deOtro = leerEventos(`${base}/api/eventos?token=${otro}`, () => false, 1500);

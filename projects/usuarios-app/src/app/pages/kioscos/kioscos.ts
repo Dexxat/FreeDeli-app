@@ -2,8 +2,10 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { PesosPipe, UsuariosApi, ZONAS, ZonaId, nombreZona, rangoTiempo } from '@freedeli/shared';
-import { startWith, switchMap } from 'rxjs';
+import { of, startWith, switchMap } from 'rxjs';
+import { UbicacionCliente } from '../../core/ubicacion';
 import { AvisoHorario } from '../../ui/aviso-horario';
+import { AvisoUbicacion } from '../../ui/aviso-ubicacion';
 
 const FILTROS: { id: ZonaId | null; etiqueta: string }[] = [{ id: null, etiqueta: 'Todas' }, ...ZONAS.map((z) => ({ id: z.id, etiqueta: z.nombre }))];
 
@@ -19,7 +21,7 @@ export function inicialKiosco(nombre: string): string {
 
 @Component({
   selector: 'fd-kioscos',
-  imports: [AvisoHorario, RouterLink, PesosPipe],
+  imports: [AvisoHorario, AvisoUbicacion, RouterLink, PesosPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './kioscos.html',
   styleUrl: './kioscos.scss',
@@ -27,14 +29,18 @@ export function inicialKiosco(nombre: string): string {
 export default class Kioscos {
   private readonly api = inject(UsuariosApi);
   private readonly router = inject(Router);
+  private readonly ubicacion = inject(UbicacionCliente);
 
   /** Filtro de zona, guardado en la URL (?zona=muniz) para que "Volver" lo conserve. */
   readonly zona = input<ZonaId | undefined>(undefined);
   protected readonly filtroActual = computed(() => (ZONAS.some((z) => z.id === this.zona()) ? this.zona()! : null));
 
   protected readonly filtros = FILTROS;
+  private readonly busqueda = computed(() => ({ zona: this.filtroActual(), desde: this.ubicacion.ubicacion() }));
   protected readonly kioscos = toSignal(
-    toObservable(this.filtroActual).pipe(switchMap((z) => this.api.kioscosAbiertos(z ?? undefined).pipe(startWith(undefined)))),
+    toObservable(this.busqueda).pipe(
+      switchMap(({ zona, desde }) => (desde ? this.api.kioscosAbiertos(desde, zona ?? undefined).pipe(startWith(undefined)) : of(undefined))),
+    ),
   );
 
   protected readonly nombreZona = nombreZona;

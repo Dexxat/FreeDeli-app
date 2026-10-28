@@ -2,11 +2,13 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { PEDIDO_MINIMO, PesosPipe, Producto, UsuariosApi, descuentoAplicable, nombreZona, rangoTiempo } from '@freedeli/shared';
-import { combineLatest, distinctUntilChanged, filter, map, shareReplay, switchMap, take, tap } from 'rxjs';
+import { combineLatest, distinctUntilChanged, filter, map, of, shareReplay, switchMap, take, tap } from 'rxjs';
 import { UsuarioStore } from '../../core/usuario.store';
+import { UbicacionCliente } from '../../core/ubicacion';
 import { formatearKm } from '../kioscos/kioscos';
 import { Horario } from '../../core/horario';
 import { AvisoHorario } from '../../ui/aviso-horario';
+import { AvisoUbicacion } from '../../ui/aviso-ubicacion';
 
 const MOTIVOS = {
   'kiosco-cerrado': 'El kiosco cerró recién. Elegí otro.',
@@ -15,7 +17,7 @@ const MOTIVOS = {
   'pedido-minimo': 'El pedido mínimo es de $15.000 en productos.',
   'pedido-en-curso': 'Ya tenés un pedido en curso.',
   'fuera-de-horario': 'FreeDeli toma pedidos de 00 a 08 hs.',
-  'fuera-de-cobertura': 'Tu dirección está fuera del área donde entrega FreeDeli.',
+  'fuera-de-cobertura': 'Estás fuera del área donde entrega FreeDeli.',
   'cuenta-pausada': 'Tu cuenta está pausada por cancelaciones. Escribinos por WhatsApp para reactivarla.',
 } as const;
 
@@ -24,7 +26,7 @@ const MAXIMO_POR_PRODUCTO = 20;
 
 @Component({
   selector: 'fd-kiosco',
-  imports: [PesosPipe, RouterLink, AvisoHorario],
+  imports: [PesosPipe, RouterLink, AvisoHorario, AvisoUbicacion],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './kiosco.html',
   styleUrl: './kiosco.scss',
@@ -34,6 +36,7 @@ export default class Kiosco {
   private readonly router = inject(Router);
   protected readonly store = inject(UsuarioStore);
   protected readonly horario = inject(Horario);
+  private readonly ubicacion = inject(UbicacionCliente);
 
   readonly kioscoId = input.required<string>();
   /** Id de un pedido anterior para cargar los mismos productos. */
@@ -42,8 +45,10 @@ export default class Kiosco {
   protected readonly cantidades = signal<Record<string, number>>({});
   /** Al cambiar de kiosco se vacía el carrito. */
   private readonly id$ = toObservable(this.kioscoId).pipe(tap(() => this.cantidades.set({})), shareReplay(1));
-  /** undefined mientras carga; null si no existe. */
-  protected readonly kiosco = toSignal(this.id$.pipe(switchMap((id) => this.api.kiosco(id))));
+  /** undefined mientras carga o sin ubicación; null si no existe. El envío depende de dónde está el cliente. */
+  protected readonly kiosco = toSignal(
+    combineLatest([this.id$, toObservable(this.ubicacion.ubicacion)]).pipe(switchMap(([id, desde]) => (desde ? this.api.kiosco(id, desde) : of(undefined)))),
+  );
   protected readonly productos = toSignal(this.id$.pipe(switchMap((id) => this.api.productos(id))), { initialValue: [] as Producto[] });
 
   protected readonly enviando = signal(false);
@@ -68,6 +73,8 @@ export default class Kiosco {
   protected readonly km = formatearKm;
 
   constructor() {
+    // Se entrega donde está el celular ahora: se lee el GPS al entrar.
+    this.ubicacion.actualizar();
     // "Pedí de nuevo": carga los productos del pedido anterior que sigan en el catálogo.
     combineLatest([toObservable(this.repetir), toObservable(this.productos)])
       .pipe(
@@ -105,9 +112,14 @@ export default class Kiosco {
       this.error.set(MOTIVOS['pedido-minimo']);
       return;
     }
+    const ubicacion = this.ubicacion.ubicacion();
+    if (!ubicacion) {
+      this.error.set('Activá tu ubicación para pedir: FreeDeli entrega donde estás.');
+      return;
+    }
     this.enviando.set(true);
     const items = Object.entries(this.cantidades()).map(([productoId, cantidad]) => ({ productoId, cantidad }));
-    this.api.crearPedido({ kioscoId: this.kioscoId(), items }).subscribe((r) => {
+    this.api.crearPedido({ kioscoId: this.kioscoId(), items, ubicacion }).subscribe((r) => {
       this.enviando.set(false);
       if (r.ok) {
         void this.router.navigate(['/pedido', r.pedido.id, 'realizado']);

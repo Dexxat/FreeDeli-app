@@ -97,8 +97,6 @@ model Usuario {
   direccion    String
   notas        String?
   zona         Zona
-  lat          Float
-  lng          Float
   /// FREEDELI RUSH: estrellas hacia el próximo premio (0 a 4).
   estrellas    Int      @default(0)
   /// Saldo a favor en pesos: se descuenta solo del próximo pedido.
@@ -175,6 +173,9 @@ model Pedido {
   destinoNombre      String
   destinoDireccion   String
   destinoNotas       String?
+  /// Donde estaba el celular del cliente al pedir: ahí se entrega.
+  destinoLat         Float
+  destinoLng         Float
   distanciaKm        Float
   costoEnvio         Int
   propina            Int                @default(0)
@@ -206,6 +207,10 @@ model Pedido {
   /// El rider había hecho más de la mitad del viaje: cobra el envío igual.
   riderCobra         Boolean            @default(false)
   reintegradoEn      DateTime?
+  /// Última posición del GPS del rider mientras lleva el pedido.
+  riderLat           Float?
+  riderLng           Float?
+  riderPosicionEn    DateTime?
   items              ItemPedido[]
   ofertas            Oferta[]
 

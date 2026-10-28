@@ -80,6 +80,15 @@ describe('Seguimiento (Usuarios)', () => {
     });
   });
 
+  it('con el rider en camino muestra a cuánto está, según su GPS', async () => {
+    const el = await abrir('/pedido', (db) => {
+      const p = db.pedidos().find((x) => x.usuarioId === USUARIO_ACTUAL_ID && x.estado === 'retirado')!;
+      const cerca = { lat: p.destino.ubicacion.lat - 0.011, lng: p.destino.ubicacion.lng, en: new Date() };
+      db.guardarPedido({ ...p, estado: 'en-camino', enCaminoEn: new Date(), posicionRider: cerca });
+    });
+    expect(el.textContent).toContain('Tu rider está a 1,2 km');
+  });
+
   it('MI PEDIDO muestra el pedido en curso con PIN, rider y tiempo estimado', async () => {
     const el = await abrir('/pedido');
     const p = enCurso();

@@ -1,5 +1,5 @@
 import { expect, ingresar, test, urlApp } from './soporte/fixtures.js';
-import { unico } from './soporte/api.js';
+import { GPS_CLIENTE, unico } from './soporte/api.js';
 
 test.describe('seguridad de la API', () => {
   test('sin sesión no se accede a nada privado', async ({ api }) => {
@@ -68,11 +68,12 @@ test.describe('seguridad de la API', () => {
     const k = await api.kiosco();
     const u = await api.usuario();
     const malos: unknown[] = [
-      { kioscoId: k.id, items: [{ productoId: k.productos[0].id, cantidad: -6 }] },
-      { kioscoId: k.id, items: [{ productoId: k.productos[0].id, cantidad: 1.5 }] },
-      { kioscoId: 'no-es-un-id', items: [{ productoId: k.productos[0].id, cantidad: 6 }] },
-      { kioscoId: k.id, items: 'todo' },
-      { kioscoId: k.id, items: [{ productoId: k.productos[0].id, cantidad: 6 }], precio: 1 },
+      { kioscoId: k.id, items: [{ productoId: k.productos[0].id, cantidad: -6 }], ubicacion: GPS_CLIENTE },
+      { kioscoId: k.id, items: [{ productoId: k.productos[0].id, cantidad: 1.5 }], ubicacion: GPS_CLIENTE },
+      { kioscoId: 'no-es-un-id', items: [{ productoId: k.productos[0].id, cantidad: 6 }], ubicacion: GPS_CLIENTE },
+      { kioscoId: k.id, items: 'todo', ubicacion: GPS_CLIENTE },
+      { kioscoId: k.id, items: [{ productoId: k.productos[0].id, cantidad: 6 }], ubicacion: GPS_CLIENTE, precio: 1 },
+      { kioscoId: k.id, items: [{ productoId: k.productos[0].id, cantidad: 6 }], ubicacion: { lat: 'cerca', lng: 0 } },
     ];
     for (const cuerpo of malos) {
       const r = await api.cruda('POST', '/pedidos', cuerpo, u.token);

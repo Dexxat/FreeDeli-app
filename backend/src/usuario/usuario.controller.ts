@@ -1,15 +1,15 @@
 import { Body, Controller, Get, HttpCode, NotFoundException, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
-import { DireccionDto } from './dto.js';
+import { BusquedaKioscosDto, DireccionDto } from './dto.js';
 import { DatosPersonalesDto } from '../auth/dto.js';
 import { CuentasService } from '../cuentas/cuentas.service.js';
 import { Roles, SesionActual, type Sesion } from '../auth/sesion.js';
 import { Perfiles } from '../comun/perfiles.js';
 import { ReglasConfig } from '../comun/reglas.config.js';
-import { ZONAS_API, geolocalizar, zonaApi, zonaDb, type ZonaApi } from '../comun/zonas.js';
-import { aceptarAjuste, cancelarPorCliente, seguirEsperandoRider, costoEnvio, distanciaKm, envioCliente, normalizarDni, puedeRecibirPedidos } from '../dominio.js';
+import { zonaApi, zonaDb } from '../comun/zonas.js';
+import { aceptarAjuste, cancelarPorCliente, seguirEsperandoRider, costoEnvio, distanciaKm, envioCliente, normalizarDni, puedeRecibirPedidos, type Ubicacion } from '../dominio.js';
 import { EstadoCuenta, EstadoPedido, Rol } from '../generated/prisma/enums.js';
 import { PedidosService } from '../pedidos/pedidos.service.js';
-import { NuevoPedidoDto } from '../pedidos/dto.js';
+import { NuevoPedidoDto, UbicacionDto } from '../pedidos/dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 /** App de Usuarios: kioscos, pedido y seguimiento. */
@@ -36,7 +36,7 @@ export class UsuarioController {
       saldoFavor: u.saldoFavor,
       pausado: u.pausado,
       email: u.cuenta.email,
-      direccion: { direccion: u.direccion, notas: u.notas ?? undefined, zona: zonaApi(u.zona), ubicacion: { lat: u.lat, lng: u.lng } },
+      direccion: { direccion: u.direccion, notas: u.notas ?? undefined, zona: zonaApi(u.zona) },
     };
   }
 
@@ -52,29 +52,26 @@ export class UsuarioController {
 
   @Patch('usuario/direccion')
   async cambiarDireccion(@SesionActual() s: Sesion, @Body() dto: DireccionDto) {
-    const { lat, lng } = geolocalizar(dto.direccion, dto.zona);
     await this.db.usuario.update({
       where: { cuentaId: s.sub },
-      data: { direccion: dto.direccion.trim(), notas: dto.notas?.trim() || null, zona: zonaDb(dto.zona), lat, lng },
+      data: { direccion: dto.direccion.trim(), notas: dto.notas?.trim() || null, zona: zonaDb(dto.zona) },
     });
     return this.perfil(s);
   }
 
-  /** Kioscos que reciben pedidos, con distancia y envío hasta la dirección del usuario. */
+  /** Kioscos que reciben pedidos, con distancia y envío hasta el GPS del cliente. */
   @Get('kioscos')
-  async kioscos(@SesionActual() s: Sesion, @Query('zona') zona?: string) {
-    const usuario = await this.db.usuario.findUniqueOrThrow({ where: { cuentaId: s.sub } });
-    const filtroZona = ZONAS_API.includes(zona as ZonaApi) ? zonaDb(zona as ZonaApi) : undefined;
-    const kioscos = await this.db.kiosco.findMany({ where: { cuenta: { estado: EstadoCuenta.APROBADA }, zona: filtroZona }, orderBy: { nombre: 'asc' } });
-    return kioscos.filter((k) => puedeRecibirPedidos(k)).map((k) => this.paraUsuario(k, usuario));
+  async kioscos(@Query() q: BusquedaKioscosDto) {
+    const zona = q.zona ? zonaDb(q.zona) : undefined;
+    const kioscos = await this.db.kiosco.findMany({ where: { cuenta: { estado: EstadoCuenta.APROBADA }, zona }, orderBy: { nombre: 'asc' } });
+    return kioscos.filter((k) => puedeRecibirPedidos(k)).map((k) => this.paraUsuario(k, q));
   }
 
   @Get('kioscos/:id')
-  async kiosco(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string) {
-    const usuario = await this.db.usuario.findUniqueOrThrow({ where: { cuentaId: s.sub } });
+  async kiosco(@Param('id', ParseUUIDPipe) id: string, @Query() desde: UbicacionDto) {
     const k = await this.db.kiosco.findFirst({ where: { id, cuenta: { estado: EstadoCuenta.APROBADA } } });
     if (!k) throw new NotFoundException('No encontramos el kiosco.');
-    return this.paraUsuario(k, usuario);
+    return this.paraUsuario(k, desde);
   }
 
   @Get('kioscos/:id/productos')
@@ -82,8 +79,8 @@ export class UsuarioController {
     return this.db.producto.findMany({ where: { kioscoId: id, disponible: true }, orderBy: { nombre: 'asc' } });
   }
 
-  private paraUsuario(k: { id: string; nombre: string; zona: Parameters<typeof zonaApi>[0]; direccion: string; lat: number; lng: number; pausado: boolean; saldo: number; tiempoEstimadoMin: number }, u: { lat: number; lng: number }) {
-    const km = distanciaKm({ lat: k.lat, lng: k.lng }, { lat: u.lat, lng: u.lng });
+  private paraUsuario(k: { id: string; nombre: string; zona: Parameters<typeof zonaApi>[0]; direccion: string; lat: number; lng: number; pausado: boolean; saldo: number; tiempoEstimadoMin: number }, desde: Ubicacion) {
+    const km = distanciaKm({ lat: k.lat, lng: k.lng }, desde);
     return {
       id: k.id,
       nombre: k.nombre,
@@ -143,7 +140,7 @@ export class UsuarioController {
   @Post('pedidos/:id/cancelar') @HttpCode(200)
   async cancelar(@SesionActual() s: Sesion, @Param('id', ParseUUIDPipe) id: string) {
     const usuarioId = await this.perfiles.usuarioId(s.sub);
-    // Hasta tener la ubicación del rider en vivo, no se puede saber si pasó la mitad del viaje: reintegro total.
+    // Si el GPS del rider dice que pasó la mitad del viaje, cobra el envío (ver cancelarPorCliente).
     return this.pedidos.transicionar(id, (f) => f.usuarioId === usuarioId, (p) => cancelarPorCliente(p, new Date()));
   }
 

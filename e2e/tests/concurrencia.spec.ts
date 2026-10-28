@@ -1,4 +1,5 @@
 import { expect, test } from './soporte/fixtures.js';
+import { GPS_CLIENTE } from './soporte/api.js';
 
 test.describe('pedidos simultáneos', () => {
   test('confirmar la entrega dos veces a la vez descuenta la comisión una sola vez', async ({ api }) => {
@@ -27,7 +28,7 @@ test.describe('pedidos simultáneos', () => {
   test('dos usuarios no pueden abrir dos pedidos con la misma cuenta a la vez', async ({ api }) => {
     const k = await api.kiosco();
     const u = await api.usuario();
-    const cuerpo = { kioscoId: k.id, items: [{ productoId: k.productos[0].id, cantidad: 6 }] };
+    const cuerpo = { kioscoId: k.id, items: [{ productoId: k.productos[0].id, cantidad: 6 }], ubicacion: GPS_CLIENTE };
     const intentos = await Promise.all(Array.from({ length: 4 }, () => api.cruda('POST', '/pedidos', cuerpo, u.token)));
     expect(intentos.filter((x) => x.status() === 201)).toHaveLength(1);
   });
