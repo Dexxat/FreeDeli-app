@@ -109,5 +109,4 @@ Sin `SMTP_HOST`, la API deja el mail con el link en el log. La clave de Dev no s
 - Dejar `HORARIO_LIBRE=false` para que solo se pida de 00 a 08 hs.
 - Configurar WhatsApp y que Meta apruebe las plantillas (ver arriba).
 - Configurar el SMTP para recuperar contraseñas (ver "Mail").
-- Cargar el WhatsApp real de la empresa en `projects/shared/src/lib/config/freedeli.config.ts`.
 - La ubicación de los kioscos es aproximada (centro de la zona según la dirección). La del cliente sale del GPS del celular.

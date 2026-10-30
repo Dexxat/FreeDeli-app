@@ -21,9 +21,9 @@ export interface TarifaEnvio {
 /** Valores provisorios hasta definir la tarifa real. */
 export const TARIFA_ENVIO_PROVISORIA: TarifaEnvio = { cerca: 3000, media: 4000, lejos: 5000 };
 
-/** Valores por defecto. Reemplazar el WhatsApp por el real con provideFreeDeliConfig(). */
+/** Valores por defecto, con el WhatsApp real de la empresa. */
 export const FREEDELI_CONFIG = new InjectionToken<FreeDeliConfig>('FREEDELI_CONFIG', {
-  factory: () => ({ whatsapp: '5491100000000', comisionPorcentaje: 10, tarifaEnvio: TARIFA_ENVIO_PROVISORIA, aliasFreeDeli: 'freedeli.pagos' }),
+  factory: () => ({ whatsapp: '5491159558216', comisionPorcentaje: 10, tarifaEnvio: TARIFA_ENVIO_PROVISORIA, aliasFreeDeli: 'freedeli.pagos' }),
 });
 
 export function provideFreeDeliConfig(config: FreeDeliConfig) {
