@@ -55,7 +55,7 @@ La Mac tiene que quedar prendida y las direcciones cambian cada vez que se reini
 - [ ] Alias real de FreeDeli para las cargas de saldo (hoy `freedeli.pagos`).
 - [ ] Legal: términos y condiciones, privacidad y reglas.
 - [ ] Manual de kioscos (interactivo + PDF, obligatorio) y manual de riders. Base: `docs/GUIA-PARA-MANUALES.md`.
-- [ ] Definir cómo el kiosco le paga el envío al rider: hoy la app del kiosco no muestra el alias del rider.
+- [ ] Pago del envío al rider: en el pedido entregado, la tarjeta del kiosco muestra "Transferile $X al rider: alias Y" y el botón YA LE PAGUÉ (decidido el 18/11/2026, falta programarlo).
 - [ ] Google Form de contingencia para tomar pedidos a mano si se cae el servidor.
 - [ ] `HORARIO_LIBRE=false`: pedidos solo de 00 a 08 hs.
 
@@ -79,3 +79,5 @@ La Mac tiene que quedar prendida y las direcciones cambian cada vez que se reini
 - Reglas de negocio: [ESPECIFICACIONES.md](ESPECIFICACIONES.md)
 - Cómo correr y probar: [README.md](README.md)
 - Despliegue: [deploy/README.md](deploy/README.md)
+- Prender, apagar y la rutina de guardia: [docs/GUIA-DE-GUARDIA.md](docs/GUIA-DE-GUARDIA.md)
+- Base para los manuales de kioscos y riders: [docs/GUIA-PARA-MANUALES.md](docs/GUIA-PARA-MANUALES.md)
