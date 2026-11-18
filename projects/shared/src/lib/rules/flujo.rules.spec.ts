@@ -102,10 +102,13 @@ describe('flujo del pedido', () => {
       expect(paso(cancelarPorCliente(conPosicion(enCamino(), cerca), minutos(1))).cancelacion).toEqual({ motivo: 'cliente', reintegro: total - 1500, riderCobra: true });
     });
 
-    it('antes de la mitad, o sin una posición de los últimos 2 minutos, el rider no cobra', () => {
+    it('antes de la mitad, o sin ninguna posición, el rider no cobra', () => {
       expect(paso(cancelarPorCliente(conPosicion(enCamino(), lejos), ahora)).cancelacion?.riderCobra).toBe(false);
-      expect(paso(cancelarPorCliente(conPosicion(enCamino(), cerca), minutos(3))).cancelacion?.riderCobra).toBe(false);
       expect(paso(cancelarPorCliente(enCamino(), ahora)).cancelacion?.riderCobra).toBe(false);
+    });
+
+    it('cuenta la última posición aunque sea vieja: el rider estaba en Google Maps', () => {
+      expect(paso(cancelarPorCliente(conPosicion(enCamino(), cerca), minutos(15))).cancelacion?.riderCobra).toBe(true);
     });
 
     it('la mitad del viaje solo cuenta con el rider en camino', () => {

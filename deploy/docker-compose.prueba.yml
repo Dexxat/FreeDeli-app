@@ -1,0 +1,27 @@
+# Prueba con celulares sin dominio ni servidor: un túnel gratuito de Cloudflare por app.
+# Cada túnel da una dirección https://….trycloudflare.com que cambia cada vez que se reinicia.
+# Dev se sigue usando en la Mac (https://dev.localhost).
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prueba.yml up -d
+#   docker compose -f docker-compose.yml -f docker-compose.prueba.yml logs tunel-usuarios tunel-riders tunel-kioscos | grep -o 'https://[a-z0-9-]*\.trycloudflare\.com'
+#   docker compose -f docker-compose.yml -f docker-compose.prueba.yml stop tunel-usuarios tunel-riders tunel-kioscos
+
+x-tunel: &tunel
+  image: cloudflare/cloudflared:2025.11.1
+  restart: unless-stopped
+  depends_on:
+    - web
+
+services:
+  # Cada túnel entra a Caddy con el nombre de su app; el certificado local de Caddy no se verifica.
+  tunel-usuarios:
+    <<: *tunel
+    command: tunnel --no-autoupdate --url https://web:443 --http-host-header localhost --origin-server-name localhost --no-tls-verify
+
+  tunel-riders:
+    <<: *tunel
+    command: tunnel --no-autoupdate --url https://web:443 --http-host-header riders.localhost --origin-server-name riders.localhost --no-tls-verify
+
+  tunel-kioscos:
+    <<: *tunel
+    command: tunnel --no-autoupdate --url https://web:443 --http-host-header kioscos.localhost --origin-server-name kioscos.localhost --no-tls-verify

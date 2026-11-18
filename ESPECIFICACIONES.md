@@ -21,7 +21,7 @@ Zonas de operación: **San Miguel**, **Muñiz** y **Bella Vista**.
 
 ## FreeDeli Dev (panel de administración)
 
-- **Acceso exclusivo:** existe una sola instancia y solo la usa el dueño. No hay otros usuarios ni roles de admin. Por ahora sin login; se protege al conectar el backend.
+- **Acceso exclusivo:** existe una sola instancia y solo la usa el dueño, con el email y la clave definidos en el servidor. No hay otros usuarios ni roles de admin.
 - **Pantalla:** pensado para compu, y usable en el celular.
 
 ### Tres grandes sectores
@@ -74,7 +74,7 @@ Dentro de MAIN también están:
 - **Avisos por WhatsApp:** todos los avisos al rider llegan por WhatsApp, también con la app cerrada: pedido nuevo (con el link a la app), el kiosco lo aprobó, el kiosco eligió a otro, y el alta aprobada o rechazada. El rider los puede apagar en su perfil. Por eso el teléfono del rider tiene que ser un celular con WhatsApp.
 - Tiene **60 segundos** para aceptar, con cuenta regresiva.
 - Antes de aceptar ve: kiosco y zona de retiro, la entrega aproximada (calle y altura redondeada, por ejemplo "Conesa al 1800"), la cantidad de productos y su ganancia. La dirección exacta y las notas aparecen al aceptar.
-- Si rechaza o deja vencer el aviso, el pedido pasa a otro rider **sin castigo**: sigue ON.
+- Si rechaza o deja vencer el aviso, el pedido pasa a otro rider **sin castigo**: sigue ON. _Decidido, falta programarlo: si deja vencer 2 ofertas seguidas sin responder, pasa a OFF solo y le llega un WhatsApp. Rechazar no cuenta._
 - Al aceptar, el pedido pasa a **Aceptado** y se abre la pantalla Vivo.
 
 ### Perfil: qué puede editar el rider
@@ -115,7 +115,8 @@ Diseño de referencia: canvas, página "App Rider" (pantallas de 390×844).
 
 - **Cliente:** el pedido se entrega **donde está el celular** al pedir. Sin permiso de ubicación no puede pedir: la app le explica cómo activarla. La dirección y las notas quedan como referencia para que el rider lo encuentre.
 - **Rider:** sin permiso de ubicación no puede pasar a ON. Mientras lleva un pedido (de Aceptado a Entregado), su app manda la posición cada 15 segundos. El cliente ve cuánto le falta ("Tu rider está a 1,2 km") y "Cómo llegar" lo lleva al punto exacto del cliente.
-- **Batería y señal son responsabilidad del rider:** una posición de más de 2 minutos no cuenta.
+- **Con Google Maps abierto** la app no puede mandar la posición (las apps web no usan el GPS en segundo plano). La manda apenas el rider vuelve a FreeDeli, y si el GPS falla lo reintenta solo.
+- **Batería y señal son responsabilidad del rider.** Para mostrarle al cliente cuánto falta solo se usan posiciones de los últimos 2 minutos.
 - Solo se guarda la última posición del rider en el pedido en curso, no un recorrido.
 - El navegador solo da la ubicación en sitios con HTTPS.
 
@@ -148,7 +149,7 @@ Si al quitar productos el pedido queda por debajo del mínimo, se mantiene igual
 
 - **El cliente puede cancelar en cualquier momento** antes de la entrega. Si todavía no transfirió, no hay nada que devolver.
 - **Reintegro:** si ya transfirió, el kiosco le devuelve todo por transferencia, a la cuenta desde la que pagó, sin cupones. El pedido le queda en "Tu turno" al kiosco hasta que toca "Ya lo devolví".
-- **Mitad del viaje:** si el rider en camino ya hizo más de la mitad del trayecto, el envío no se devuelve: el kiosco se lo paga al rider. Se mide con el GPS del rider: está más cerca del cliente que la mitad de la distancia entre el kiosco y el cliente. Sin una posición de los últimos 2 minutos, el reintegro es total.
+- **Mitad del viaje:** si el rider en camino ya hizo más de la mitad del trayecto, el envío no se devuelve: el kiosco se lo paga al rider. Se mide con la última posición que mandó el GPS del rider, aunque sea vieja (mientras usa Google Maps no la manda): está más cerca del cliente que la mitad de la distancia entre el kiosco y el cliente. Como el rider se va acercando, una posición vieja nunca lo favorece. Sin ninguna posición, el reintegro es total.
 - **Productos:** si el rider ya los retiró, se los devuelve al kiosco. La app del rider se lo avisa al cancelarse.
 - **3 cancelaciones en una semana** pausan la cuenta del cliente: no puede pedir hasta que Dev la reactive desde la alerta en MAIN. Al reactivarla, el conteo vuelve a cero.
 - **Sin rider:** a los **10 minutos** buscando rider, la app le pregunta al cliente si sigue esperando. Si sigue, se le vuelve a preguntar en otros 10 minutos. Si cancela, no le cuenta como cancelación.

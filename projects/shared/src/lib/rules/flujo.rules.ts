@@ -53,7 +53,7 @@ const abierto = (p: Pedido) => ESTADOS_ABIERTOS.includes(p.estado);
  */
 export function cancelarPorCliente(p: Pedido, ahora: Date): Resultado {
   if (!abierto(p)) return error('El pedido ya no se puede cancelar.');
-  return ok(cancelado(p, esperaSinRider(p, ahora) ? 'sin-rider' : 'cliente', riderPasoLaMitad(p, ahora)));
+  return ok(cancelado(p, esperaSinRider(p, ahora) ? 'sin-rider' : 'cliente', riderPasoLaMitad(p)));
 }
 
 /** El cliente elige seguir esperando un rider: se le vuelve a preguntar en MINUTOS_SIN_RIDER. */

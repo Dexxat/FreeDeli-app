@@ -61,11 +61,14 @@ describe('incidentes (e2e)', () => {
     await posicion(e.rider, GPS_CLIENTE).expect(409);
   });
 
-  it('sin una posición de los últimos 2 minutos, el rider no cobra el envío', async () => {
-    const p = await e.pedidoEnCamino();
-    await e.api().post(`/api/rider/pedidos/${p.id}/posicion`).set(auth(e.rider)).send(GPS_CLIENTE).expect(204);
-    await db.pedido.update({ where: { id: p.id }, data: { riderPosicionEn: new Date(Date.now() - 3 * 60_000) } });
-    expect((await cancelar(p.id).expect(200)).body.cancelacion.riderCobra).toBe(false);
+  it('cuenta la última posición aunque sea vieja (el rider estaba en Google Maps); sin ninguna, no cobra', async () => {
+    const conPosicionVieja = await e.pedidoEnCamino();
+    await e.api().post(`/api/rider/pedidos/${conPosicionVieja.id}/posicion`).set(auth(e.rider)).send(GPS_CLIENTE).expect(204);
+    await db.pedido.update({ where: { id: conPosicionVieja.id }, data: { riderPosicionEn: new Date(Date.now() - 15 * 60_000) } });
+    expect((await cancelar(conPosicionVieja.id).expect(200)).body.cancelacion.riderCobra).toBe(true);
+
+    const sinPosicion = await e.pedidoEnCamino();
+    expect((await cancelar(sinPosicion.id).expect(200)).body.cancelacion.riderCobra).toBe(false);
   });
 
   it('a los 10 minutos sin rider, el cliente sigue esperando o cancela sin que le cuente', async () => {

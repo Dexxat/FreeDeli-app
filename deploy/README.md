@@ -49,6 +49,22 @@ Las apps quedan en https://localhost, https://kioscos.localhost, https://riders.
 
 Para apagarlo: `docker compose down` (los datos quedan en el volumen; `docker compose down -v` los borra).
 
+## Probar con celulares (sin dominio)
+
+Los celulares necesitan HTTPS para dar la ubicación. Con Docker Desktop andando en la Mac (sección anterior), `docker-compose.prueba.yml` agrega un túnel gratuito de Cloudflare para Usuarios, Riders y Kioscos, sin cuenta ni instalar nada:
+
+```bash
+cd deploy
+docker compose -f docker-compose.yml -f docker-compose.prueba.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.prueba.yml logs tunel-usuarios tunel-riders tunel-kioscos | grep -o 'https://[a-z0-9-]*\.trycloudflare\.com'
+```
+
+Cada túnel da una dirección `https://….trycloudflare.com` que se abre desde cualquier celular, con wifi o datos. Las direcciones cambian cada vez que se reinician los túneles, y la Mac tiene que quedar prendida. Dev se sigue usando en la Mac. Para cortar los túneles:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prueba.yml stop tunel-usuarios tunel-riders tunel-kioscos
+```
+
 ## Actualizar
 
 ```bash

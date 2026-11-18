@@ -1,9 +1,15 @@
 import { Controller, MessageEvent, Sse } from '@nestjs/common';
-import { Observable, filter, from, map, mergeMap } from 'rxjs';
+import { Observable, filter, from, interval, map, merge, mergeMap } from 'rxjs';
 import { PermitirToken, SesionActual, type Sesion } from '../auth/sesion.js';
 import { Rol } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { EventosService, type Evento } from './eventos.service.js';
+
+/**
+ * Señal de vida cada tantos segundos: las redes móviles y los proxies cortan las conexiones que no
+ * transmiten nada, y la app la usa para darse cuenta de que la conexión se cortó sin avisar.
+ */
+export const SEGUNDOS_LATIDO = 25;
 
 /**
  * Tiempo real. EventSource no manda encabezados, así que el token va en ?token=.
@@ -20,10 +26,12 @@ export class EventosController {
   @PermitirToken()
   @Sse()
   flujo(@SesionActual() sesion: Sesion): Observable<MessageEvent> {
-    return from(this.perfilId(sesion)).pipe(
+    const eventos = from(this.perfilId(sesion)).pipe(
       mergeMap((perfilId) => this.eventos.flujo$.pipe(filter((e) => this.leCorresponde(e, sesion.rol, perfilId)))),
-      map((e) => ({ type: e.tipo, data: e })),
+      map((e): MessageEvent => ({ type: e.tipo, data: e })),
     );
+    const latidos = interval(SEGUNDOS_LATIDO * 1000).pipe(map((): MessageEvent => ({ type: 'latido', data: {} })));
+    return merge(eventos, latidos);
   }
 
   private async perfilId(sesion: Sesion): Promise<string | null> {

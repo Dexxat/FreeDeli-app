@@ -3,7 +3,7 @@ import { distanciaKm } from './pedido.rules.js';
 
 /** Cada cuánto manda su posición el rider mientras lleva un pedido. */
 export const SEGUNDOS_REPORTE_RIDER = 15;
-/** Una posición más vieja no cuenta: el rider se quedó sin batería o sin señal. */
+/** Para mostrarle al cliente cuánto falta: una posición más vieja ya no sirve. */
 export const MINUTOS_POSICION_VIGENTE = 2;
 
 type ConPosicion = Pick<Pedido, 'estado' | 'distanciaKm' | 'destino' | 'posicionRider'>;
@@ -21,10 +21,11 @@ export function distanciaDelRider(p: ConPosicion, ahora: Date): number | undefin
 }
 
 /**
- * El rider en camino ya hizo más de la mitad del viaje del kiosco al cliente.
- * Sin posición vigente es false: la batería y la señal son responsabilidad del rider.
+ * El rider en camino ya hizo más de la mitad del viaje del kiosco al cliente, según la última posición
+ * que mandó su GPS, aunque sea vieja: mientras usa Google Maps la app no puede mandarla, y como el rider
+ * se va acercando, una posición vieja nunca lo favorece. Sin ninguna posición es false.
  */
-export function riderPasoLaMitad(p: ConPosicion, ahora: Date): boolean {
-  const falta = distanciaDelRider(p, ahora);
-  return falta !== undefined && falta < p.distanciaKm / 2;
+export function riderPasoLaMitad(p: ConPosicion): boolean {
+  const pos = p.posicionRider;
+  return p.estado === 'en-camino' && !!pos && distanciaKm(pos, p.destino.ubicacion) < p.distanciaKm / 2;
 }

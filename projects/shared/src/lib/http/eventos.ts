@@ -14,9 +14,13 @@ export type EventoApi =
   /** Alta nueva de kiosco o rider (solo Dev). */
   | { tipo: 'alta'; cuentaId: string };
 
+/** Sin noticias del servidor por este tiempo, la conexión se dio por cortada. El servidor late cada 25 s. */
+export const MS_SIN_LATIDO = 60_000;
+
 /**
- * Eventos en tiempo real de la API (Server-Sent Events). Se reconecta solo si se corta,
- * y se reinicia al cambiar la sesión.
+ * Eventos en tiempo real de la API (Server-Sent Events). Se reinicia al cambiar la sesión, y se reconecta
+ * si se cortó: al volver a la app (por ejemplo desde Google Maps), al volver la señal o si el servidor
+ * dejó de latir. Cada reconexión emite `conexion`, así las pantallas vuelven a pedir el estado.
  */
 @Injectable({ providedIn: 'root' })
 export class EventosCliente {
@@ -51,22 +55,48 @@ export class EventosCliente {
 
   private conectar(token: string): Observable<EventoApi> {
     return new Observable<EventoApi>((sub) => {
-      const fuente = new EventSource(`${this.url}/eventos?token=${encodeURIComponent(token)}`);
+      let fuente: EventSource;
+      let ultimaNoticia = 0;
+      const emitir = (evento: EventoApi) => this.zona.run(() => sub.next(evento));
       const recibir = (msg: MessageEvent<string>) => {
+        ultimaNoticia = Date.now();
         const e = JSON.parse(msg.data) as EventoApi;
-        const evento: EventoApi =
+        emitir(
           e.tipo === 'pedido'
             ? { tipo: 'pedido', pedido: revivirPedido(e.pedido) }
             : e.tipo === 'oferta'
               ? { ...e, oferta: e.oferta ? revivirOferta(e.oferta) : null }
-              : e;
-        this.zona.run(() => sub.next(evento));
+              : e,
+        );
       };
-      fuente.onopen = () => this.zona.run(() => sub.next({ tipo: 'conexion' }));
-      fuente.addEventListener('pedido', recibir as EventListener);
-      fuente.addEventListener('oferta', recibir as EventListener);
-      fuente.addEventListener('alta', recibir as EventListener);
-      return () => fuente.close();
+      const abrir = () => {
+        fuente?.close();
+        ultimaNoticia = Date.now();
+        fuente = new EventSource(`${this.url}/eventos?token=${encodeURIComponent(token)}`);
+        fuente.onopen = () => {
+          ultimaNoticia = Date.now();
+          emitir({ tipo: 'conexion' });
+        };
+        fuente.addEventListener('pedido', recibir as EventListener);
+        fuente.addEventListener('oferta', recibir as EventListener);
+        fuente.addEventListener('alta', recibir as EventListener);
+        fuente.addEventListener('latido', () => (ultimaNoticia = Date.now()));
+      };
+      /** Reabre si el navegador la cerró o si hace rato que no llega nada (se cortó sin avisar). */
+      const revisar = () => {
+        if (document.hidden) return;
+        if (fuente.readyState === EventSource.CLOSED || Date.now() - ultimaNoticia > MS_SIN_LATIDO) abrir();
+      };
+      abrir();
+      const reloj = setInterval(revisar, 15_000);
+      document.addEventListener('visibilitychange', revisar);
+      window.addEventListener('online', abrir);
+      return () => {
+        clearInterval(reloj);
+        document.removeEventListener('visibilitychange', revisar);
+        window.removeEventListener('online', abrir);
+        fuente.close();
+      };
     });
   }
 }

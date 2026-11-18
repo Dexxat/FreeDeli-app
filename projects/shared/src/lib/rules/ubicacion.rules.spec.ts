@@ -22,7 +22,13 @@ describe('posición del rider', () => {
   });
 
   it('a 1 km de un viaje de 2 km todavía no pasó la mitad', () => {
-    expect(riderPasoLaMitad(pedido('en-camino'), ahora)).toBe(false);
-    expect(riderPasoLaMitad({ ...pedido('en-camino'), distanciaKm: 2.1 }, ahora)).toBe(true);
+    expect(riderPasoLaMitad(pedido('en-camino'))).toBe(false);
+    expect(riderPasoLaMitad({ ...pedido('en-camino'), distanciaKm: 2.1 })).toBe(true);
+  });
+
+  it('la mitad del viaje se mide con la última posición, aunque sea vieja (el rider estaba en Google Maps)', () => {
+    expect(riderPasoLaMitad({ ...pedido('en-camino', segundos(20 * 60)), distanciaKm: 2.1 })).toBe(true);
+    expect(riderPasoLaMitad({ ...pedido('en-camino'), distanciaKm: 2.1, posicionRider: undefined })).toBe(false);
+    expect(riderPasoLaMitad({ ...pedido('retirado'), distanciaKm: 2.1 })).toBe(false);
   });
 });
